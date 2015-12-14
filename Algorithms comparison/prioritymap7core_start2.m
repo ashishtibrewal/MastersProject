@@ -1,9 +1,10 @@
-% Function to generate a priority map for a 7 core fibre.
-% Function return values:
-% coreseq1 - Core Sequence 1
-% coreseq2 - Core Sequence 2
-
 function [coreseq1,coreseq2] = prioritymap7core_start2()
+% prioritymap7core_start2 - Function to generate a priority map for a 7 
+% core fibre.
+%   Function return values:
+%     coreseq1 - Core Sequence 1
+%     coreseq2 - Core Sequence 2
+
   loop=3;
   coreseq1=zeros(1,6);
   coreseq2=zeros(1,6);

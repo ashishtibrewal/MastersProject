@@ -1,9 +1,8 @@
-% Function to generate a 4D (boolean) matrix that represents node
-% connectivity on a network topology with 6 nodes. A value of 1
+function resource=res6nodes()
+% res6nodes - Function to generate a 4D (boolean) matrix that represents 
+% node connectivity on a network topology with 6 nodes. A value of 1
 % represents that it is connected and a value of 0 represents that it is
 % disconnected.
-
-function resource=res6nodes()
 
   resource(:,:,1,2)=ones(14,200);
   resource(:,:,1,6)=ones(14,200);

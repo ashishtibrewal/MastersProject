@@ -1,9 +1,8 @@
-% Function to generate a 4D (boolean) matrix that represents node
-% connectivity on a star network topology with 20 nodes. A value of 1
+function resource=res20star()
+% res20star - Function to generate a 4D (boolean) matrix that represents
+% node connectivity on a star network topology with 20 nodes. A value of 1
 % represents that it is connected and a value of 0 represents that it is
 % disconnected.
-
-function resource=res20star()
 
   resource(:,:,1,21)=ones(14,200);
   resource(:,:,2,21)=ones(14,200);

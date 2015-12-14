@@ -1,11 +1,10 @@
-% Function to generate core cost for a 7 core fibre
-% Function parameters:
-% corecost - Matrix containing the core cost values
-% corenum - Value containing the current core number
-% Function return values:
-% corecost - Updated core cost value for a particular core
-
 function corecost = cost7_2(corecost,corenum)
+% cost7_2 - Function to generate core cost for a 7 core fibre
+%   Function parameters:
+%     corecost - Matrix containing the core cost values
+%     corenum - Value containing the current core number
+%   Function return values:
+%     corecost - Updated core cost value for a particular core
 
   corecost(corenum)=inf;
 
