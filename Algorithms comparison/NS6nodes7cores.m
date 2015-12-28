@@ -1,6 +1,7 @@
 function NumSlots=NS6nodes7cores()
 
-%Store XT in each link per request
+%Generate number of slots for a 6 node topology with 7 cores links between
+%each node
 
 NumSlots(:,:,1,2)=zeros(14,200);
 NumSlots(:,:,1,6)=zeros(14,200);

@@ -1,4 +1,6 @@
 function index=check7_2(resource,i,j,a,b)
+% Same as the function check7 but with added support for checking more
+% cores (Additional cores from core number 7 to 14)
 total=0; %#ok<NASGU>
 index=0;
 if i==1

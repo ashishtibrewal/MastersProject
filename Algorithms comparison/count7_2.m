@@ -1,6 +1,6 @@
 
 %CHONG NEW!!!!!!!!!
-
+% Same as the count7 function but supports upto 14 cores
 function [n1,n2]=count7_2(resource,row,column,BW,a,b)
 x=zeros(1,6);
 n1=0;

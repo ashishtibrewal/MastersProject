@@ -1,8 +1,8 @@
 function linkblock=linkBlock()
-
 %This function is used to calculate BP in each link
-%The first number notes down the blcok number in this link
+%The first number notes down the block number in this link
 %The second number notes down the total request number in this link
+
 linkblock(2,1,2)=0;
 linkblock(2,1,6)=0;
 linkblock(2,2,3)=0;

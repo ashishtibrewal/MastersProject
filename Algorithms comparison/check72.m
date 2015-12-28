@@ -1,4 +1,6 @@
 function index=check7(resource,i,j,a,b)
+% Same as the check7 function. Note that this function is unused since the
+% function name and the file name don't match.
 total=0; %#ok<NASGU>
 index=0;
 if i==1

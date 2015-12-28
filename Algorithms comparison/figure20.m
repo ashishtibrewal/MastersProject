@@ -1,6 +1,11 @@
 % Comparision of all new algorithms
+% Randomly generated input requests (10000 requests)
 % 7cores 
 % Typical 6 nodes topology
+% 2di = bidirectional
+% XT = blocking probability
+% Note that any matrix/vector of size 10000 is due to the number of input
+% request being simulated.
 
 clear all;
 link=map6nodesDATA();
@@ -9,24 +14,27 @@ node=length(link);
 sta=zeros(1,10000);
 dst=zeros(1,10000);
 BW=zeros(1,10000);
-[coreseq1  coreseq2] = prioritymap7core_start2(  );
+[coreseq1, coreseq2] = prioritymap7core_start2(); % Generate a priority map for a 7 core fiber
 
 
 for y=1:5
-    % y=1  '2di priority core switch spectrum soft split'
-    % y=2  '2di priority core switch slot split spectrum soft split 3 paths '
-    % y=3  '2di priority core switch spectrum hard split 3 paths(0.001)'
-    % y=4  '2di priority core switch spectrum hard split 3 paths(0.01)'
-    % y=5  '2di priority core switch spectrum hard split 3 paths(0.1)'
-    pathmemory=zeros(10000,10);
-    linkblock=linkBlock();
-    LXPR=LXPR6nodes();
-    NumSlots=NS6nodes7cores();
+    % y=1  '2di priority, core switch, spectrum soft split'
+    % y=2  '2di priority, core switch, slot split, spectrum soft split 3 paths '
+    % y=3  '2di priority, core switch, spectrum hard split 3 paths(0.001)'
+    % y=4  '2di priority, core switch, spectrum hard split 3 paths(0.01)'
+    % y=5  '2di priority, core switch, spectrum hard split 3 paths(0.1)'
+    
+    % Note: Lines that are not under an if condition is applicable for all
+    % types of algorithms
+    pathmemory=zeros(10000,10); % Used to store shortest paths (for each iteration/request)
+    linkblock=linkBlock();    % Link block function to generate a link block matrix
+    LXPR=LXPR6nodes();    % Link specific blocking probability (XT) per request
+    NumSlots=NS6nodes7cores();  % Number of slots for a 6 node (with 7 core links) topology 
     xtavg=zeros(1,100);
     probabilitya=zeros(1,100);
     probabilityb=zeros(1,100);
     probabilityc=zeros(1,100);
-    count=zeros(1,10000);
+    count=zeros(1,10000);   % Used to store "boolean" blocking value for the x^th request 
     XTblockcount=zeros(1,10000);
     EXTblockcount=zeros(1,10000);
     core=zeros(14,100);
@@ -37,12 +45,12 @@ for y=1:5
     XTcondition=zeros(2,4);
     time=zeros(1,100);
     
-    resource=res6nodes();
-    resource1=res6nodes();
+    resource=res6nodes();  % Generate resource matrix for a 6 node topology
+    resource1=res6nodes(); % Generate resource matrix for a 6 node topology
     seq=1;
     dis=zeros(1,10000);
-    XT=zeros(1,10000);
-    no=0;%no crosstalk number(0XT and blcok number)
+    XT=zeros(1,10000);     % Blocking probability matrix
+    no=0; %no crosstalk number(0XT and block number)
     
     
     slot_index3=0;
@@ -50,13 +58,22 @@ for y=1:5
     K1=0;
     K2=0;
     
+    % Loop/run for 10000 iterations (i.e. 10000 requests) 
     %XT=crosstalk();
     for x=1:10000%request(x)
-        tic;
+        tic;      % Start timer
+        % y=1  '2di priority, core switch, spectrum soft split'
+        % INPUT GENERATION !!!
+        % Only generate the input request for the first iteration on the
+        % outer loop (i.e. y == 1) and use the same matrix for the other
+        % iterations. Generating input requests for each iteration of y
+        % would produce incorrect results since it uses the randi()
+        % function that generates random numbers/integers, which would make
+        % inputs differ between each iteration of y.
         if y==1
             sta(x)=randi([1,node],1,1); %generate random start node
             dst(x)=randi([1,node],1,1); %generate random destination node
-            BW(x)=2*randi([1,4],1,1);   %generate random BW (2 4 6 8)
+            BW(x)=2*randi([1,4],1,1);   %generate random BW (2 4 6 8). Generate a 1x1 dimensional matrix for each iteration containing a value between 1 and 4 inclusive.
             while sta(x)==dst(x)
                 dst(x)=randi([1,node],1,1); %if the two random number are same, regenerate one.
             end
@@ -64,9 +81,9 @@ for y=1:5
         
         [distance,path]=dijkstra(link,sta(x),dst(x));  %use the dijkstra code to find the shortest path
         
-        
+        % y=3  '2di priority, core switch, spectrum hard split 3 paths(0.001)'
         if y==3
-           k_paths=3;
+           k_paths=3;    % Number of shortest path to find
                
             
              [shortestpaths,kdistances]=kShortestPath(link,sta(x),dst(x),k_paths);
@@ -90,17 +107,18 @@ for y=1:5
          
         end
         
+        % y=1  '2di priority, core switch, spectrum soft split'
         if y==1
-            k_paths=3;
+            k_paths=3;    % Number of shortest path to find
                
-            
-             [shortestpaths,kdistances]=kShortestPath(link,sta(x),dst(x),k_paths);
+             [shortestpaths,kdistances]=kShortestPath(link,sta(x),dst(x),k_paths); % Find k shortest paths between start and destination nodes
               [resource,blocking,XT,LXPR,NumSlots,ReqNums,XTblock,EXTblock,linkblock,k_index,Bcauses(x,:)]=ff1XTnewcoreswitchKpaths2di_ss_(BW(x),shortestpaths,link,resource,x,LXPR,NumSlots,linkblock,pathmemory,XT,coreseq1,coreseq2);
             for i=1:length(shortestpaths{k_index})
                 pathmemory(x,i)=shortestpaths{k_index}(i);
             end
         end
         
+        % y=4  '2di priority, core switch, spectrum hard split 3 paths(0.01)'
          if y==4
            k_paths=3;
                
@@ -122,9 +140,9 @@ for y=1:5
             end
          end
          
-         
+         % y=2  '2di priority, core switch, slot split spectrum soft split 3 paths '
          if y==2
-            k_paths=3;
+            k_paths=3;    % Number of shortest path to find
                
             
              [shortestpaths,kdistances]=kShortestPath(link,sta(x),dst(x),k_paths);
@@ -134,8 +152,9 @@ for y=1:5
             end
          end
          
+         % y=5  '2di priority, core switch, spectrum hard split 3 paths(0.1)'
          if y==5
-            k_paths=3;
+            k_paths=3;    % Number of shortest path to find
                
             
              [shortestpaths,kdistances]=kShortestPath(link,sta(x),dst(x),k_paths);
@@ -157,19 +176,18 @@ for y=1:5
          end
         
          
-        seq=seq+1;
+        seq=seq+1;        % This starts at 1 and can go upto 7
         if seq==8
-            seq=1;
+            seq=1;        % Reset sequence number
         end
         
         
-        dis(x)=distance;
-        count(x)=blocking;
-         XTblockcount(x)=XTblock;
-         EXTblockcount(x)=EXTblock;
+        dis(x)=distance;      % Distance for the x^th iteration (Distance is calculated using Dijksta's algorithm, note that this function is called earlier in the script)
+        count(x)=blocking;    % If the x^th request was blocked
+        XTblockcount(x)=XTblock;
+        EXTblockcount(x)=EXTblock;
         
-
-            if mod(x,100)==0
+            if mod(x,100)==0  % If the current iteration is a multiple of 100
                 %x==200/2||x==400/2||x==600/2||x==800/2||x==1000/2||x==1200/2||x==1400/2||x==1600/2||x==1800/2||x==2000/2||x==2200/2||x==2400/2||x==2600/2||x==2800/2||x==3000/2||x==3200/2||x==3400/2||x==3600/2||x==3800/2||x==4000/2
                 XTsum=0;
                 x
@@ -346,6 +364,7 @@ for y=1:5
             linkblockratio(9,3)=linkblock(2,5,6)/linkblock(1,5,6);
             
         end
+        
         if x==10000
             
             %             linkblocksum(4,1,1)=linkblock(1,1,2);
@@ -388,8 +407,10 @@ for y=1:5
         
     end
     
+    % Other calculations for each iteration of y (i.e. the outer loop) and
+    % function calls to plot all the results.
     
-        sum1=(2800-sum1)/2800;
+    sum1=(2800-sum1)/2800;
     asum=zeros(1,100);
     for t=1:100
         for i=1:9
@@ -403,7 +424,7 @@ for y=1:5
     b=0;%Block number due to XT
     c=0;%Block number due to resource
     
-    XTsum=0;
+   XTsum=0;
    for i=100:100:10000
         for j=(i-99):i
             a=a+count(j);
@@ -441,18 +462,23 @@ for y=1:5
      
     x=100:100:10000;
     figure(1);
+    % y=1  '2di priority, core switch, spectrum soft split'
     if y==1
         semilogy(asum,probabilitya,'xb-');
     end
+    % y=2  '2di priority, core switch, slot split, spectrum soft split 3 paths '
     if y==2
         semilogy(asum,probabilitya,'+g-');
     end
-     if y==3
+    % y=3  '2di priority, core switch, spectrum hard split 3 paths(0.001)'
+    if y==3
         semilogy(asum,probabilitya,'vr-');
     end
+    % y=4  '2di priority, core switch, spectrum hard split 3 paths(0.01)'
     if y==4
         semilogy(asum,probabilitya,'dk-');
     end
+    % y=5  '2di priority, core switch, spectrum hard split 3 paths(0.1)'
     if y==5
         semilogy(asum,probabilitya,'sm-');
     end
@@ -466,12 +492,5 @@ for y=1:5
     xlabel('Network Utilization');
     ylabel('Blocking Probability');
    % grid on;
-    
-    
-
-    
-    
-      
-    
 
 end

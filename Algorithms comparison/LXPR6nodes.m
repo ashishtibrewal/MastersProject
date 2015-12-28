@@ -1,6 +1,6 @@
 function LinkXTperRequest=LXPR6nodes()
 
-%Store XT in each link per request
+%Store XT (blocking probability) in each link per request
 
 LinkXTperRequest(:,:,1,2)=zeros(14,200);
 LinkXTperRequest(:,:,1,6)=zeros(14,200);

@@ -1,5 +1,6 @@
 function corecost=cost7(corecost,corenum)
-
+% Function of evaluate the corecost. Core cost for a specific core is equal
+% to the sum of the corecosts of all it's neighbouring cores.
 corecost(corenum)=inf;
 
 if corenum==1

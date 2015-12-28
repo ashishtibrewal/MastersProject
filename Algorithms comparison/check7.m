@@ -1,4 +1,10 @@
 function index=check7(resource,i,j,a,b)
+% Need to figure out what this function does (Probably evaluates the total
+% crosstalk value for a given core)
+% Note: resource is a 4D matrix
+% i is the selcted core (Max of 7)
+% j,a,b - Unsure at the moment. Need to check where this function is called
+
 total=0; %#ok<NASGU>
 index=0;
 if i==1
