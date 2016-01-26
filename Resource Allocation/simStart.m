@@ -1,0 +1,31 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Script that starts the simulation %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Set up clean environment
+clear;      % Clear all variables in the workspace
+close all;  % Close all open figures
+clc;        % Clear console/command prompt
+
+% Datacenter IT & Network constants
+% Insert call to a separate script/function to setup/declare all datacenter
+% constants
+nRequests = 100000;   % Number of requests to generate
+nRacks = 10;          % Number of racks (in the datacenter)
+nBlades = 20;         % Number of blades (in each rack)
+nSlots = 20;          % Number of slots (in each blade)
+nUnits = 20;          % Number of units (in each slot)
+
+% Network creation
+[networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap] = networkCreation();
+
+% Input generation
+requestDB = inputGeneration(nRequests);    % Pre-generating randomised requests - Note that the resourec allocation is only allowed to loo
+
+% IT resource allocation
+for i = 1:nRequests
+  [occupiedMap, requestDB] = resourceAllocation(i, requestDB, networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap);
+end
+
+% Network resource allocation 
+% Need to get a better understanding of network resource allocation code
