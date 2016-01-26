@@ -20,20 +20,20 @@ function requestDB = inputGeneration(nRequests)
   MEMs = 4096;        % Todal amount of memory in the datacenter
   STOs = 8192;        % Total amount of storage in the datacenter
 
-  cpuMin = 1;
-  cpuMax = 16;
+  cpuMin = 1;               % In cores
+  cpuMax = 16;              % In cores
 
-  memoryMin = 1;
-  memoryMax = 32;
+  memoryMin = 1;            % In GBs
+  memoryMax = 32;           % In GBs
 
-  storageMin = 1;
-  storageMax = 32;
+  storageMin = 1;           % In GBs
+  storageMax = 256;         % In GBs
 
   bandwidhtMin = 10;        % In Gb/s
   bandwidhtMax = 400;       % In Gb/s
   
-  latencyMin = 10;          % In us (i.e. microseconds)
-  latencyMax = 100;         % In us (i.e. microseconds)
+  latencyMin = 5;           % In ns (i.e. nanoseconds)
+  latencyMax = 100;         % In ns (i.e. nanoseconds)
   
   holdTimeMin = 1;          % In s (i.e. seconds)
   holdTimeMax = 10000000;   % In s (i.e. seconds)
