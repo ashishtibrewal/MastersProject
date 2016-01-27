@@ -1,6 +1,6 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Script that starts the simulation %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Set up clean environment
 clear;      % Clear all variables in the workspace
@@ -11,17 +11,14 @@ clc;        % Clear console/command prompt
 % Insert call to a separate script/function to setup/declare all datacenter
 % constants
 nRequests = 100000;   % Number of requests to generate
-nRacks = 10;          % Number of racks (in the datacenter)
+nRacks = 20;          % Number of racks (in the datacenter)
 nBlades = 20;         % Number of blades (in each rack)
-nSlots = 20;          % Number of slots (in each blade)
-nUnits = 20;          % Number of units (in each slot)
+nSlots = 50;          % Number of slots (in each blade)
+nUnits = 25;          % Number of units (in each slot) - This could be split into three different values, one for each CPU, Memory and Storage
 
 unitSizeCPU = 1;      % >1 signifies multi-core (A simplistic approach)
 unitSizeMEM = 4;      % Each DIMM is 4 GB in size/capacity
 unitSizeSTO = 500;    % Each HDD is 500 GB in size /capacity
-unitSizeBWH = 1600;   % Maximum bandwidth available on a link connecting two nodes in the network
-unitSizeLAT = 5;      % Minimum latency between two connected (adjacent) nodes is 5 ns (Assuming they are 1 meter apart)
-% Note that the latency is 5 ns/m - Higher the distance, higher the latency
 
 % Network creation
 [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap] = networkCreation(nRacks, nBlades, nSlots, nUnits);
