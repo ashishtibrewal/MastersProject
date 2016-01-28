@@ -1,4 +1,4 @@
-function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap] =  networkCreation(nRacks, nBlades, nSlots, nUnits)
+function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap, holdTimeMap] =  networkCreation(nRacks, nBlades, nSlots, nUnits)
 % Function to create the data center network
 
   % Note that the latency map should have an almost linear relationship
@@ -13,6 +13,8 @@ function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap] =  net
   % Assumptions on inter-blade (i.e. intra-node) need to be made - latency,
   % connectivity (i.e. the topology) and the bandwidth capabilities of these
   % links need to be set
+  
+  holdTimeMap = 0;      % Need to add this feature once I've got basic functionality working
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK CONSTANTS

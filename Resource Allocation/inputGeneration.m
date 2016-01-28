@@ -14,11 +14,9 @@ function requestDB = inputGeneration(nRequests)
 %     maximum values for memory, cpu, storage, latency and bandwidth are
 %     changed.
 
-  % Declare datacenter constants
-  
-  CPUs = 1024;        % Total CPUs in the datacenter
-  MEMs = 4096;        % Todal amount of memory in the datacenter
-  STOs = 8192;        % Total amount of storage in the datacenter
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % Declare input request constants
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   cpuMin = 1;               % In cores
   cpuMax = 16;              % In cores
