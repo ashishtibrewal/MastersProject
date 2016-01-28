@@ -13,7 +13,6 @@ function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap] =  net
   % Assumptions on inter-blade (i.e. intra-node) need to be made - latency,
   % connectivity (i.e. the topology) and the bandwidth capabilities of these
   % links need to be set
-  latencyMap = 0;
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK CONSTANTS
@@ -59,7 +58,7 @@ function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap] =  net
   networkMap.slotConnectivity = slotConnectivity;
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % NETWORK DISTANCE MAP
+  % NETWORK DISTANCE & LATENCY MAP
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % VALUE MEANINGS
@@ -71,19 +70,23 @@ function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap] =  net
   % RACK DISTANCE - All racks are equidistant from each other (i.e. at a
   % distance of 25 meters from each other)
   rackDistance = ones(nRacks);
+  rackLatency = ones(nRacks);
   for rackNoDim1 = 1:nRacks
     for rackNoDim2 = 1:nRacks
       % Distance between a rack and itself is 0
       if (rackNoDim1 ~= rackNoDim2)
-        % If the racks are connected, they have a finite distance else they
-        % are inifinite
+        % If the racks are connected, they have a finite distance and latency 
+        % else they are inifinite
         if (rackConnectivity(rackNoDim1,rackNoDim2) == 1)
           rackDistance(rackNoDim1,rackNoDim2) = 25;
+          rackLatency(rackNoDim1,rackNoDim2) = rackDistance(rackNoDim1,rackNoDim2) * minChannelLatency;
         else
           rackDistance(rackNoDim1,rackNoDim2) = inf;
+          rackLatency(rackNoDim1,rackNoDim2) = inf;
         end
       else
         rackDistance(rackNoDim1,rackNoDim2) = 0;
+        rackLatency(rackNoDim1,rackNoDim2) = -1;
       end
     end
   end
@@ -91,20 +94,24 @@ function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap] =  net
   % BLADE DISTANCE - Blades 1 to n are an increasing distance away from each
   % other. Adjacent nodes are 0.1 meters (i.e. 10 cm) away from each other.
   bladeDistance = ones(nBlades, nBlades, nRacks);
+  bladeLatency = ones(nBlades, nBlades, nRacks);
   for rackNo = 1:nRacks
     for bladeNoDim1 = 1:nBlades
       for bladeNoDim2 = 1:nBlades
         % Distance between a blade and itself is 0
         if (bladeNoDim1 ~= bladeNoDim2)
-          % If the blades are connected, they have a finite distance else
-          % they are infinite
+          % If the blades are connected, they have a finite distance and 
+          % latency else they are infinite
           if (bladeConnectivity(bladeNoDim1,bladeNoDim2,rackNo) == 1)
             bladeDistance(bladeNoDim1,bladeNoDim2,rackNo) = (abs(bladeNoDim1 - bladeNoDim2))/10;
+            bladeLatency(bladeNoDim1,bladeNoDim2,rackNo) = bladeDistance(bladeNoDim1,bladeNoDim2,rackNo) * minChannelLatency;
           else
             bladeDistance(bladeNoDim1,bladeNoDim2,rackNo) = inf;
+            bladeLatency(bladeNoDim1,bladeNoDim2,rackNo) = inf;
           end
         else
           bladeDistance(bladeNoDim1,bladeNoDim2,rackNo) = 0;
+          bladeLatency(bladeNoDim1,bladeNoDim2,rackNo) = -1;
         end
       end
     end
@@ -113,21 +120,25 @@ function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap] =  net
   % SLOT DISTANCE - Slots 1 to n are an increasing distance away from each
   % other. Adjacent slots are 0.01 meters (i.e. 1 cm) away from each other.
   slotDistance = ones(nSlots, nSlots, nBlades, nRacks);
+  slotLatency = ones(nSlots, nSlots, nBlades, nRacks);
   for rackNo = 1:nRacks
     for bladeNo = 1:nBlades
       for slotNoDim1 = 1:nSlots
         for slotNoDim2 = 1:nSlots
           % Distance between a slot and itself is 0
           if (slotNoDim1 ~= slotNoDim2)
-            % If the slots are connected, they have a finite distance else
-            % they are infinite
+            % If the slots are connected, they have a finite distance and 
+            % latency else they are infinite
             if (slotConnectivity(slotNoDim1,slotNoDim2,bladeNo,rackNo) == 1)
               slotDistance(slotNoDim1,slotNoDim2,bladeNo,rackNo) = (abs(slotNoDim1 - slotNoDim2))/100;
+              slotLatency(slotNoDim1,slotNoDim2,bladeNo,rackNo) = slotDistance(slotNoDim1,slotNoDim2,bladeNo,rackNo) * minChannelLatency;
             else
               slotDistance(slotNoDim1,slotNoDim2,bladeNo,rackNo) = inf;
+              slotLatency(slotNoDim1,slotNoDim2,bladeNo,rackNo) = inf;
             end
           else
             slotDistance(slotNoDim1,slotNoDim2,bladeNo,rackNo) = 0;
+            slotLatency(slotNoDim1,slotNoDim2,bladeNo,rackNo) = -1;
           end
         end
       end
@@ -139,6 +150,12 @@ function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap] =  net
   distanceMap.rackDistance = rackDistance;
   distanceMap.bladeDistance = bladeDistance;
   distanceMap.slotDistance = slotDistance;
+  
+  % Network latency map struct containing the inter-rack, inter-blade and
+  % inter-slot latency maps
+  latencyMap.rackLatency = rackLatency;
+  latencyMap.bladeLatency = bladeLatency;
+  latencyMap.slotLatency = slotLatency;
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK/RESOURCE OCCUPIED MAP
@@ -181,8 +198,7 @@ function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap] =  net
       if (rackNoDim1 ~= rackNoDim2)
         % If the racks are connected, they have a finite bandwidth else
         % they are zero
-        if (rackConnectivity(rackNoDim1,rackNoDim2) == 1)
-          
+        if (rackConnectivity(rackNoDim1,rackNoDim2) == 1)       
           rackBandwidth(rackNoDim1,rackNoDim2) = maxChannelBandwidth * numInterRackChannels;
         else
           rackBandwidth(rackNoDim1,rackNoDim2) = 0;
@@ -246,5 +262,5 @@ function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap] =  net
   bandwidthMap.rackBandwidth = rackBandwidth;
   bandwidthMap.bladeBandwidth = bladeBandwidth;
   bandwidthMap.slotBandwidth = slotBandwidth;
-
+  
 end
