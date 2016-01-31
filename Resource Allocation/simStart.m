@@ -65,9 +65,11 @@ requestDB = inputGeneration(nRequests);    % Pre-generating randomised requests 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % IT resource allocation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure ('Name', 'Rack Usage', 'NumberTitle', 'off', 'Position', [200, 200, 1000, 800]);
 % Iterate over all generated requests
 for i = 1:nRequests
   [occupiedMap, requestDB] = resourceAllocation(i, requestDB, networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap, dataCenterConfig);
+  plotUsage(occupiedMap, dataCenterConfig);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
