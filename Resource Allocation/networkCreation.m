@@ -1,4 +1,4 @@
-function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap, holdTimeMap] =  networkCreation(nRacks, nBlades, nSlots, nUnits)
+function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap, holdTimeMap] =  networkCreation(dataCenterConfig)
 % Function to create the data center network
 
   % Note that the latency map should have an almost linear relationship
@@ -14,7 +14,19 @@ function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap, holdTi
   % connectivity (i.e. the topology) and the bandwidth capabilities of these
   % links need to be set
   
-  holdTimeMap = 0;      % Need to add this feature once I've got basic functionality working
+  % Extract data center configuration parameters
+  nRacks = dataCenterConfig.nRacks;
+  nBlades = dataCenterConfig.nBlades;
+  nSlots = dataCenterConfig.nSlots;
+  nUnits = dataCenterConfig.nUnits;
+  
+  unitSizeCPU = dataCenterConfig.unitSizeCPU;
+  unitSizeMEM = dataCenterConfig.unitSizeMEM;
+  unitSizeSTO = dataCenterConfig.unitSizeSTO;
+
+  racksCPU = dataCenterConfig.racksCPU;
+  racksMEM = dataCenterConfig.racksMEM;
+  racksSTO = dataCenterConfig.racksSTO;
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK CONSTANTS
@@ -174,7 +186,28 @@ function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap, holdTi
   occupiedMap = zeros(nSlots, nBlades, nRacks);
 
   % Set the value for each slot to the number of units available in it
-  occupiedMap(:,:,:) = nUnits;
+  for rackNo = 1:nRacks
+    for bladeNo = 1:nBlades
+      for slotNo = 1:nSlots
+        % Check for CPU racks
+        if (racksCPU(racksCPU == rackNo))
+          %str = sprintf('Here !!! %i', rackNo);
+          %disp(str);
+          occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeCPU;
+        end
+        
+        % Check for MEM racks
+        if (racksMEM(racksMEM == rackNo))
+          occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeMEM;
+        end
+        
+        % Check for STO racks
+        if (racksSTO(racksSTO == rackNo))
+          occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeSTO;
+        end
+      end
+    end
+  end
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK BANDWIDTH MAP
@@ -265,4 +298,18 @@ function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap, holdTi
   bandwidthMap.bladeBandwidth = bladeBandwidth;
   bandwidthMap.slotBandwidth = slotBandwidth;
   
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % HOLD TIME MAP
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % VALUE MEANINGS
+  %  0 = Zero holdtime (i.e. the particular slot is unoccupied/free)
+  % >0 = Non-zero holdtime (i.e. the particular slot has at least one occupied unit)
+
+  % All slots in all blades in all racks are unoccupied at the start,
+  % therefore the holdtime is 0
+  % 1st dimension = Slot number
+  % 2nd dimension = Blade number
+  % 3rd dimension = Rack number
+  holdTimeMap = zeros(nSlots, nBlades, nRacks);
+
 end

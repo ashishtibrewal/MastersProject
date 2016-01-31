@@ -1,6 +1,6 @@
 function requestDB = inputGeneration(nRequests)
-% inputGeneration - Function to generate the input that feeds into the
-% resource allocation algorithm
+% Function to generate the input that feeds into the resource allocation 
+% algorithm
 %   Funtion return values:
 %     cpu - number of cpu units required
 %     memory - number of memory units requried
@@ -34,16 +34,18 @@ function requestDB = inputGeneration(nRequests)
   latencyMax = 100;         % In ns (i.e. nanoseconds)
   
   holdTimeMin = 1;          % In s (i.e. seconds)
-  holdTimeMax = 10000000;   % In s (i.e. seconds)
+  holdTimeMax = 100000;     % In s (i.e. seconds)
   
-  requestDB = (zeros(nRequests, 7));  % Matrix to store all generated requests (Each row contains a different request)
+  requestDB = (zeros(nRequests, 9));  % Matrix to store all generated requests (Each row contains a different request)
   % Column 1 -> CPU
   % Column 2 -> Memory
   % Column 3 -> Storage
   % Column 4 -> Bandwidth
   % Column 5 -> Latency
   % Column 6 -> Hold time
-  % Column 7 -> Request status (0 = not served, 1 = served, 2 = rejected)
+  % Column 7 -> IT resource allocation stats (0 = not allocated, 1 = allocated)
+  % Column 8 -> Network resource allocation stats (0 = not allocated, 1 = allocated)
+  % Column 9 -> Request status (0 = not served, 1 = served, 2 = rejected)
   
 %   figure;
 %   hold on;
@@ -91,7 +93,7 @@ function requestDB = inputGeneration(nRequests)
     nHDT = round(2^HDT);   % Required holdtime for this request
     
     % Collect/store data generated over i iterations
-    requestDB(i,:) = [nCPU, nMEM, nSTO, nBAN, nLAT, nHDT, 0];
+    requestDB(i,:) = [nCPU, nMEM, nSTO, nBAN, nLAT, nHDT, 0, 0, 0];
     
 %     scatter(i,nCPU,'filled');
 %     scatter(i,nMEM,'filled');
