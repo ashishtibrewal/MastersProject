@@ -22,7 +22,7 @@ function [occupiedMap, requestDB] = resourceAllocation(i, requestDB, networkMap,
   requiredSTO = requestDB(i,3);
   requiredBAN = requestDB(i,4);
   requiredLAT = requestDB(i,5);
-  requiredHDT = requestDB(i,6);
+  requiredHDT = requestDB(i,6);   % (Same) Hold time applies to both the IT and network resources
 
   % Flags that are set when a required resource has been alloated
   allocatedCPU = 0;
@@ -32,7 +32,9 @@ function [occupiedMap, requestDB] = resourceAllocation(i, requestDB, networkMap,
   ITresourceAllocStatusColumn = 7;
 
   % NEED TO MAKE SURE THAT ALL RESOURCES THAT ARE BEING ALLOCATED FOR A
-  % REQUEST ARE CONNECTED
+  % REQUEST ARE CONNECTED (Currently this is indirectly true since all
+  % racks are connected to each, all blades in a rack are connected to each
+  % other and all slots in a blade are connected to each other.
 
   % Scan through all racks
   for rackNo = 1:nRacks

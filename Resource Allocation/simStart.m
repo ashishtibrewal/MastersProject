@@ -19,13 +19,14 @@ clc;        % Clear console/command prompt
 %MEM_racks = 60;
 %STO_racks = 40;
 
-% NEED TO CHANGE THESE TO HAVE A BETTER SPREAD OF RESOURCES
-racksCPU = 1:10;      % Racks  1-10 are for CPUs
-racksMEM = 11:20;     % Racks 11-20 are for MEMs
-racksSTO = 21:30;     % Racks 21-30 are for STOs
+% NEED TO CHANGE THESE TO HAVE A BETTER SPREAD OF RESOURCES AND ALSO NEED
+% TO INCREASE THE NUMBER OF RACKS
+racksCPU =  1:5;      % Racks  1-5 are for CPUs
+racksMEM =  6:10;     % Racks 6-10 are for MEMs
+racksSTO = 11:15;     % Racks 11-15 are for STOs
 
-nRequests = 1000;   % Number of requests to generate
-nRacks = 30;          % Number of racks (in the datacenter)
+nRequests = 100;   % Number of requests to generate
+nRacks = 15;          % Number of racks (in the datacenter)
 nBlades = 20;         % Number of blades (in each rack)
 nSlots = 50;          % Number of slots (in each blade)
 nUnits = 25;          % Number of units (in each slot) - This could be split into three different values, one for each CPU, Memory and Storage
@@ -63,14 +64,20 @@ dataCenterConfig.racksSTO = racksSTO;
 requestDB = inputGeneration(nRequests);    % Pre-generating randomised requests - Note that the resource allocation is only allowed to look at the request for the current iteration
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Plot data center structure as a graph
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+plotDataCenterLayout(networkMap, racksCPU, racksMEM, racksSTO);   % Function to plot data center layout
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % IT resource allocation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-figure ('Name', 'Rack Usage', 'NumberTitle', 'off', 'Position', [200, 200, 1000, 800]);
-% Iterate over all generated requests
-for i = 1:nRequests
-  [occupiedMap, requestDB] = resourceAllocation(i, requestDB, networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap, dataCenterConfig);
-  plotUsage(occupiedMap, dataCenterConfig);
-end
+%figure ('Name', 'Rack Usage', 'NumberTitle', 'off', 'Position', [200, 200, 1000, 800]);
+% Iterate over all generated requests (Each time step has 1 request being
+% generated)
+% for i = 1:nRequests
+%   [occupiedMap, requestDB] = resourceAllocation(i, requestDB, networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap, dataCenterConfig);
+%   plotUsage(occupiedMap, dataCenterConfig);
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Network resource allocation
