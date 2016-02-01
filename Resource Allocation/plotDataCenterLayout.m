@@ -1,8 +1,13 @@
-function plotDataCenterLayout(networkMap, racksCPU, racksMEM, racksSTO)
+function plotDataCenterLayout(networkMap, dataCenterConfig)
 % Function to plot the data center layout (i.e. how all racks are laid out
 % (and connected) in the data center, how all blades are laid out (and 
 % connected) in each rack and how each slot is laid out (and connected) in
 % each blade.
+
+  racksCPU = dataCenterConfig.racksCPU;   % Extract the CPU nodes
+  racksMEM = dataCenterConfig.racksMEM;   % Extract the MEM nodes
+  racksSTO = dataCenterConfig.racksSTO;   % Extract the STO nodes
+  
   figure ('Name', 'Data Center Topology', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
   subplot(2,2,1);
   G_racks = graph(networkMap.rackConnectivity, 'OmitSelfLoops');

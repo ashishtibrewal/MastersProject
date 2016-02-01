@@ -53,7 +53,7 @@ function [occupiedMap, requestDB] = resourceAllocation(i, requestDB, networkMap,
               occupiedMap(slotNo,bladeNo,rackNo) = occupiedMap(slotNo,bladeNo,rackNo) - requiredCPU;
               allocatedCPU = 1;
               str = sprintf('CPU allocated for request %i !!!', i);
-              disp(str);
+              %disp(str);
             end
           end
         end
@@ -68,7 +68,7 @@ function [occupiedMap, requestDB] = resourceAllocation(i, requestDB, networkMap,
               occupiedMap(slotNo,bladeNo,rackNo) = occupiedMap(slotNo,bladeNo,rackNo) - requiredMEM;
               allocatedMEM = 1;
               str = sprintf('MEM allocated for request %i !!!', i);
-              disp(str);
+              %disp(str);
             end
           end
         end
@@ -83,7 +83,7 @@ function [occupiedMap, requestDB] = resourceAllocation(i, requestDB, networkMap,
               occupiedMap(slotNo,bladeNo,rackNo) = occupiedMap(slotNo,bladeNo,rackNo) - requiredSTO;
               allocatedSTO = 1;
               str = sprintf('STO allocated for request %i !!!', i);
-              disp(str);
+              %disp(str);
             end
           end
         end
@@ -92,7 +92,7 @@ function [occupiedMap, requestDB] = resourceAllocation(i, requestDB, networkMap,
         if (allocatedCPU == 1 && allocatedMEM == 1 && allocatedSTO == 1)
           requestDB(i,ITresourceAllocStatusColumn) = 1;
           str = sprintf('Complete resource allocation for request %i !!!', i);
-          disp(str);
+          %disp(str);
           break;        % Break out of the loop since the request has been 
         end
       end

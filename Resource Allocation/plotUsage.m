@@ -1,6 +1,7 @@
 function plotUsage(occupiedMap, dataCenterConfig)
 % Function to plot data center usage
 
+tRacks = dataCenterConfig.tRacks;
 nRacks = dataCenterConfig.nRacks;
 nBlades = dataCenterConfig.nBlades;
 nSlots = dataCenterConfig.nSlots;
@@ -18,7 +19,7 @@ racksSTO = dataCenterConfig.racksSTO;
 limits = [0, nBlades, 0, nSlots, 0, nUnits];
 i = 0;
 % Create a 3D bar plots
-for rackNo = 1:10:nRacks
+for rackNo = 1:(nRacks/tRacks):nRacks
   i = i + 1;
   subplot(1,3,i);
   
@@ -35,9 +36,14 @@ for rackNo = 1:10:nRacks
   end
   
   str = sprintf('Rack %i', rackNo);
+  if (racksCPU(racksCPU == rackNo)) str = strcat(str, ' (CPUs)');
+  elseif (racksMEM(racksMEM == rackNo)) str = strcat(str, ' (MEMs)');
+  elseif (racksSTO(racksSTO == rackNo)) str = strcat(str, ' (STOs)');
+  end
   title(str);
   xlabel('Blade');
   ylabel('Slot');
+  zlabel('Unit');
   axis(limits);
 end
 
