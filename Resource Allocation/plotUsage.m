@@ -1,5 +1,8 @@
-function plotUsage(occupiedMap, dataCenterConfig)
+function plotUsage(dataCenterMap, dataCenterConfig)
 % Function to plot data center usage
+
+% Extract data center network maps
+occupiedMap = dataCenterMap.occupiedMap;
 
 tRacks = dataCenterConfig.tRacks;
 nRacks = dataCenterConfig.nRacks;

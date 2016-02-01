@@ -1,4 +1,4 @@
-function displayResults(occupiedMap, requestDB, nRequests, dataCenterConfig)
+function displayResults(dataCenterMap, requestDB, nRequests, dataCenterConfig)
 % Function to generate all the results
 % Request database info:
 % Column 1 -> CPU

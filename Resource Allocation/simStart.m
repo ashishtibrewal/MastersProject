@@ -65,7 +65,7 @@ dataCenterConfig.racksSTO = racksSTO;
 str = sprintf('Network creation started ...');
 disp(str);
 
-[networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap] = networkCreation(dataCenterConfig);
+dataCenterMap = networkCreation(dataCenterConfig);
 
 str = sprintf('Network creation complete.\n');
 disp(str);
@@ -95,6 +95,10 @@ disp(str);
 str = sprintf('Resource allocation started ...');
 disp(str);
 
+ITresourceAllocStatusColumn = 7;
+networkResourceAllocStatusColumn = 8;
+requestStatusColumn = 9;
+
 % Open figure - Updated when each request's resource allocation is complete
 figure ('Name', 'Data Center Rack Usage (1st rack of each type)', 'NumberTitle', 'off', 'Position', [40, 100, 1200, 700]);
 
@@ -102,16 +106,28 @@ figure ('Name', 'Data Center Rack Usage (1st rack of each type)', 'NumberTitle',
 for t = 1:tTime
   % Each timestep, look at it's corresponding request in the request database
   requestDBindex = t;
+  % Extract request from the database
+  request = requestDB(requestDBindex,:);
   
   %%%%%%%%%% IT resource allocation %%%%%%%%%%
-  [occupiedMap, requestDB_Updated] = resourceAllocation(requestDBindex, requestDB, networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap, dataCenterConfig);
-  plotUsage(occupiedMap, dataCenterConfig);
+  [dataCenterMap, ITallocationResult] = resourceAllocation(request, dataCenterConfig, dataCenterMap);
+  plotUsage(dataCenterMap, dataCenterConfig);
 
   %%%%%%%%%% Network resource allocation %%%%%%%%%%
   % Need to get a better understanding of network resource allocation code
 
   %%%%%%%%%% Update requests database %%%%%%%%%%
-  requestDB = requestDB_Updated;
+  % Doing this to "simulate parallelism" with IT and network resource
+  % allocation. Updating the request database after the IT resource
+  % allocation makes the updated database available to the network resource
+  % allocation unit which is not what we want. We want them to work
+  % independently although we would still require information on which IT
+  % resources have been allocated to this request (if any, i.e. Rack
+  % number, blade number, slot number and unit numbers for each slot). This
+  % can be stored in the request database (i.e. requestDB).
+  
+  requestDB(requestDBindex, ITresourceAllocStatusColumn) =  ITallocationResult;
+  %requestDB(requestDBindex, networkResourceAllocStatusColumn) =  networkAllocationResult;
 end
 
 str = sprintf('Resource allocation complete.\n');
@@ -123,7 +139,7 @@ disp(str);
 str = sprintf('Displaying results ...\n');
 disp(str);
 
-displayResults(occupiedMap, requestDB, nRequests, dataCenterConfig);
+displayResults(dataCenterMap, requestDB, nRequests, dataCenterConfig);
 
 % NEED TO THINK OF GRAPHS THAT CAN BE PLOTTED TO DEPICT SIMULATION RESULTS
 

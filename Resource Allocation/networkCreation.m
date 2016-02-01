@@ -1,4 +1,4 @@
-function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap, holdTimeMap] =  networkCreation(dataCenterConfig)
+function dataCenterMap =  networkCreation(dataCenterConfig)
 % Function to create the data center network
 
   % Note that the latency map should have an almost linear relationship
@@ -310,6 +310,18 @@ function [networkMap, occupiedMap, distanceMap, latencyMap, bandwidthMap, holdTi
   % 1st dimension = Slot number
   % 2nd dimension = Blade number
   % 3rd dimension = Rack number
+  
+  % THIS NEEDS TO BE CHANGED TO CONSIDER DIFFERENT UNITS INSIDE A SLOT
   holdTimeMap = zeros(nSlots, nBlades, nRacks);
-
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % Pack all maps into a single struct
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  dataCenterMap.networkMap = networkMap;
+  dataCenterMap.occupiedMap = occupiedMap;
+  dataCenterMap.distanceMap = distanceMap;
+  dataCenterMap.latencyMap = latencyMap;
+  dataCenterMap.bandwidthMap = bandwidthMap;
+  dataCenterMap.holdTimeMap = holdTimeMap;
+  
 end
