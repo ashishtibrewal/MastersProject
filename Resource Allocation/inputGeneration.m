@@ -14,6 +14,11 @@ function requestDB = inputGeneration(nRequests)
 %     maximum values for memory, cpu, storage, latency and bandwidth are
 %     changed.
 
+% TODO Need to generate different requried bandwidths for CPU-MEM and
+% MEM-STO
+% TODO Need to generate these bandwidths based on the number of CPUs
+% requested (i.e. there is a correation)
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Declare input request constants
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

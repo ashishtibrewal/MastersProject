@@ -36,7 +36,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   numInterRackChannels = 10;    % Number of inter-rack channels
   numInterBladeChannels = 20;   % Number of inter-blade channels
   numInterSlotChannels = 20;    % Number of inter-slot channels
-  maxChannelBandwidth = 400; % Maximum bandwidth available on a link connecting two nodes in the network (i.e 400 Gb/s)
+  maxChannelBandwidth = 25; % Maximum bandwidth available on a link connecting any two "nodes" in the network (i.e 400 Gb/s)
   minChannelLatency = 5;  % Minimum latency between two connected (adjacent) nodes is 5 ns (Assuming they are 1 meter apart)
   % Note that the latency is 5 ns/m - Higher the distance, higher the latency
   
@@ -75,11 +75,19 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % NETWORK DISTANCE & LATENCY MAP
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  % VALUE MEANINGS
+  % VALUE MEANINGS (Distance)
   %  0  = Connected (i.e. Same rack/blade/slot)
   % >0  = Connected (i.e. Different rack/blade/slot)
   % inf =  Disconnected 
-  % All values are in meters.
+  % All values are in meters (m).
+  
+  % VALUE MEANINGS (Latency)
+  % -1  = Connected (i.e. Same rack/blade/slot)
+  % >0  = Connected (i.e. Different rack/blade/slot)
+  % inf =  Disconnected 
+  % All values are in nanoseconds (ns)
+  % Note that the latency between two "nodes" is dependent on the distance
+  % between them (i.e. minimum latency is 5 ns/m)
 
   % RACK DISTANCE - All racks are equidistant from each other (i.e. at a
   % distance of 25 meters from each other)

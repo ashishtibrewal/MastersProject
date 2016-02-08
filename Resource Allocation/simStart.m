@@ -12,6 +12,13 @@ str = sprintf('\n+-------- SIMULATION STARTED --------+\n');
 disp(str);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Miscellaneous simulation "variables" (including macros)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Macro definitions
+SUCCESS = 1;
+FAILURE = 0;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Datacenter IT & Network constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Insert call to a separate script/function to setup/declare all datacenter
@@ -29,9 +36,11 @@ nBlades = 20;         % Number of blades (in each rack)
 nSlots = 50;          % Number of slots (in each blade)
 nUnits = 25;          % Number of units (in each slot) - This could be split into three different values, one for each CPU, Memory and Storage
 
-nRequests = 100;      % Number of requests to generate
+nRequests = 10;      % Number of requests to generate
 tTime = nRequests;    % Total time to simulate for (1 second for each request)
 
+% TODO Need to change this to accommodate different types of resources on
+% one rack
 racksCPU = 1:((nRacks/tRacks) * 1);      % Racks  1-5 are for CPUs
 racksMEM = (((nRacks/tRacks) * 1) + 1):((nRacks/tRacks) * 2);     % Racks 6-10 are for MEMs
 racksSTO = (((nRacks/tRacks) * 2) + 1):nRacks;     % Racks 11-15 are for STOs
@@ -117,6 +126,7 @@ for t = 1:tTime
 
   %%%%%%%%%% Network resource allocation %%%%%%%%%%
   % Need to get a better understanding of network resource allocation code
+  networkAllocationResult = 0;
 
   %%%%%%%%%% Update requests database %%%%%%%%%%
   % Doing this to "simulate parallelism" with IT and network resource
@@ -128,8 +138,16 @@ for t = 1:tTime
   % number, blade number, slot number and unit numbers for each slot). This
   % can be stored in the request database (i.e. requestDB).
   
+  % Update IT resource allocation column
   requestDB(requestDBindex, ITresourceAllocStatusColumn) =  ITallocationResult;
+  
+  % Update network resource allocation column
   %requestDB(requestDBindex, networkResourceAllocStatusColumn) =  networkAllocationResult;
+  
+  % Update request status column
+  if (ITallocationResult == SUCCESS && networkAllocationResult == SUCCESS)
+    requestDB(requestDBindex, requestStatusColumn) = SUCCESS;
+  end
 end
 
 str = sprintf('Resource allocation complete.\n');
