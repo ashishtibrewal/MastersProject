@@ -1,8 +1,11 @@
-function plotDataCenterLayout(networkMap, dataCenterConfig)
+function plotDataCenterLayout(dataCenterMap, dataCenterConfig)
 % Function to plot the data center layout (i.e. how all racks are laid out
 % (and connected) in the data center, how all blades are laid out (and 
 % connected) in each rack and how each slot is laid out (and connected) in
 % each blade.
+
+  % Extract data center network map from data center map struct
+  networkMap = dataCenterMap.networkMap;
 
   racksCPU = dataCenterConfig.racksCPU;   % Extract the CPU nodes
   racksMEM = dataCenterConfig.racksMEM;   % Extract the MEM nodes

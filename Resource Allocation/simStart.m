@@ -84,8 +84,10 @@ disp(str);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plot data center structure as a graph
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% plotDataCenterLayout(networkMap, dataCenterConfig);   % Function to plot data center layout
-
+% str = sprintf('Data center topology/layout plot started ...');
+% disp(str);
+% plotDataCenterLayout(dataCenterMap, dataCenterConfig);   % Function to plot data center layout
+% 
 % str = sprintf('Data center topology/layout plot complete.\n');
 % disp(str);
 
