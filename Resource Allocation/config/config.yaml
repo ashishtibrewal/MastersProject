@@ -52,6 +52,6 @@ setupTypes:
   homogenSTO: 3
   heterogenCPU_MEM: 4
 
-# Percentage of CPU in a heterogeneous blade, therefore, percentage of MEM is (100 - percentage of CPU)
+# Percentage of CPU slots in a heterogeneous blade, therefore, percentage of MEM slots is (100 - percentage of CPU)
 heterogenSplit:
-  heterogenCPU_MEM: 50
+  heterogenCPU_MEM: 50    # Change this to the number of slots rather than a percentage to avoid floating point results during calculations - WOULD ALSO NEED TO MAKE THE NECESSARY CHANGES IN THE simStart.m script/file

@@ -22,7 +22,7 @@ FAILURE = 0;
 % Import configuration file (YAML config files)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 yaml_configFile = 'config/import_config.yaml';  % File to import (File path)
-yaml_configStruct = ReadYaml(yaml_configFile);  % Read file
+dataCenterConfig = ReadYaml(yaml_configFile);   % Read file and store it into a struct called dataCenterConfig
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Evaluate IT & Network constants
@@ -37,34 +37,29 @@ nSTOs = 0;
 nCPU_MEM = 0;
 
 % Total number of racks specified in the configuration file
-rackNo = fieldnames(yaml_configStruct.racksConfig);
+rackNo = fieldnames(dataCenterConfig.racksConfig);
 
 % Iterate over all specified racks
 for i = 1:numel(rackNo)
   % Find homogeneous blades of CPUs
-  nCPUs = nCPUs + size(find([yaml_configStruct.racksConfig.(rackNo{i}){:}] == yaml_configStruct.setupTypes.homogenCPU), 2);
+  nCPUs = nCPUs + size(find([dataCenterConfig.racksConfig.(rackNo{i}){:}] == dataCenterConfig.setupTypes.homogenCPU), 2);
   % Find homogeneous blades of MEMs
-  nMEMs = nMEMs + size(find([yaml_configStruct.racksConfig.(rackNo{i}){:}] == yaml_configStruct.setupTypes.homogenMEM), 2);
+  nMEMs = nMEMs + size(find([dataCenterConfig.racksConfig.(rackNo{i}){:}] == dataCenterConfig.setupTypes.homogenMEM), 2);
   % Find homogeneous blades of STOs
-  nSTOs = nSTOs + size(find([yaml_configStruct.racksConfig.(rackNo{i}){:}] == yaml_configStruct.setupTypes.homogenSTO), 2);
+  nSTOs = nSTOs + size(find([dataCenterConfig.racksConfig.(rackNo{i}){:}] == dataCenterConfig.setupTypes.homogenSTO), 2);
   % Find heterogeneous blades of CPUs & MEMs
-  nCPU_MEM = nCPU_MEM + size(find([yaml_configStruct.racksConfig.(rackNo{i}){:}] == yaml_configStruct.setupTypes.heterogenCPU_MEM), 2);
+  nCPU_MEM = nCPU_MEM + size(find([dataCenterConfig.racksConfig.(rackNo{i}){:}] == dataCenterConfig.setupTypes.heterogenCPU_MEM), 2);
 end
 
 % Add heterogenous values to nCPUs and nMEMs and evaluate total amount/units of resources available
-CPUs = (nCPUs * yaml_configStruct.nSlots * yaml_configStruct.nUnits * yaml_configStruct.unitSize.CPU) + (((nCPU_MEM * yaml_configStruct.nSlots) * (yaml_configStruct.heterogenSplit.heterogenCPU_MEM/100)) * yaml_configStruct.nUnits * yaml_configStruct.unitSize.CPU);
-MEMs = (nMEMs * yaml_configStruct.nSlots * yaml_configStruct.nUnits * yaml_configStruct.unitSize.MEM) + (((nCPU_MEM * yaml_configStruct.nSlots) * ((100 - yaml_configStruct.heterogenSplit.heterogenCPU_MEM)/100)) * yaml_configStruct.nUnits * yaml_configStruct.unitSize.MEM);
-STOs = (nSTOs * yaml_configStruct.nSlots * yaml_configStruct.nUnits * yaml_configStruct.unitSize.STO);
+CPUs = (nCPUs * dataCenterConfig.nSlots * dataCenterConfig.nUnits * dataCenterConfig.unitSize.CPU) + (((nCPU_MEM * dataCenterConfig.nSlots) * (dataCenterConfig.heterogenSplit.heterogenCPU_MEM/100)) * dataCenterConfig.nUnits * dataCenterConfig.unitSize.CPU);
+MEMs = (nMEMs * dataCenterConfig.nSlots * dataCenterConfig.nUnits * dataCenterConfig.unitSize.MEM) + (((nCPU_MEM * dataCenterConfig.nSlots) * ((100 - dataCenterConfig.heterogenSplit.heterogenCPU_MEM)/100)) * dataCenterConfig.nUnits * dataCenterConfig.unitSize.MEM);
+STOs = (nSTOs * dataCenterConfig.nSlots * dataCenterConfig.nUnits * dataCenterConfig.unitSize.STO);
 
-% Pack all required data center configuration parameters into a struct
-dataCenterConfig.nRacks = yaml_configStruct.nRacks;
-dataCenterConfig.nBlades = yaml_configStruct.nBlades;
-dataCenterConfig.nSlots = yaml_configStruct.nSlots;
-dataCenterConfig.nUnits = yaml_configStruct.nUnits;
-
-dataCenterConfig.unitSizeCPU = yaml_configStruct.unitSize.CPU;
-dataCenterConfig.unitSizeMEM = yaml_configStruct.unitSize.MEM;
-dataCenterConfig.unitSizeSTO = yaml_configStruct.unitSize.STO;
+% Pack number of different types of resource items into a struct
+dataCenterItems.nCPUs = CPUs;
+dataCenterItems.nMEMs = MEMs;
+dataCenterItems.nSTOs = STOs;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Network creation
