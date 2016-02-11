@@ -4,6 +4,12 @@
 nRacks: 16      # Total number of racks
 nBlades: 32     # Total number of blades (in each rack)
 nSlots: 8       # Total number of slots (in each blade)
+nUnits: 2       # Total number of units (in each slot)
+
+unitSize:
+  CPU: 1      # >1 signifies multi-core (A simplistic approach)
+  MEM: 4      # Each DIMM is 4 GB in size/capacity
+  STO: 128    # Each HDD is 128 GB in size /capacity
 
 ########################################
 # Specify blade configuration on each rack
@@ -17,6 +23,8 @@ nSlots: 8       # Total number of slots (in each blade)
 # 'nRacks' number of fields (i.e. each field is a rack configuration). Each
 # of these fields are a cell of size 1xp, where p is 'nBlades'.
 ########################################
+
+# Configuration of each rack
 racksConfig:
   rack1: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]    # Homogenous CPU rack (With homogenous CPU blades)
   rack2: [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]    # Homogenous MEM rack (With homogenous MEM blades)
@@ -36,3 +44,14 @@ racksConfig:
   rack14: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
   rack15: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
   rack16: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)  
+
+# Types of configurations/setups possible
+setupTypes:
+  homogenCPU: 1
+  homogenMEM: 2
+  homogenSTO: 3
+  heterogenCPU_MEM: 4
+
+# Percentage of CPU in a heterogeneous blade, therefore, percentage of MEM is (100 - percentage of CPU)
+heterogenSplit:
+  heterogenCPU_MEM: 50

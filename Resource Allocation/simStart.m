@@ -25,54 +25,46 @@ yaml_configFile = 'config/import_config.yaml';  % File to import (File path)
 yaml_configStruct = ReadYaml(yaml_configFile);  % Read file
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Datacenter IT & Network constants
+% Evaluate IT & Network constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Insert call to a separate script/function to setup/declare all datacenter
-% constants
-
-%CPU_racks = 20;
-%MEM_racks = 60;
-%STO_racks = 40;
-
-% NEED TO CHANGE THESE TO HAVE A BETTER SPREAD OF RESOURCES AND ALSO NEED
-% TO INCREASE THE NUMBER OF RACKS
-tRacks = 3;           % Types of racks in the data center
-nRacks = 15;          % Number of racks (in the datacenter)
-nBlades = 20;         % Number of blades (in each rack)
-nSlots = 50;          % Number of slots (in each blade)
-nUnits = 25;          % Number of units (in each slot) - This could be split into three different values, one for each CPU, Memory and Storage
-
 nRequests = 10;      % Number of requests to generate
 tTime = nRequests;    % Total time to simulate for (1 second for each request)
 
-% TODO Need to change this to accommodate different types of resources on
-% one rack
-racksCPU = 1:((nRacks/tRacks) * 1);      % Racks  1-5 are for CPUs
-racksMEM = (((nRacks/tRacks) * 1) + 1):((nRacks/tRacks) * 2);     % Racks 6-10 are for MEMs
-racksSTO = (((nRacks/tRacks) * 2) + 1):nRacks;     % Racks 11-15 are for STOs
+% Initialize counter variables
+nCPUs = 0;
+nMEMs = 0;
+nSTOs = 0;
+nCPU_MEM = 0;
 
-unitSizeCPU = 1;      % >1 signifies multi-core (A simplistic approach)
-unitSizeMEM = 4;      % Each DIMM is 4 GB in size/capacity
-unitSizeSTO = 500;    % Each HDD is 500 GB in size /capacity
+% Total number of racks specified in the configuration file
+rackNo = fieldnames(yaml_configStruct.racksConfig);
 
-CPUs = size(racksCPU,2) * nBlades * nSlots * nUnits * unitSizeCPU;     % Total CPUs in the datacenter
-MEMs = size(racksMEM,2) * nBlades * nSlots * nUnits * unitSizeMEM;     % Todal amount of memory in the datacenter
-STOs = size(racksSTO,2) * nBlades * nSlots * nUnits * unitSizeSTO;     % Total amount of storage in the datacenter
+% Iterate over all specified racks
+for i = 1:numel(rackNo)
+  % Find homogeneous blades of CPUs
+  nCPUs = nCPUs + size(find([yaml_configStruct.racksConfig.(rackNo{i}){:}] == yaml_configStruct.setupTypes.homogenCPU), 2);
+  % Find homogeneous blades of MEMs
+  nMEMs = nMEMs + size(find([yaml_configStruct.racksConfig.(rackNo{i}){:}] == yaml_configStruct.setupTypes.homogenMEM), 2);
+  % Find homogeneous blades of STOs
+  nSTOs = nSTOs + size(find([yaml_configStruct.racksConfig.(rackNo{i}){:}] == yaml_configStruct.setupTypes.homogenSTO), 2);
+  % Find heterogeneous blades of CPUs & MEMs
+  nCPU_MEM = nCPU_MEM + size(find([yaml_configStruct.racksConfig.(rackNo{i}){:}] == yaml_configStruct.setupTypes.heterogenCPU_MEM), 2);
+end
+
+% Add heterogenous values to nCPUs and nMEMs and evaluate total amount/units of resources available
+CPUs = (nCPUs * yaml_configStruct.nSlots * yaml_configStruct.nUnits * yaml_configStruct.unitSize.CPU) + (((nCPU_MEM * yaml_configStruct.nSlots) * (yaml_configStruct.heterogenSplit.heterogenCPU_MEM/100)) * yaml_configStruct.nUnits * yaml_configStruct.unitSize.CPU);
+MEMs = (nMEMs * yaml_configStruct.nSlots * yaml_configStruct.nUnits * yaml_configStruct.unitSize.MEM) + (((nCPU_MEM * yaml_configStruct.nSlots) * ((100 - yaml_configStruct.heterogenSplit.heterogenCPU_MEM)/100)) * yaml_configStruct.nUnits * yaml_configStruct.unitSize.MEM);
+STOs = (nSTOs * yaml_configStruct.nSlots * yaml_configStruct.nUnits * yaml_configStruct.unitSize.STO);
 
 % Pack all required data center configuration parameters into a struct
-dataCenterConfig.tRacks = tRacks;
-dataCenterConfig.nRacks = nRacks;
-dataCenterConfig.nBlades = nBlades;
-dataCenterConfig.nSlots = nSlots;
-dataCenterConfig.nUnits = nUnits;
+dataCenterConfig.nRacks = yaml_configStruct.nRacks;
+dataCenterConfig.nBlades = yaml_configStruct.nBlades;
+dataCenterConfig.nSlots = yaml_configStruct.nSlots;
+dataCenterConfig.nUnits = yaml_configStruct.nUnits;
 
-dataCenterConfig.unitSizeCPU = unitSizeCPU;
-dataCenterConfig.unitSizeMEM = unitSizeMEM;
-dataCenterConfig.unitSizeSTO = unitSizeSTO;
-
-dataCenterConfig.racksCPU = racksCPU;
-dataCenterConfig.racksMEM = racksMEM;
-dataCenterConfig.racksSTO = racksSTO;
+dataCenterConfig.unitSizeCPU = yaml_configStruct.unitSize.CPU;
+dataCenterConfig.unitSizeMEM = yaml_configStruct.unitSize.MEM;
+dataCenterConfig.unitSizeSTO = yaml_configStruct.unitSize.STO;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Network creation
