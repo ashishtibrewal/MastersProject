@@ -40,6 +40,8 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   minChannelLatency = 5;  % Minimum latency between two connected (adjacent) nodes is 5 ns (Assuming they are 1 meter apart)
   % Note that the latency is 5 ns/m - Higher the distance, higher the latency
   
+  % TODO Swicthes for all categoires (Take a constant - Different for TOR and TOB)
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK CONNECTIVITY/TOPOLOGY MAP
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -19,6 +19,12 @@ SUCCESS = 1;
 FAILURE = 0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Import configuration file (YAML config files)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+yaml_configFile = 'config/import_config.yaml';  % File to import (File path)
+yaml_configStruct = ReadYaml(yaml_configFile);  % Read file
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Datacenter IT & Network constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Insert call to a separate script/function to setup/declare all datacenter

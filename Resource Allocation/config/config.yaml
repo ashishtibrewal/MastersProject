@@ -1,0 +1,32 @@
+########################################
+# Resource unit dimensions to prevent going out of bounds/limit
+########################################
+nRacks: 25
+nBlades: 30
+nSlots: 10
+
+########################################
+# Specify blade configuration on each rack
+# Homogeneous
+#   CPUs only = 1
+#   MEMs only = 2
+#   STOs only = 3
+# Heterogeneous
+#   CPUs, MEMs = 4 (50-50 of each CPU slots and MEM slots on a blade)
+# Declaring it this way creates a 1x1 struct called 'racksConfig' that 
+# 'nRacks' number of fields (i.e. each field is a rack configuration). Each
+# of these fields are a cell of size 1xp, where p is 'nBlades'.
+########################################
+racksConfig:
+  rack1: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]    # Homogenous CPU rack (With homogenous CPU blades)
+  rack2: [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]    # Homogenous MEM rack (With homogenous MEM blades)
+  rack3: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+
+  rack4: [1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2]    # Heterogeneous rack (With homogenous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack5: [1,1,2,2,2,2,1,1,2,2,2,2,1,1,2,2,2,2,1,1,2,2,2,2,1,1,2,2,2,2]    # Heterogeneous rack (With homogenous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 33-67)  
+  
+  rack6: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack7: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack8: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack9: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack10: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
