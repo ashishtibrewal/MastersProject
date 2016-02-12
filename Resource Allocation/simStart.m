@@ -56,7 +56,8 @@ CPUs = (nCPUs * dataCenterConfig.nSlots * dataCenterConfig.nUnits * dataCenterCo
 MEMs = (nMEMs * dataCenterConfig.nSlots * dataCenterConfig.nUnits * dataCenterConfig.unitSize.MEM) + (((nCPU_MEM * dataCenterConfig.nSlots) * ((100 - dataCenterConfig.heterogenSplit.heterogenCPU_MEM)/100)) * dataCenterConfig.nUnits * dataCenterConfig.unitSize.MEM);
 STOs = (nSTOs * dataCenterConfig.nSlots * dataCenterConfig.nUnits * dataCenterConfig.unitSize.STO);
 
-% Pack number of different types of resource items into a struct
+% Pack number of different types of resource items into a struct (Using a
+% different struct to keep the original YAML struct unmodified)
 dataCenterItems.nCPUs = CPUs;
 dataCenterItems.nMEMs = MEMs;
 dataCenterItems.nSTOs = STOs;

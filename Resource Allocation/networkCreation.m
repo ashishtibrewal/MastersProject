@@ -20,13 +20,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   nSlots = dataCenterConfig.nSlots;
   nUnits = dataCenterConfig.nUnits;
   
-  unitSizeCPU = dataCenterConfig.unitSizeCPU;
-  unitSizeMEM = dataCenterConfig.unitSizeMEM;
-  unitSizeSTO = dataCenterConfig.unitSizeSTO;
-
-  racksCPU = dataCenterConfig.racksCPU;
-  racksMEM = dataCenterConfig.racksMEM;
-  racksSTO = dataCenterConfig.racksSTO;
+  unitSizeCPU = dataCenterConfig.unitSize.CPU;
+  unitSizeMEM = dataCenterConfig.unitSize.MEM;
+  unitSizeSTO = dataCenterConfig.unitSize.STO;
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK CONSTANTS
@@ -182,10 +178,10 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   latencyMap.slotLatency = slotLatency;
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % NETWORK/RESOURCE OCCUPIED MAP
+  % NETWORK/RESOURCE OCCUPIED & TYPE MAP
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  % VALUE MEANINGS
+  % VALUE MEANINGS (OCCUPIED)
   %  0 = Resource unavailable (i.e. the particular slot has no free unit)
   % >0 = Resource available (i.e. the particular slot has at least one free unit)
 
@@ -194,26 +190,55 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % 2nd dimension = Blade number
   % 3rd dimension = Rack number
   occupiedMap = zeros(nSlots, nBlades, nRacks);
+  
+  % VALUE MEANINGS (TYPE)
+  % CPU = 1
+  % 
+  
+  % Map to keep track of the type of resource in each slot
+  % 1st dimension = Slot number
+  % 2nd dimension = Blade number
+  % 3rd dimension = Rack number
+  resourceMap = cell(nSlots, nBlades, nRacks);
 
+  % Total number of racks specified in the configuration file
+  racks = fieldnames(dataCenterConfig.racksConfig);
+  
   % Set the value for each slot to the number of units available in it
   for rackNo = 1:nRacks
+    rackConfigData = [dataCenterConfig.racksConfig.(racks{rackNo}){:}];
     for bladeNo = 1:nBlades
       for slotNo = 1:nSlots
-        % Check for CPU racks
-        if (racksCPU(racksCPU == rackNo))
-          %str = sprintf('Here !!! %i', rackNo);
-          %disp(str);
-          occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeCPU;
-        end
-        
-        % Check for MEM racks
-        if (racksMEM(racksMEM == rackNo))
-          occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeMEM;
-        end
-        
-        % Check for STO racks
-        if (racksSTO(racksSTO == rackNo))
-          occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeSTO;
+        switch (rackConfigData(bladeNo))
+          % Check for homogeneous CPU blades
+          case dataCenterConfig.setupTypes.homogenCPU
+            occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeCPU; % Updated occupied map
+            resourceMap{slotNo,bladeNo,rackNo} = 'CPU';                % Store the type of resource
+          % Check for homogeneous MEM blades
+          case dataCenterConfig.setupTypes.homogenMEM
+            occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeMEM; % Updated occupied map
+            resourceMap{slotNo,bladeNo,rackNo} = 'MEM';                % Store the type of resource
+          % Check for homogeneous STO blades
+          case dataCenterConfig.setupTypes.homogenSTO
+            occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeSTO; % Updated occupied map
+            resourceMap{slotNo,bladeNo,rackNo} = 'STO';                % Store the type of resource
+          % Check for heterogeneous CPU & MEM blades
+          case dataCenterConfig.setupTypes.heterogenCPU_MEM
+            % Check for % of CPUs and % of MEMs
+            switch (dataCenterConfig.heterogenSplit.heterogenCPU_MEM)
+              % 50-50 CPU-MEM
+              case 50
+                % Even slots are CPUs
+                if (mod(slotNo,2) == 0)
+                  occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeCPU; % Updated occupied map
+                  resourceMap{slotNo,bladeNo,rackNo} = 'CPU';                % Store the type of resource
+                % Odd slots are MEMs
+                else
+                  occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeMEM; % Updated occupied map
+                  resourceMap{slotNo,bladeNo,rackNo} = 'MEM';                % Store the type of resource
+                end
+              % Add cases to handle other percentages
+            end
         end
       end
     end
@@ -329,6 +354,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   dataCenterMap.networkMap = networkMap;
   dataCenterMap.occupiedMap = occupiedMap;
+  dataCenterMap.resourceMap = resourceMap;
   dataCenterMap.distanceMap = distanceMap;
   dataCenterMap.latencyMap = latencyMap;
   dataCenterMap.bandwidthMap = bandwidthMap;

@@ -7,17 +7,18 @@ function plotDataCenterLayout(dataCenterMap, dataCenterConfig)
   % Extract data center network map from data center map struct
   networkMap = dataCenterMap.networkMap;
 
-  racksCPU = dataCenterConfig.racksCPU;   % Extract the CPU nodes
-  racksMEM = dataCenterConfig.racksMEM;   % Extract the MEM nodes
-  racksSTO = dataCenterConfig.racksSTO;   % Extract the STO nodes
+%   racksCPU = dataCenterConfig.racksCPU;   % Extract the CPU nodes
+%   racksMEM = dataCenterConfig.racksMEM;   % Extract the MEM nodes
+%   racksSTO = dataCenterConfig.racksSTO;   % Extract the STO nodes
   
   figure ('Name', 'Data Center Topology', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
   subplot(2,2,1);
   G_racks = graph(networkMap.rackConnectivity, 'OmitSelfLoops');
-  H_racks = plot(G_racks, 'Layout', 'circle');
-  highlight(H_racks, racksCPU, 'NodeColor', 'r'); % Red nodes are CPU nodes
-  highlight(H_racks, racksMEM, 'NodeColor', 'g'); % Red nodes are MEM nodes
-  highlight(H_racks, racksSTO, 'NodeColor', 'b'); % Red nodes are STO nodes
+  plot(G_racks, 'Layout', 'circle');
+%   H_racks = plot(G_racks, 'Layout', 'circle');
+%   highlight(H_racks, racksCPU, 'NodeColor', 'r'); % Red nodes are CPU nodes
+%   highlight(H_racks, racksMEM, 'NodeColor', 'g'); % Red nodes are MEM nodes
+%   highlight(H_racks, racksSTO, 'NodeColor', 'b'); % Red nodes are STO nodes
   title('Data Center Topology - Nodes = Racks, Edges = Connections');
   
   subplot(2,2,2);
