@@ -21,7 +21,8 @@ function requestDB = inputGeneration(nRequests)
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Declare input request constants
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+  % NOTE : CM = CPU-MEM & MS = MEM-STO
 
   cpuMin = 1;               % In cores
   cpuMax = 32;              % In cores
@@ -32,29 +33,37 @@ function requestDB = inputGeneration(nRequests)
   storageMin = 1;           % In GBs
   storageMax = 256;         % In GBs
 
-  bandwidthMin = 50;        % In Gb/s
-  bandwidthMax = 400;       % In Gb/s
+  bandwidthMinCM = 50;      % In Gb/s
+  bandwidthMaxCM = 400;     % In Gb/s
   
-  latencyMin = 5;           % In ns (i.e. nanoseconds)
-  latencyMax = 100;         % In ns (i.e. nanoseconds)
+  bandwidthMinMS = bandwidthMinCM/5;      % In Gb/s -> 5x LOWER acceptable (min) bandwidth between MEM & STO
+  bandwidthMaxMS = bandwidthMaxCM/5;      % In Gb/s -> 5x LOWER acceptable (max) bandwidth between MEM & STO
+  
+  latencyMinCM = 5;         % In ns (i.e. nanoseconds)
+  latencyMaxCM = 100;       % In ns (i.e. nanoseconds)
+  
+  latencyMinMS = latencyMinCM * 10;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (min) latency between MEM & STO
+  latencyMaxMS = latencyMaxCM * 10;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (max) latency between MEM & STO
   
   holdTimeMin = 1;          % In s (i.e. seconds)
   holdTimeMax = 100000;     % In s (i.e. seconds)
   
   % Add columns for cpu-mem bandwidth and mem-sto bandwidth
-  requestDB = (zeros(nRequests, 9));  % Matrix to store all generated requests (Each row contains a different request)
-  % Column 1 -> CPU
-  % Column 2 -> Memory
-  % Column 3 -> Storage
-  % Column 4 -> Bandwidth
-  % Column 5 -> Latency
-  % Column 6 -> Hold time
-  % Column 7 -> IT resource allocation stats (0 = not allocated, 1 = allocated)
-  % Column 8 -> Network resource allocation stats (0 = not allocated, 1 = allocated)
-  % Column 9 -> Request status (0 = not served, 1 = served, 2 = rejected)
+  requestDB = zeros(nRequests, 11);  % Matrix to store all generated requests (Each row contains a different request)
+  % Column  1 -> CPU
+  % Column  2 -> Memory
+  % Column  3 -> Storage
+  % Column  4 -> Bandwidth (CPU-MEM)
+  % Column  5 -> Bandwidth (MEM-STO)
+  % Column  6 -> Latency (CPU-MEM)
+  % Column  7 -> Latency (MEM-STO)
+  % Column  8 -> Hold time
+  % Column  9 -> IT resource allocation stats (0 = not allocated, 1 = allocated)
+  % Column 10 -> Network resource allocation stats (0 = not allocated, 1 = allocated)
+  % Column 11 -> Request status (0 = not served, 1 = served, 2 = rejected)
   
-  distributionPlot = 0;   % Flag variable to check if anything needs to be plotted
-  scatterPlot = 1;
+  distributionPlot = 1;   % Flag variable to check if anything needs to be plotted
+  scatterPlot = 0;
   
   if (scatterPlot == 1)
     figure ('Name', 'Input Request Scatter Plot', 'NumberTitle', 'off');
@@ -63,8 +72,8 @@ function requestDB = inputGeneration(nRequests)
     nCPUs = zeros(1,nRequests);
     nMEMs = zeros(1,nRequests);
     nSTOs = zeros(1,nRequests);
-    nBANs = zeros(1,nRequests);
-    nLATs = zeros(1,nRequests);
+    nBAN_CMs = zeros(1,nRequests);
+    nLAT_CMs = zeros(1,nRequests);
   end
   
   % CPU-MEM logarithm (base) factor
@@ -75,8 +84,10 @@ function requestDB = inputGeneration(nRequests)
     nCPU = round(cpuMax * rand(1));
     nMEM = round(logb(nCPU,logBaseCPU_MEM));   %nMEM = round(logb(nCPU,2));
     nSTO = round(storageMax * rand(1));
-    nBAN = round(bandwidthMax * rand(1));
-    nLAT = round(latencyMax * rand(1));
+    nBAN_CM = round(bandwidthMaxCM * rand(1));
+    nBAN_MS = round(bandwidthMaxMS * rand(1));
+    nLAT_CM = round(latencyMaxCM * rand(1));
+    nLAT_MS = round(latencyMaxMS * rand(1));
     nHDT = round(holdTimeMax * rand(1));
     
     % Boundary checks
@@ -98,16 +109,28 @@ function requestDB = inputGeneration(nRequests)
       nSTO = storageMax;
     end
     
-    if (nBAN < bandwidthMin)
-      nBAN = bandwidthMin;
-    elseif (nBAN > bandwidthMax)
-      nBAN = bandwidthMax;
+    if (nBAN_CM < bandwidthMinCM)
+      nBAN_CM = bandwidthMinCM;
+    elseif (nBAN_CM > bandwidthMaxCM)
+      nBAN_CM = bandwidthMaxCM;
     end
     
-    if (nLAT < latencyMin)
-      nLAT = latencyMin;
-    elseif (nLAT > latencyMax)
-      nLAT = latencyMax;
+    if (nBAN_MS < bandwidthMinMS)
+      nBAN_MS = bandwidthMinMS;
+    elseif (nBAN_MS > bandwidthMaxMS)
+      nBAN_MS = bandwidthMaxMS;
+    end
+    
+    if (nLAT_CM < latencyMinCM)
+      nLAT_CM = latencyMinCM;
+    elseif (nLAT_CM > latencyMaxCM)
+      nLAT_CM = latencyMaxCM;
+    end
+    
+    if (nLAT_MS < latencyMinMS)
+      nLAT_MS = latencyMinMS;
+    elseif (nLAT_MS > latencyMaxMS)
+      nLAT_MS = latencyMaxMS;
     end
     
     if (nHDT < holdTimeMin)
@@ -117,7 +140,7 @@ function requestDB = inputGeneration(nRequests)
     end
     
     % Collect/store data generated over i iterations
-    requestDB(i,:) = [nCPU, nMEM, nSTO, nBAN, nLAT, nHDT, 0, 0, 0];
+    requestDB(i,:) = [nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0];
 
     if (scatterPlot == 1)
       % Store all iteration numbers/values
@@ -126,8 +149,8 @@ function requestDB = inputGeneration(nRequests)
       nCPUs(:,i) = nCPU;
       nMEMs(:,i) = nMEM;
       nSTOs(:,i) = nSTO;
-      nBANs(:,i) = nBAN;
-      nLATs(:,i) = nLAT;
+      nBAN_CMs(:,i) = nBAN_CM;
+      nLAT_CMs(:,i) = nLAT_CM;
     end
   end
 
@@ -136,8 +159,8 @@ function requestDB = inputGeneration(nRequests)
     scatter(is,nCPUs,'^');
     scatter(is,nMEMs,'x');
     scatter(is,nSTOs,'s');
-    scatter(is,nBANs,'filled','d');
-    scatter(is,nLATs,'filled','h');
+    scatter(is,nBAN_CMs,'filled','d');
+    scatter(is,nLAT_CMs,'filled','h');
     
     % Plot legend and axis labels
     legend({'CPU (Cores)','MEM (GB)','STO (GB)','BAN (GB/s)','LAT (ns)'},'Location','NE');
@@ -147,31 +170,39 @@ function requestDB = inputGeneration(nRequests)
   
   if (distributionPlot == 1)
     nbins = 100;
-    figure ('Name', 'Input (Discrete) Probability Distributions', 'NumberTitle', 'off');
+    figure ('Name', 'Input (Discrete) Probability Distributions', 'NumberTitle', 'off','Position', [40, 100, 1200, 700]);
 
-    subplot(2,3,1);
+    subplot(2,4,1);
     histogram(requestDB(:,1),nbins);
     title('CPU distribution');
 
-    subplot(2,3,2);
+    subplot(2,4,2);
     histogram(requestDB(:,2),nbins);
     title('Memory distribution');
+    
+    subplot(2,4,3);
+    histogram(requestDB(:,4),nbins);
+    title('CPU-MEM Bandwidth distribution');
+    
+    subplot(2,4,4);
+    histogram(requestDB(:,5),nbins);
+    title('MEM-STO Bandwidth distribution');
+    
+    subplot(2,4,5);
+    histogram(requestDB(:,8),nbins);
+    title('Holdtime distribution');
 
-    subplot(2,3,3);
+    subplot(2,4,6);
     histogram(requestDB(:,3),nbins);
     title('Storage distribution');
 
-    subplot(2,3,4);
-    histogram(requestDB(:,4),nbins);
-    title('Bandwidth distribution');
-
-    subplot(2,3,5);
-    histogram(requestDB(:,5),nbins);
-    title('Latency distribution');
-    
-    subplot(2,3,6);
+    subplot(2,4,7);
     histogram(requestDB(:,6),nbins);
-    title('Holdtime distribution');
+    title('CPU-MEM Latency distribution');
+    
+    subplot(2,4,8);
+    histogram(requestDB(:,7),nbins);
+    title('MEM-STO Latency distribution');
   end 
 
 end

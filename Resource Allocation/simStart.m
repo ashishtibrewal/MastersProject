@@ -27,7 +27,7 @@ dataCenterConfig = ReadYaml(yaml_configFile);   % Read file and store it into a 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Evaluate IT & Network constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-nRequests = 1000;      % Number of requests to generate
+nRequests = 100;      % Number of requests to generate
 tTime = nRequests;    % Total time to simulate for (1 second for each request)
 
 % Initialize counter variables
@@ -100,9 +100,9 @@ disp(str);
 % str = sprintf('Resource allocation started ...');
 % disp(str);
 % 
-% ITresourceAllocStatusColumn = 7;
-% networkResourceAllocStatusColumn = 8;
-% requestStatusColumn = 9;
+% ITresourceAllocStatusColumn = 9;
+% networkResourceAllocStatusColumn = 10;
+% requestStatusColumn = 11;
 % 
 % % Open figure - Updated when each request's resource allocation is complete
 % figure ('Name', 'Data Center Rack Usage (1st rack of each type)', 'NumberTitle', 'off', 'Position', [40, 100, 1200, 700]);
