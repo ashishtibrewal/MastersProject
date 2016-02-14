@@ -238,6 +238,8 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
                   resourceMap{slotNo,bladeNo,rackNo} = 'MEM';                % Store the type of resource
                 end
               % Add cases to handle other percentages
+              otherwise
+                error('Check configuration file for CPU-MEM distribution percentage. Cases other than 50-50 haven''t been handled yet.');
             end
         end
       end
