@@ -4,8 +4,8 @@ function plotDataCenterLayout(dataCenterMap, dataCenterConfig)
 % connected) in each rack and how each slot is laid out (and connected) in
 % each blade.
 
-  % Extract data center network map from data center map struct
-  networkMap = dataCenterMap.networkMap;
+  % Extract data center network/connectivity map from data center map struct
+  connectivityMap = dataCenterMap.connectivityMap;
 
 %   racksCPU = dataCenterConfig.racksCPU;   % Extract the CPU nodes
 %   racksMEM = dataCenterConfig.racksMEM;   % Extract the MEM nodes
@@ -13,7 +13,7 @@ function plotDataCenterLayout(dataCenterMap, dataCenterConfig)
   
   figure ('Name', 'Data Center Topology', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
   subplot(2,2,1);
-  G_racks = graph(networkMap.rackConnectivity, 'OmitSelfLoops');
+  G_racks = graph(connectivityMap.rackConnectivity, 'OmitSelfLoops');
   plot(G_racks, 'Layout', 'circle');
 %   H_racks = plot(G_racks, 'Layout', 'circle');
 %   highlight(H_racks, racksCPU, 'NodeColor', 'r'); % Red nodes are CPU nodes
@@ -22,12 +22,12 @@ function plotDataCenterLayout(dataCenterMap, dataCenterConfig)
   title('Data Center Topology - Nodes = Racks, Edges = Connections');
   
   subplot(2,2,2);
-  G_blades = graph(networkMap.bladeConnectivity(:,:,1), 'OmitSelfLoops');
+  G_blades = graph(connectivityMap.bladeConnectivity(:,:,1), 'OmitSelfLoops');
   plot(G_blades, 'Layout', 'layered');
   title('Intra-rack (Blade) Topology (On Rack 1) - Nodes = Blades, Edges = Connections');
   
   subplot(2,2,3);
-  G_slots = graph(networkMap.slotConnectivity(:,:,1,1), 'OmitSelfLoops');
+  G_slots = graph(connectivityMap.slotConnectivity(:,:,1,1), 'OmitSelfLoops');
   plot(G_slots, 'Layout', 'layered');
   title('Intra-blade (Slot) Topology (On Rack 1, Blade 1) - Nodes = Slots, Edges = Connections)');
   

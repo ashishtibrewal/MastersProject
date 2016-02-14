@@ -20,9 +20,9 @@ disp(str);
 
 str = sprintf('Number of racks: %i', dataCenterConfig.nRacks);
 disp(str);
-str = sprintf('Number of blades: %i', dataCenterConfig.nBlades);
+str = sprintf('Number of blades (in each rack): %i', dataCenterConfig.nBlades);
 disp(str);
-str = sprintf('Number of slots: %i', dataCenterConfig.nSlots);
+str = sprintf('Number of slots (in each blade): %i', dataCenterConfig.nSlots);
 disp(str);
 
 str = sprintf('\n+------------------------------------+');

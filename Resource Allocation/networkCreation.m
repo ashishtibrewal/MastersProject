@@ -65,9 +65,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
 
   % Network map/connectivity struct containing the rack, blade and slot
   % connectivity maps
-  networkMap.rackConnectivity = rackConnectivity;
-  networkMap.bladeConnectivity = bladeConnectivity;
-  networkMap.slotConnectivity = slotConnectivity;
+  connectivityMap.rackConnectivity = rackConnectivity;
+  connectivityMap.bladeConnectivity = bladeConnectivity;
+  connectivityMap.slotConnectivity = slotConnectivity;
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK DISTANCE & LATENCY MAP
@@ -352,7 +352,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Pack all maps into a single struct
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  dataCenterMap.networkMap = networkMap;
+  dataCenterMap.connectivityMap = connectivityMap;
   dataCenterMap.occupiedMap = occupiedMap;
   dataCenterMap.resourceMap = resourceMap;
   dataCenterMap.distanceMap = distanceMap;

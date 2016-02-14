@@ -62,7 +62,7 @@ function requestDB = inputGeneration(nRequests)
   % Column 10 -> Network resource allocation stats (0 = not allocated, 1 = allocated)
   % Column 11 -> Request status (0 = not served, 1 = served, 2 = rejected)
   
-  distributionPlot = 1;   % Flag variable to check if anything needs to be plotted
+  distributionPlot = 0;   % Flag variable to check if anything needs to be plotted
   scatterPlot = 0;
   
   if (scatterPlot == 1)

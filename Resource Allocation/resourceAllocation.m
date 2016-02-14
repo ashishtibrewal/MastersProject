@@ -3,7 +3,7 @@ function [dataCenterMap, ITallocationResult] = resourceAllocation(request, dataC
   % NEED TO PLAN AND TRY DIFFERENT APPROACHES.
   
   % Extract data center network maps
-  networkMap = dataCenterMap.networkMap;
+  connectivityMap = dataCenterMap.connectivityMap;
   occupiedMap = dataCenterMap.occupiedMap;
   distanceMap = dataCenterMap.distanceMap;
   latencyMap = dataCenterMap.latencyMap;
@@ -16,9 +16,9 @@ function [dataCenterMap, ITallocationResult] = resourceAllocation(request, dataC
   nSlots = dataCenterConfig.nSlots;
   nUnits = dataCenterConfig.nUnits;
 
-  unitSizeCPU = dataCenterConfig.unitSizeCPU;
-  unitSizeMEM = dataCenterConfig.unitSizeMEM;
-  unitSizeSTO = dataCenterConfig.unitSizeSTO;
+  unitSizeCPU = dataCenterConfig.unitSize.CPU;
+  unitSizeMEM = dataCenterConfig.unitSize.MEM;
+  unitSizeSTO = dataCenterConfig.unitSize.STO;
 
   racksCPU = dataCenterConfig.racksCPU;
   racksMEM = dataCenterConfig.racksMEM;
