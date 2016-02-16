@@ -3,11 +3,14 @@
 %%+++++++++++++++++++++++++++++++++++++%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Set up clean environment
+% Set up clean environment and logging functionality
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear;      % Clear all variables in the workspace
-close all;  % Close all open figures
-clc;        % Clear console/command prompt
+diaryFileName = 'log/log.txt';  % Log file name/path
+diary(diaryFileName);           % Create new diary with the specified file name
+diary on;                       % Turn diary (i.e. logging functionality) on
+clear;                          % Clear all variables in the workspace
+close all;                      % Close all open figures
+clc;                            % Clear console/command prompt
 str = sprintf('\n+-------- SIMULATION STARTED --------+\n');
 disp(str);
 
@@ -105,7 +108,7 @@ networkResourceAllocStatusColumn = 10;
 requestStatusColumn = 11;
 
 % Open figure - Updated when each request's resource allocation is complete
-figure ('Name', 'Data Center Rack Usage (1st rack of each type)', 'NumberTitle', 'off', 'Position', [40, 100, 1200, 700]);
+%figure ('Name', 'Data Center Rack Usage (1st rack of each type)', 'NumberTitle', 'off', 'Position', [40, 100, 1200, 700]);
 
 % Main time loop
 for t = 1:tTime
@@ -117,7 +120,7 @@ for t = 1:tTime
   
   %%%%%%%%%% IT resource allocation %%%%%%%%%%
   [dataCenterMap, ITallocationResult] = resourceAllocation(request, dataCenterConfig, dataCenterMap);
-  plotUsage(dataCenterMap, dataCenterConfig);
+  %plotUsage(dataCenterMap, dataCenterConfig);
 
   %%%%%%%%%% Network resource allocation %%%%%%%%%%
   % Need to get a better understanding of network resource allocation code
@@ -160,3 +163,4 @@ displayResults(dataCenterMap, requestDB, nRequests, dataCenterConfig);
 
 str = sprintf('\n+------- SIMULATION COMPLETE --------+\n');
 disp(str);
+diary on;                       % Turn diary (i.e. logging functionality) off

@@ -14,29 +14,40 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % connectivity (i.e. the topology) and the bandwidth capabilities of these
   % links need to be set
   
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % NETWORK CONSTANTS
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
   % Extract data center configuration parameters
   nRacks = dataCenterConfig.nRacks;
   nBlades = dataCenterConfig.nBlades;
   nSlots = dataCenterConfig.nSlots;
   nUnits = dataCenterConfig.nUnits;
+  nTOR = dataCenterConfig.nTOR;
+  nTOB = dataCenterConfig.nTOB;
   
   unitSizeCPU = dataCenterConfig.unitSize.CPU;
   unitSizeMEM = dataCenterConfig.unitSize.MEM;
   unitSizeSTO = dataCenterConfig.unitSize.STO;
   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % NETWORK CONSTANTS
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  rackTopology = dataCenterConfig.topology.rack;
+  rack_bladeTopology = dataCenterConfig.topology.rack_blade;
+  bladeTopology = dataCenterConfig.topology.blade;
+  blade_slotTopology = dataCenterConfig.topology.blade_slot;
+  slotTopology = dataCenterConfig.topology.slot;
   
   % Optical fiber channels between each node
-  numInterRackChannels = 10;    % Number of inter-rack channels
-  numInterBladeChannels = 20;   % Number of inter-blade channels
-  numInterSlotChannels = 20;    % Number of inter-slot channels
-  maxChannelBandwidth = 25; % Maximum bandwidth available on a link connecting any two "nodes" in the network (i.e 400 Gb/s)
-  minChannelLatency = 5;  % Minimum latency between two connected (adjacent) nodes is 5 ns (Assuming they are 1 meter apart)
+  numInterRackChannels = dataCenterConfig.channels.interRack;    % Number of inter-rack channels
+  numInterBladeChannels = dataCenterConfig.channels.interBlade;   % Number of inter-blade channels
+  numInterSlotChannels = dataCenterConfig.channels.interSlot;    % Number of inter-slot channels
+  maxChannelBandwidth = dataCenterConfig.bounds.maxChannelBandwidth; % Maximum bandwidth available on a link connecting any two "nodes" in the network (i.e 400 Gb/s)
+  minChannelLatency = dataCenterConfig.bounds.minChannelLatency;  % Minimum latency between two connected (adjacent) nodes is 5 ns (Assuming they are 1 meter apart)
   % Note that the latency is 5 ns/m - Higher the distance, higher the latency
   
   % TODO Swicthes for all categoires (Take a constant - Different for TOR and TOB)
+  TOD_delay = dataCenterConfig.switchDelay.TOD;   % TOD switch delay
+  TOR_delay = dataCenterConfig.switchDelay.TOR;   % TOR switch delay
+  TOB_delay = dataCenterConfig.switchDelay.TOB;   % TOB switch delay
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK CONNECTIVITY/TOPOLOGY MAP
@@ -45,32 +56,222 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % VALUE MEANINGS
   % 0 = Disconnected
   % 1 = Connected
-
+  
+  % Compelte/total connectivity map in a single 2D matrix of size 
+  % [(nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks)]
+  completeConnectivityMatrixSize = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks));
+  completeConnectivity = zeros(completeConnectivityMatrixSize);
+  
   % RACK CONNECTIVITY - Fully-connected data-center (All racks are connected to all other racks)
-  rackConnectivity = ones(nRacks);
-
+  switch (rackTopology)
+    case 'Fully-connected'
+      rackConnectivity = ones(nTOR * nRacks);
+      for rackNoDim1 = 1:(nTOR * nRacks)
+        for rackNoDim2 = (rackNoDim1 + 1):(nTOR * nRacks)
+          completeConnectivity(rackNoDim1,rackNoDim2) = 1;
+        end
+      end
+    
+    case 'Ring'
+      
+    %case 'Star'   % Make the first rack (i.e. first TOR in the first rack) the center of the star
+      
+    case 'Line'
+      
+    case 'Disconnected'
+      rackConnectivity = zeros(nTOR * nRacks);
+      % Do nothing to completeConnectivity since it's already zeroed
+      
+    %TODO Need to handle other cases/topologies
+    otherwise
+      error('Check configuration file for rack topology. Cases other than Fully-connected haven''t been handled yet.');
+  end
+  
+  % TORs - TOBs CONNECTIVITY (i.e. rack to blade topology)
+  % Note: When TOR > 1 => Star = Spineleaf
+  switch (rack_bladeTopology)
+    case 'Star'   % Note when TOR > 1 => Star = Spineleaf
+      TOB_offset = 0;   % Initialize TOB offset outside/before the outer loop
+      TOR_counter = 0;  % Initialize TOR counter outside/before the outer loop
+      for TOR = 1:(nTOR * nRacks)
+        TOB_counter = 0;
+        TOR_counter = TOR_counter + 1;
+        TOB_start = ((nTOR * nRacks) + (nTOB * nBlades * TOB_offset) + 1); 
+        for TOB = TOB_start:((nTOR * nRacks) + (nTOB * nBlades * nRacks)) 
+          TOB_counter = TOB_counter + 1;
+          completeConnectivity(TOR,TOB) = 1;
+          if (TOB_counter == (nTOB * nBlades))
+            break;      % Break out of inner loop once all TOBs and been connected to/for a specific TOR
+          end
+        end
+        if (mod(TOR_counter,nTOR) == 0)
+          TOB_offset = TOB_offset + 1;    % Increment the offset once all TORs for a rack have been covered
+          TOR_counter = 0;                % Reset TOR counter back to zero
+        end
+      end
+      % Check number of TORs to issue warning when configured with the wrong topology
+      if (nTOR > 1)
+        warning(['TORs > 1, hence, rack-blade star topology is invalid - using spine-leaf ', ...
+                 'topology setup instead.']);
+      end
+      
+    case 'Spine-leaf'   % Note when TOR > 1 => Star = Spineleaf
+      TOB_offset = 0;   % Initialize TOB offset outside/before the outer loop
+      TOR_counter = 0;  % Initialize TOR counter outside/before the outer loop
+      for TOR = 1:(nTOR * nRacks)
+        TOB_counter = 0;
+        TOR_counter = TOR_counter + 1;
+        TOB_start = ((nTOR * nRacks) + (nTOB * nBlades * TOB_offset) + 1); 
+        for TOB = TOB_start:((nTOR * nRacks) + (nTOB * nBlades * nRacks)) 
+          TOB_counter = TOB_counter + 1;
+          completeConnectivity(TOR,TOB) = 1;
+          if (TOB_counter == (nTOB * nBlades))
+            break;      % Break out of inner loop once all TOBs and been connected to/for a specific TOR
+          end
+        end
+        if (mod(TOR_counter,nTOR) == 0)
+          TOB_offset = TOB_offset + 1;    % Increment the offset once all TORs for a rack have been covered
+          TOR_counter = 0;                % Reset TOR counter back to zero
+        end
+      end
+      % Check number of TORs to issue warning when configured with the wrong topology
+      if (nTOR == 1)
+        warning(['TORs = 1, hence, rack-blade spine-leaf topology is invalid - using star ', ...
+                 'topology setup instead.']);
+      end
+      
+    case 'Disconnected'
+      warning(['Rack-blade (i.e.TORs-TOBs) is disconnected. Check configuration file ', ... 
+               '(Also check if blades between racks are connected - If this is true, it could ', ...
+               'still work without requiring any rack-blade connectivity to be present).']);
+      % Do nothing to completeConnectivity since it's already zeroed
+      
+    otherwise
+      error('Check configuration file for rack-blade topology. Cases other than Star/Spine-leaf is not allowed for rack-blade topology.');
+  end
+  
   % BLADE CONNECTIVITY - All blades in a rack are connected - A fully-
   % connected rack (Note to get from a blade on one rack to a blade on 
   % another, you'd need to check the rackConnectivity matrix)
   % 1st & 2nd dimensions = Connectivity of blades in a rack
   % 3rd dimension = Rack number
-  bladeConnectivity = ones(nBlades, nBlades, nRacks);
-
+  switch (bladeTopology)
+    case 'Fully-connected'
+      bladeConnectivity = ones(nBlades, nBlades, nRacks);
+      
+    case 'Ring'
+      
+    %case 'Star'   % Make the first blade (i.e. first TOB in the first blade) in each rack the center of the star
+      
+    case 'Line'
+    
+    case 'Disconnected'
+      bladeConnectivity = zeros(nBlades, nBlades, nRacks);
+      % Do nothing to completeConnectivity since it's already zeroed
+      
+    %TODO Need to handle other cases/topologies  
+    otherwise
+      error('Check configuration file for blade topology. Cases other than Fully-connected haven''t been handled yet.');
+  end
+  
+  % TOBs - slots CONNECTIVITY (i.e. blade to slot topology)
+  % Note: When TOB > 1 => Star = Spineleaf)
+  switch (blade_slotTopology)
+    case 'Star'   % Note when TOB > 1 => Star = Spineleaf
+      slot_offset = 0;   % Initialize slot offset outside/before the outer loop
+      TOB_counter = 0;   % Initialize TOB counter outside/before the outer loop
+      for TOB = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
+        slot_counter = 0;
+        TOB_counter = TOB_counter + 1;
+        slot_start = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * slot_offset) + 1); 
+        for slot = slot_start:((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))
+          slot_counter = slot_counter + 1;
+          completeConnectivity(TOB,slot) = 1;
+          if (slot_counter == nSlots)
+            break;      % Break out of inner loop once all slots and been connected to/for a specific TOB
+          end
+        end
+        if (mod(TOB_counter,nTOB) == 0)
+          slot_offset = slot_offset + 1;    % Increment the offset once all TORs for a rack have been covered
+          TOB_counter = 0;                  % Reset TOB counter back to zero
+        end
+      end
+      % Check number of TOBs to issue warning when configured with the wrong topology
+      if (nTOB > 1)
+        warning(['TOBs > 1, hence, blade-slot star topology is invalid - using spine-leaf ', ...
+                 'topology setup instead.']);
+      end
+      
+    case 'Spine-leaf'   % Note when TOB > 1 => Star = Spineleaf
+      slot_offset = 0;   % Initialize slot offset outside/before the outer loop
+      TOB_counter = 0;   % Initialize TOB counter outside/before the outer loop
+      for TOB = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
+        slot_counter = 0;
+        TOB_counter = TOB_counter + 1;
+        slot_start = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * slot_offset) + 1); 
+        for slot = slot_start:((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))
+          slot_counter = slot_counter + 1;
+          completeConnectivity(TOB,slot) = 1;
+          if (slot_counter == nSlots)
+            break;      % Break out of inner loop once all slots and been connected to/for a specific TOB
+          end
+        end
+        if (mod(TOB_counter,nTOB) == 0)
+          slot_offset = slot_offset + 1;    % Increment the offset once all TORs for a rack have been covered
+          TOB_counter = 0;                  % Reset TOB counter back to zero
+        end
+      end
+      % Check number of TOBs to issue warning when configured with the wrong topology
+      if (nTOB == 1)
+        warning(['TOBs = 1, hence, blade-slot spine-leaf topology is invalid - using star ', ...
+                 'topology setup instead.']);
+      end
+      
+    case 'Disconnected'
+      warning(['Blade-slot (i.e.TOBs-slots) is disconnected. Check configuration file ', ... 
+              '(Also check if slots between blades are connected - If this is true, it could ', ...
+              'still work without requiring any blade-slot connectivity to be present).']);
+      % Do nothing to completeConnectivity since it's already zeroed
+      
+    otherwise
+      error('Check configuration file for rack-blade topology. Cases other than Star/Spine-leaf is not allowed for blade-slot topology.');
+  end
+  
   % SLOT CONNECTIVITY - All slots on a blade are connected - A
   % fully-connected blade
   % 1st & 2nd dimensions = Connectivity of slots on a blade
   % 3rd dimension = Blade number
   % 4th dimension = Rack number
-  slotConnectivity = ones(nSlots, nSlots, nBlades, nRacks);
-
+  switch (slotTopology)
+    case 'Fully-connected'
+      slotConnectivity = ones(nSlots, nSlots, nBlades, nRacks);
+      
+    case 'Ring'
+      
+    %case 'Star'   % Make the first slot in every blade in every rack the center of the star
+      
+    case 'Line'
+      
+    case 'Disconnected'
+      slotConnectivity = zeros(nSlots, nSlots, nBlades, nRacks);
+      
+    %TODO Need to handle other cases/topologies
+    otherwise
+      error('Check configuration file for slot topology. Cases other than Fully-connected haven''t been handled yet.');
+  end
+      
   % Network map/connectivity struct containing the rack, blade and slot
   % connectivity maps
   connectivityMap.rackConnectivity = rackConnectivity;
   connectivityMap.bladeConnectivity = bladeConnectivity;
   connectivityMap.slotConnectivity = slotConnectivity;
+  connectivityMap.completeConnectivity = completeConnectivity + completeConnectivity.';
+  % Transposing completeConnectivity matrix and adding to fill in remaining
+  % elements. Since only the upper half is filled as specified by the
+  % topology and an adjacency matrix is symmetric, this works perfectly.
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % NETWORK DISTANCE & LATENCY MAP
+  % NETWORK DISTANCE & LATENCY MAP (Hierarchial)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % VALUE MEANINGS (Distance)
@@ -145,7 +346,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     for bladeNo = 1:nBlades
       for slotNoDim1 = 1:nSlots
         for slotNoDim2 = 1:nSlots
-          % Distance between a slot and itself is 0
+          % Distance bgietween a slot and itself is 0
           if (slotNoDim1 ~= slotNoDim2)
             % If the slots are connected, they have a finite distance and 
             % latency else they are infinite
@@ -176,7 +377,55 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   latencyMap.rackLatency = rackLatency;
   latencyMap.bladeLatency = bladeLatency;
   latencyMap.slotLatency = slotLatency;
-
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % NETWORK LATENCY MAP (Linear indexing)
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % This is used to find the latency between every slot (i.e. node) to
+  % every other slot (i.e. node) in the network/graph. 
+  % TODO Need to add switch delay factors (300ns for each switch) - Note
+  % when doing this we might need to check the network connectivity map (or
+  % the hierarchial latency map since nodes that are no connected have a
+  % latency value of infinite)
+  
+  % TODO Switch delay value
+  % TODO Connected value (check is latency is infinite) 
+  
+  % Latency map for each slot in the topology (Total number of slots in the
+  % toplogy is equal to nRacks * nBlades * nSlots). Note that this is a 2D
+  % matrix having a size of the total number of slots in each dimension
+  latencyMapLinear = zeros(nRacks * nBlades * nSlots);
+  
+  for rackNoDim1 = 1:nRacks
+    for bladeNoDim1 = 1:nBlades
+      for slotNoDim1 = 1:nSlots
+        for rackNoDim2 = 1:nRacks
+          for bladeNoDim2 = 1:nBlades
+            for slotNoDim2 = 1:nSlots
+              % Evaluate row offsets
+              rackOffsetRow = (nBlades * nSlots) * (rackNoDim1 - 1);
+              bladeOffsetRow = nSlots * (bladeNoDim1 - 1);
+              slotOffsetRow = slotNoDim1;
+              rowOffset = rackOffsetRow + bladeOffsetRow + slotOffsetRow; % Total row offset
+              % Evaluate column offset
+              rackOffsetColumn = (nBlades * nSlots) * (rackNoDim2 - 1);
+              bladeOffsetColumn = nSlots * (bladeNoDim2 - 1);
+              slotOffsetColumn = slotNoDim2;
+              columnOffset = rackOffsetColumn + bladeOffsetColumn + slotOffsetColumn; % Total column offset
+              % Distance between a slot and itself is 0
+              if (rowOffset == columnOffset)
+                latencyMapLinear(rowOffset,columnOffset) = 0;
+              else
+                % TODO This needs to be changed
+                latencyMapLinear(rowOffset,columnOffset) = rackNoDim1 * 10;
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK/RESOURCE OCCUPIED & TYPE MAP
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -359,6 +608,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   dataCenterMap.resourceMap = resourceMap;
   dataCenterMap.distanceMap = distanceMap;
   dataCenterMap.latencyMap = latencyMap;
+  dataCenterMap.latencyMapLinear = latencyMapLinear;
   dataCenterMap.bandwidthMap = bandwidthMap;
   dataCenterMap.holdTimeMap = holdTimeMap;
   
