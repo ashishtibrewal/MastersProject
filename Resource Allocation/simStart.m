@@ -163,4 +163,4 @@ displayResults(dataCenterMap, requestDB, nRequests, dataCenterConfig);
 
 str = sprintf('\n+------- SIMULATION COMPLETE --------+\n');
 disp(str);
-diary on;                       % Turn diary (i.e. logging functionality) off
+diary off;                       % Turn diary (i.e. logging functionality) off
