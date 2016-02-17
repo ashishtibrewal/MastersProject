@@ -270,6 +270,21 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % elements. Since only the upper half is filled as specified by the
   % topology and an adjacency matrix is symmetric, this works perfectly.
 
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % SWITCH DATABASE (TOB & TOB)
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  % Stores indexes of TOR & TOB swithces in the connectivity matrix
+  % IMPORTANT NOTE: This doesn't consider "slot-level" switching even if it
+  % exists.
+  TOR_indexes = 1:(nTOR * nRacks);
+  TOB_indexes = ((nTOR * nRacks) + 1):(nTOB * nBlades * nRacks);
+  
+  % Switch map struct
+  switchMap.TOR_indexes = TOR_indexes;
+  switchMap.TOB_indexes = TOB_indexes;
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK DISTANCE & LATENCY MAP (Hierarchial)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -604,6 +619,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % Pack all maps into a single struct
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   dataCenterMap.connectivityMap = connectivityMap;
+  dataCenterMap.switchMap = switchMap;
   dataCenterMap.occupiedMap = occupiedMap;
   dataCenterMap.resourceMap = resourceMap;
   dataCenterMap.distanceMap = distanceMap;
