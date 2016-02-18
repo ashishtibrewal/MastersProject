@@ -13,6 +13,15 @@ unitSize:
   MEM: 4      # Each DIMM is 4 GB in size/capacity
   STO: 128    # Each HDD is 128 GB in size /capacity
 
+distances:
+  TOR_IntraRack: 5    # Distance between TORs within the same rack
+  TOR_InterRack: 30   # Distance between TORs between different racks
+  TOR_TOB: 15         # Distance between TORs and TOBs within the same rack
+  TOB_IntraBlade: 2   # Distance between TOBs within the same blade (within the same rack)
+  TOB_InterBlade: 5   # Distance between TOBs between different blades (within the same rack)
+  TOB_slot: 10        # Distance between TOBs and and slots within the same blade (within the same rack)
+  slot: 2             # Distance between slots within the same blad (within the same rack)
+  
 ########################################
 # Specify the network topology and switch delays for each 
 # hierarchial level (i.e. for rack-level, blade-level and slot-level
@@ -66,6 +75,8 @@ bounds:
 racksConfig:
   rack1: [1,2,1]    # Heterogeneous rack (With homogenous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
   rack2: [3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack3: [4,4,4]    # Homogenous STO rack (With homogenous STO blades)
+  rack4: [1,1,1]    # Homogenous STO rack (With homogenous STO blades)
 
 # Types of configurations/setups possible
 setupTypes:
