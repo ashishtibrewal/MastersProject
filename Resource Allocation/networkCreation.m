@@ -37,9 +37,13 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   slotTopology = dataCenterConfig.topology.slot;
   
   % Optical fiber channels between each node
-  numInterRackChannels = dataCenterConfig.channels.interRack;    % Number of inter-rack channels
-  numInterBladeChannels = dataCenterConfig.channels.interBlade;   % Number of inter-blade channels
-  numInterSlotChannels = dataCenterConfig.channels.interSlot;    % Number of inter-slot channels
+  nChannelsTOR_TOR = dataCenterConfig.channels.TOR_TOR;
+  nChannelsTOR_TOB = dataCenterConfig.channels.TOR_TOB;
+  nChannelsTOB_TOB = dataCenterConfig.channels.TOB_TOB;
+  nChannelsTOB_SLOT = dataCenterConfig.channels.TOB_SLOT;
+  nChannelsSLOT_SLOT = dataCenterConfig.channels.SLOT_SLOT;
+  
+  % Network limits/constraints
   maxChannelBandwidth = dataCenterConfig.bounds.maxChannelBandwidth; % Maximum bandwidth available on a link connecting any two "nodes" in the network (i.e 400 Gb/s)
   minChannelLatency = dataCenterConfig.bounds.minChannelLatency;  % Minimum latency between two connected (adjacent) nodes is 5 ns (Assuming they are 1 meter apart)
   % Note that the latency is 5 ns/m - Higher the distance, higher the latency
@@ -49,8 +53,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   TOR_delay = dataCenterConfig.switchDelay.TOR;   % TOR switch delay
   TOB_delay = dataCenterConfig.switchDelay.TOB;   % TOB switch delay
   
-  % Compelte/total matrix map in a single 2D matrix of size 
-  % [(nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks)]
+  % Compelte/total matrix map in a single 2D matrix of size [(nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks)]
   completeMatrixSize = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks));
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,8 +67,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   completeConnectivityMatrixSize = completeMatrixSize;          % Complete connectivity map
   completeConnectivity = zeros(completeConnectivityMatrixSize); % Initialize with zeros
   
-  % RACK (TOR) CONNECTIVITY - Fully-connected data-center (All racks are 
-  % connected to all other racks)
+  %%%%%% RACK (TOR) CONNECTIVITY %%%%%%
   switch (rackTopology)
     case 'Fully-connected'
       rackConnectivity = ones(nTOR * nRacks);
@@ -74,12 +76,12 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
           completeConnectivity(TOR_NoDim1,TOR_NoDim2) = 1;
         end
       end
+      
+    case 'Line'    % Adjacent nodes (i.e.TORs) are connected to each other
     
-    case 'Ring'
+    case 'Ring'    % Similar to the line topology but with end nodes connected to each other too (i.e. node 1 and node n have to be connected)
       
-    %case 'Star'   % Make the first rack (i.e. first TOR in the first rack) the center of the star
-      
-    case 'Line'
+    %case 'Star'   % Make the first/middle rack (i.e. first TOR in the first rack) the center of the star
       
     case 'Disconnected'
       rackConnectivity = zeros(nTOR * nRacks);
@@ -90,9 +92,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       error('Check configuration file for rack topology. Cases other than Fully-connected haven''t been handled yet.');
   end
   
-  % TORs - TOBs CONNECTIVITY (i.e. rack to blade topology)
-  % Note: When TOR > 1 => Star = Spineleaf
+  %%%%%% TORs - TOBs CONNECTIVITY (i.e. rack to blade topology) %%%%%%
   switch (rack_bladeTopology)
+    % Note: When TOR > 1 => Star = Spineleaf
     case 'Star'   % Note when TOR > 1 => Star = Spineleaf
       TOB_offset = 0;   % Initialize TOB offset outside/before the outer loop
       TOR_counter = 0;  % Initialize TOR counter outside/before the outer loop
@@ -153,11 +155,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       error('Check configuration file for rack-blade topology. Cases other than Star/Spine-leaf is not allowed for rack-blade topology.');
   end
   
-  % BLADE (TOB) CONNECTIVITY - All blades in a rack are connected - A fully
-  % -connected rack (Note to get from a blade on one rack to a blade on 
-  % another, you'd need to check the rackConnectivity matrix)
-  % 1st & 2nd dimensions = Connectivity of blades in a rack
-  % 3rd dimension = Rack number
+  %%%%%% BLADE (TOB) CONNECTIVITY %%%%%%
   switch (bladeTopology)
     case 'Fully-connected'
       % IMPORTANT NOTE: Fully-connected within a rack (No inter-rack blades
@@ -177,11 +175,11 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
         mod_offset = mod_offset + 1;    % Increment mod offset for every source TOB node (Note don't need to reset mod offset since it's value is being added and modded)
       end
       
-    case 'Ring'
+    case 'Line'    % Adjacent nodes (i.e.TOBs) are connected to each other
+    
+    case 'Ring'    % Similar to the line topology but with end nodes connected to each other too (i.e. node 1 and node n have to be connected)
       
-    %case 'Star'   % Make the first blade (i.e. first TOB in the first blade) in each rack the center of the star
-      
-    case 'Line'
+    %case 'Star'   % Make the first/middle blade (i.e. first TOB in the first blade) in each rack the center of the star
     
     case 'Disconnected'
       bladeConnectivity = zeros(nBlades, nBlades, nRacks);
@@ -192,9 +190,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       error('Check configuration file for blade topology. Cases other than Fully-connected haven''t been handled yet.');
   end
   
-  % TOBs - SLOTS CONNECTIVITY (i.e. blade to slot topology)
-  % Note: When TOB > 1 => Star = Spineleaf)
+  %%%%%% TOBs - SLOTS CONNECTIVITY (i.e. blade to slot topology) %%%%%%
   switch (blade_slotTopology)
+    % Note: When TOB > 1 => Star = Spineleaf)
     case 'Star'   % Note when TOB > 1 => Star = Spineleaf
       slot_offset = 0;   % Initialize slot offset outside/before the outer loop
       TOB_counter = 0;   % Initialize TOB counter outside/before the outer loop
@@ -255,52 +253,51 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       error('Check configuration file for rack-blade topology. Cases other than Star/Spine-leaf is not allowed for blade-slot topology.');
   end
   
-  % SLOT CONNECTIVITY - All slots on a blade are connected - A
-  % fully-connected blade
-  % 1st & 2nd dimensions = Connectivity of slots on a blade
-  % 3rd dimension = Blade number
-  % 4th dimension = Rack number
+  %%%%%% SLOT CONNECTIVITY %%%%%%
   switch (slotTopology)
+    % IMPORTANT NOTE: Fully-connected within a balde (No inter-blade slots
+    % are connected directly and all traffic has to go through the TOB
+    % switch)
     case 'Fully-connected'
       slotConnectivity = ones(nSlots, nSlots, nBlades, nRacks);
       % TODO Change complete connectivity map to connect all slots in a
       % blade to every other slot on the blade
-    case 'Ring'
       
-    %case 'Star'   % Make the first slot in every blade in every rack the center of the star
+    case 'Line'    % Adjacent nodes (i.e.SLOTs) are connected to each other
+    
+    case 'Ring'    % Similar to the line topology but with end nodes connected to each other too (i.e. node 1 and node n have to be connected)
       
-    case 'Line'
+    %case 'Star'   % Make the first/middle slot in every blade in every rack the center of the star
       
     case 'Disconnected'
       slotConnectivity = zeros(nSlots, nSlots, nBlades, nRacks);
+      % Do nothing to completeConnectivity since it's already zeroed
       
     %TODO Need to handle other cases/topologies
     otherwise
       error('Check configuration file for slot topology. Cases other than Fully-connected haven''t been handled yet.');
   end
       
-  % Network map/connectivity struct containing the rack, blade and slot
-  % connectivity maps
+  % Transposing completeConnectivity matrix and adding to fill in remaining elements (i.e. the elements in the bottom half of the matrix).
+  % Since only the upper triangle is filled as specified by the topology (and since an adjacency matrix is symmetric), this works perfectly.
+  completeConnectivity = completeConnectivity + completeConnectivity.';
+  
+  % Network map/connectivity struct containing the rack, blade, slot and complete connectivity maps.
   connectivityMap.rackConnectivity = rackConnectivity;
   connectivityMap.bladeConnectivity = bladeConnectivity;
   connectivityMap.slotConnectivity = slotConnectivity;
-  connectivityMap.completeConnectivity = completeConnectivity + completeConnectivity.';
-  % Transposing completeConnectivity matrix and adding to fill in remaining
-  % elements. Since only the upper half is filled as specified by the
-  % topology and an adjacency matrix is symmetric, this works perfectly.
-
+  connectivityMap.completeConnectivity = completeConnectivity;
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % SWITCH DATABASE (TOB & TOB)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   % Stores indexes of TOR & TOB swithces in the connectivity matrix
-  % IMPORTANT NOTE: This doesn't consider "slot-level" switching even if it
-  % exists.
-  TOR_indexes = 1:(nTOR * nRacks);
-  TOB_indexes = ((nTOR * nRacks) + 1):(nTOB * nBlades * nRacks);
+  % IMPORTANT NOTE: This doesn't consider "slot-level" switching even if it exists.
+  TOR_indexes = 1:(nTOR * nRacks);          % Top of rack switch indexes
+  TOB_indexes = ((nTOR * nRacks) + 1):(nTOB * nBlades * nRacks);  % Top of blade switch indexes
   
-  % Switch map struct
+  % Switch map struct containing TOR & TOB switch indexes
   switchMap.TOR_indexes = TOR_indexes;
   switchMap.TOB_indexes = TOB_indexes;
   
@@ -494,25 +491,32 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % TODO Depending on the slot topology, update distance map. Currently all
   % slots are assumed to be disconnected hence distance map doesn't need to
   % be changed.
-
-  % Network distance map struct containing the rack, blade and slot distance
-  % maps
+  
+  % Convert upper-triangular matrix to a full matrix (Doing this since the matrix should be complete and symmetric)
+  nNodes = size(completeDistance, 1);
+  for i = 1:nNodes
+    for j = 1:nNodes
+      completeDistance(j,i) = completeDistance(i,j);
+    end
+  end
+  
+  % Network distance map struct containing the rack, blade, slot and complete distance maps
   distanceMap.rackDistance = rackDistance;
   distanceMap.bladeDistance = bladeDistance;
   distanceMap.slotDistance = slotDistance;
   distanceMap.completeDistance = completeDistance;
   
-  % Network latency map struct containing the inter-rack, inter-blade and
-  % inter-slot latency maps
+  % Network latency map struct containing the inter-rack, inter-blade and inter-slot latency maps
   latencyMap.rackLatency = rackLatency;
   latencyMap.bladeLatency = bladeLatency;
   latencyMap.slotLatency = slotLatency;
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % HOPS MAP
+  % HOPS MAP (i.e. Inter-node hops)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  hopsMap = connectivityMap.completeConnectivity;
-	nNodes = size(hopsMap, 1);
+  hopsMap = connectivityMap.completeConnectivity;   % Extract complete connectivity matrix
+	nNodes = size(hopsMap, 1);                        % Obtain size of the matrix
+  
   % Check to make distance between disconnected nodes infinity
   for sourceNode = 1:nNodes
     for destNode = 1:nNodes
@@ -524,12 +528,64 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     end
   end
   
-  % Implement Floyd-Warshall algorithm
+  % Implement Floyd-Warshall algorithm on the (boolean) connectivity/adjaceny matrix. 
+  % This finds the shortest distance between between every node to every other node.
 	for k=1:nNodes
 		i2k = repmat(hopsMap(:,k), 1, nNodes);
 		k2j = repmat(hopsMap(k,:), nNodes, 1);
 		hopsMap = min(hopsMap, i2k+k2j);
   end
+  
+  % Loop over hops matrix to reduce every element by one (since the Floyd-Warshall algorithm gives 
+  % the shortest-path and not the number of hops). In general, nHops = nNodeTraversed - 1.
+  for sourceNode = 1:nNodes
+    for destNode = 1:nNodes
+      if (sourceNode ~= destNode)    % Ignore diagonal (since it's already zero)
+        hopsMap(sourceNode,destNode) = hopsMap(sourceNode,destNode) - 1;    % Subtract one from every non-diagonal element
+      end
+    end
+  end
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % SHORTEST PATH MAP
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  %%%%%% Shortest path using Floyd-Warshall %%%%%%
+  sPath = distanceMap.completeDistance;   % Extract complete distance matrix
+	nNodes = size(sPath, 1);                % Obtain size of the matrix
+  
+  % Implement Floyd-Warshall algorithm (Shortest path between every node to
+  % every other node)
+	for k=1:nNodes
+		i2k = repmat(sPath(:,k), 1, nNodes);
+		k2j = repmat(sPath(k,:), nNodes, 1);
+		sPath = min(sPath, i2k+k2j);
+  end
+  
+  %%%%%% K-shortest path %%%%%%
+  weightedEdgeSparseGraph = sparse(distanceMap.completeDistance);   % Extract complete distance matrix and make it a sparse matrix
+	nNodes = size(weightedEdgeSparseGraph, 1);                % Obtain size of the matrix
+  kPaths = 2;     % Specify number of shortest paths to find
+  
+  ksPath_Dist = zeros (nNodes,nNodes,kPaths);   % Initialize k-shortest path distance matrix with it's 3rd dimension being of size kPaths
+  ksPath_Paths = cell(nNodes,1);    % Initialize k-shortest path paths cell
+  
+  % Run k-shortest path for every node to every other node in the graph
+  for sourceNode = 1:nNodes
+    for destNode = 1:nNodes
+      if (sourceNode ~= destNode)    % Ignore diagonal (since distance between a node to itself if 0)
+        [ksPath_Dist(sourceNode,destNode,:),ksPath_Paths{sourceNode}] = graphkshortestpaths(weightedEdgeSparseGraph, sourceNode, destNode, kPaths);
+      end
+    end
+  end
+  
+  % K-shortest path struct containing the path distance and shortest paths
+  ksPath.ksPath_Dist = ksPath_Dist;
+  ksPath.ksPath_Paths = ksPath_Paths;
+  
+  % Shortest path struct containing the shortest path and k-shortest paths
+  shortestPathMap.sPath = sPath;
+  shortestPathMap.ksPath = ksPath;
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK LATENCY MAP (Linear indexing)
@@ -673,7 +729,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
         % If the racks are connected, they have a finite bandwidth else
         % they are zero
         if (rackConnectivity(rackNoDim1,rackNoDim2) == 1)       
-          rackBandwidth(rackNoDim1,rackNoDim2) = maxChannelBandwidth * numInterRackChannels;
+          rackBandwidth(rackNoDim1,rackNoDim2) = maxChannelBandwidth * nChannelsTOR_TOR;
         else
           rackBandwidth(rackNoDim1,rackNoDim2) = 0;
         end
@@ -694,7 +750,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
           % If the blades are connected, they have a finite bandwidth else
           % they are zero
           if (bladeConnectivity(bladeNoDim1,bladeNoDim2,rackNo) == 1)
-            bladeBandwidth(bladeNoDim1,bladeNoDim2,rackNo) = maxChannelBandwidth * numInterBladeChannels;
+            bladeBandwidth(bladeNoDim1,bladeNoDim2,rackNo) = maxChannelBandwidth * nChannelsTOB_TOB;
           else
             bladeBandwidth(bladeNoDim1,bladeNoDim2,rackNo) = 0;
           end
@@ -719,7 +775,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
             % If the slots are connected, they have a finite bandwidth else
             % they are zero
             if (slotConnectivity(slotNoDim1,slotNoDim2,bladeNo,rackNo) == 1)
-              slotBandwidth(slotNoDim1,slotNoDim2,bladeNo,rackNo) = maxChannelBandwidth * numInterSlotChannels;
+              slotBandwidth(slotNoDim1,slotNoDim2,bladeNo,rackNo) = maxChannelBandwidth * nChannelsSLOT_SLOT;
             else
               slotBandwidth(slotNoDim1,slotNoDim2,bladeNo,rackNo) = 0;
             end
@@ -766,5 +822,6 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   dataCenterMap.latencyMapLinear = latencyMapLinear;
   dataCenterMap.bandwidthMap = bandwidthMap;
   dataCenterMap.holdTimeMap = holdTimeMap;
+  dataCenterMap.shortestPathMap = shortestPathMap;
   
 end
