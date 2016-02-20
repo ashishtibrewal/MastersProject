@@ -530,10 +530,10 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   
   % Implement Floyd-Warshall algorithm on the (boolean) connectivity/adjaceny matrix. 
   % This finds the shortest distance between between every node to every other node.
-	for k=1:nNodes
+	for k = 1:nNodes
 		i2k = repmat(hopsMap(:,k), 1, nNodes);
 		k2j = repmat(hopsMap(k,:), nNodes, 1);
-		hopsMap = min(hopsMap, i2k+k2j);
+		hopsMap = min(hopsMap, (i2k + k2j));
   end
   
   % Loop over hops matrix to reduce every element by one (since the Floyd-Warshall algorithm gives 
@@ -556,19 +556,21 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   
   % Implement Floyd-Warshall algorithm (Shortest path between every node to
   % every other node)
-	for k=1:nNodes
+	for k = 1:nNodes
 		i2k = repmat(sPath(:,k), 1, nNodes);
 		k2j = repmat(sPath(k,:), nNodes, 1);
-		sPath = min(sPath, i2k+k2j);
+		sPath = min(sPath, (i2k + k2j));
   end
   
   %%%%%% K-shortest path %%%%%%
   weightedEdgeSparseGraph = sparse(distanceMap.completeDistance);   % Extract complete distance matrix and make it a sparse matrix
 	nNodes = size(weightedEdgeSparseGraph, 1);                % Obtain size of the matrix
-  kPaths = 2;     % Specify number of shortest paths to find
+  kPaths = 10;     % Specify number of shortest paths to find
   
   ksPath_Dist = zeros (nNodes,nNodes,kPaths);   % Initialize k-shortest path distance matrix with it's 3rd dimension being of size kPaths
   ksPath_Paths = cell(nNodes,nNodes);    % Initialize k-shortest path paths cell
+  
+  profile on;       % Turn on profiler
   
   % Run k-shortest path for every node to every other node in the graph
   for sourceNode = 1:nNodes
@@ -578,6 +580,8 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       end
     end
   end
+  
+  profile viewer;     % View profiler results
   
   % K-shortest path struct containing the path distance and shortest paths
   ksPath.ksPath_Dist = ksPath_Dist;
