@@ -13,6 +13,7 @@ unitSize:
   MEM: 4      # Each DIMM is 4 GB in size/capacity
   STO: 128    # Each HDD is 128 GB in size /capacity
 
+# TODO change these to more realistic values (such as 1U, 2U .. rack unit sizes)
 distances:
   TOR_IntraRack: 5    # Distance between TORs within the same rack
   TOR_InterRack: 30   # Distance between TORs between different racks
@@ -38,17 +39,18 @@ topology:
   slot: 'Disconnected'
 
 # Switch delays at different levels (in nanoseconds) - Used in the latency map
-# TODO Should realistically have different constants for each 'type' of switch
 switchDelay:
-  TOD: 300
-  TOR: 300
-  TOB: 300
+  TOD: 300          # Main (Top of data center) switch delay - Currently not used
+  TOR: 200          # Top of rack switch delay
+  TOB: 100          # Top of blade switch delay
 
 # Number of channels between two nodes (i.e. a node can be a rack/blade/slot)
 channels:
-  interRack: 1
-  interBlade: 1
-  interSlot: 1
+  TOR_TOR: 1        # Number of channels between TORs
+  TOR_TOB: 1        # Number of channels between TOR & TOB
+  TOB_TOB: 1        # Number of channels between TOBs
+  TOB_SLOT: 1       # Number of channels between TOB & SLOT
+  SLOT_SLOT: 1      # Number of channels between SLOTs
 
 # Contraints/bounds in the data center (Minimum channel latency in nanoseconds & maximum channel bandwidth in Gb/s)
 # Maximum bandwidth available on a link connecting any two "nodes" in the network (i.e 400 Gb/s)
