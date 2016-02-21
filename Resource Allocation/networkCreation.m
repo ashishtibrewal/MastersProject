@@ -361,7 +361,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     end
   end
   
-  %%%%% TOR DISTANCE %%%%% 
+  %%%%%% TOR DISTANCE %%%%%% 
   for TOR_NoDim1 = 1:(nTOR * nRacks)
     for TOR_NoDim2 = (TOR_NoDim1 + 1):(nTOR * nRacks)
       if (completeConnectivity(TOR_NoDim1,TOR_NoDim2) == 1) % Only has a finite distance if two nodes are connected
@@ -374,7 +374,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     end
   end
   
-  % TORs - TOBs DISTANCE
+  %%%%%% TORs - TOBs DISTANCE %%%%%%
   for TOR = 1:(nTOR * nRacks)
     bladeCounter = 0;       % Reset blade counter when iterating for every TOR
     for TOB = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
@@ -418,7 +418,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     end
   end
   
-  %%%%% TOB DISTANCE %%%%%  
+  %%%%%% TOB DISTANCE %%%%%%  
   % TODO THIS STILL NEEDS TO BE FIXED (BEFORE FIXING, CHANGE CONFIG FILE 
   % ('fully-connected TOB/blade topology and nRacks to 4)
 %   for TOB_NoDim1 = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
@@ -446,7 +446,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     end
   end
     
-  % TOBs - SLOTs DISTANCE 
+  %%%%%% TOBs - SLOTs DISTANCE %%%%%%
   for TOB = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
     slot_counter = 0;
     for slot = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))
@@ -490,7 +490,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     end
   end
   
-  %%%%% SLOT DISTANCE %%%%% 
+  %%%%%% SLOT DISTANCE %%%%%% 
   % TODO Depending on the slot topology, update distance map. Currently all
   % slots are assumed to be disconnected hence distance map doesn't need to
   % be changed.
@@ -552,6 +552,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % SHORTEST PATH MAP
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % IMPORTANT NOTE: Shortest paths simply based on link distances and doesn't account for switch delays
   
   %%%%%% Shortest path using Floyd-Warshall %%%%%%
   sPath = distanceMap.completeDistance;   % Extract complete distance matrix
@@ -568,10 +569,12 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   %%%%%% K-shortest path %%%%%%
   weightedEdgeSparseGraph = sparse(distanceMap.completeDistance);   % Extract complete distance matrix and make it a sparse matrix
 	nNodes = size(weightedEdgeSparseGraph, 1);                % Obtain size of the matrix
-  kPaths = 2;     % Specify number of shortest paths to find
+  kPaths = 1;     % Specify number of shortest paths to find
   
   ksPath_Dist = zeros (nNodes,nNodes,kPaths);   % Initialize k-shortest path distance matrix with it's 3rd dimension being of size kPaths
   ksPath_Paths = cell(nNodes,nNodes);    % Initialize k-shortest path paths cell
+  
+  ksPath_Latency = zeros (nNodes,nNodes,kPaths);   % Initialize k-shortest path latency matrix with it's 3rd dimension being of size kPaths 
   
   profile on;         % Turn on profiler
   
@@ -579,7 +582,30 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   for sourceNode = 1:nNodes
     for destNode = 1:nNodes
       if (sourceNode ~= destNode)    % Ignore diagonal (since distance between a node to itself if 0)
+        % Use the k-shortest paths algorithm
         [ksPath_Dist(sourceNode,destNode,:),ksPath_Paths{sourceNode,destNode}] = graphkshortestpaths(weightedEdgeSparseGraph, sourceNode, destNode, kPaths);
+        % Store distance found for a specific set of source and destination nodes to the latency matrix
+        ksPath_Latency(sourceNode,destNode,:) = ksPath_Dist(sourceNode,destNode,:) * minChannelLatency;
+        % Find if the path found contains any switches for every k-th path
+        for k = 1:kPaths
+          % Extract k-th path for current source and destination nodes exluding the destination node (hence, the -1)
+          kth_Path = ksPath_Paths{sourceNode,destNode}{k}(1:numel(ksPath_Paths{sourceNode,destNode}{k}) - 1);
+          % Find TOR swithces
+          TOR_Switches = ismember(switchMap.TOR_indexes, kth_Path);
+          % Find TOB switches
+          TOB_Swithces = ismember(switchMap.TOB_indexes, kth_Path);
+          % If any switches exist in the shortest path
+          if (nnz(TOR_Switches) || nnz(TOB_Swithces))
+            % Find the total number of TOR swithces
+            nTOR_Switches = sum(histc(kth_Path,switchMap.TOR_indexes));
+            % Find the total number of TOB swithces
+            nTOB_Switches = sum(histc(kth_Path,switchMap.TOB_indexes));
+            % Find total switch delay on the path
+            totalSwitchDelay = (nTOR_Switches * TOR_delay) + (nTOB_Switches * TOB_delay);
+            % Update latency map
+            ksPath_Latency(sourceNode,destNode,k) = ksPath_Latency(sourceNode,destNode,k) + totalSwitchDelay;
+          end
+        end
       end
     end
   end
@@ -593,6 +619,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % Shortest path struct containing the shortest path and k-shortest paths
   shortestPathMap.sPath = sPath;
   shortestPathMap.ksPath = ksPath;
+  
+  % Latency map struct (Shortest path latency map)
+  latencyMap.completeLatency = ksPath_Latency;
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK LATENCY MAP (Linear indexing)
