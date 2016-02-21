@@ -261,7 +261,10 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     case 'Fully-connected'
       slotConnectivity = ones(nSlots, nSlots, nBlades, nRacks);
       % TODO Change complete connectivity map to connect all slots in a
-      % blade to every other slot on the blade
+      % blade to every other slot on the blade. Loop with a counter that
+      % counts upto nSlots. This counter is decremented on every itertation
+      % of the inner loop (i.e. the slot loop) and is reset on every
+      % iteration of the outer loop (i.e. rack/blade loop)
       
     case 'Line'    % Adjacent nodes (i.e.SLOTs) are connected to each other
     
@@ -565,12 +568,12 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   %%%%%% K-shortest path %%%%%%
   weightedEdgeSparseGraph = sparse(distanceMap.completeDistance);   % Extract complete distance matrix and make it a sparse matrix
 	nNodes = size(weightedEdgeSparseGraph, 1);                % Obtain size of the matrix
-  kPaths = 10;     % Specify number of shortest paths to find
+  kPaths = 2;     % Specify number of shortest paths to find
   
   ksPath_Dist = zeros (nNodes,nNodes,kPaths);   % Initialize k-shortest path distance matrix with it's 3rd dimension being of size kPaths
   ksPath_Paths = cell(nNodes,nNodes);    % Initialize k-shortest path paths cell
   
-  profile on;       % Turn on profiler
+  profile on;         % Turn on profiler
   
   % Run k-shortest path for every node to every other node in the graph
   for sourceNode = 1:nNodes
