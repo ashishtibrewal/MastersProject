@@ -597,9 +597,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
           % If any switches exist in the shortest path
           if (nnz(TOR_Switches) || nnz(TOB_Swithces))
             % Find the total number of TOR swithces
-            nTOR_Switches = sum(histc(kth_Path,switchMap.TOR_indexes));
+            nTOR_Switches = sum(histcounts(kth_Path,switchMap.TOR_indexes));
             % Find the total number of TOB swithces
-            nTOB_Switches = sum(histc(kth_Path,switchMap.TOB_indexes));
+            nTOB_Switches = sum(histcounts(kth_Path,switchMap.TOB_indexes));
             % Find total switch delay on the path
             totalSwitchDelay = (nTOR_Switches * TOR_delay) + (nTOB_Switches * TOB_delay);
             % Update latency map
