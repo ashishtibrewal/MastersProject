@@ -1,8 +1,8 @@
 ########################################
 # Resource unit dimensions to prevent going out of bounds/limit
 ########################################
-nRacks: 2     # Total number of racks
-nBlades: 2    # Total number of blades (in each rack)
+nRacks: 4     # Total number of racks
+nBlades: 3    # Total number of blades (in each rack)
 nSlots: 3     # Total number of slots (in each blade)
 nUnits: 2     # Total number of units (in each slot)
 nTOR: 2       # Number of TOR switches per rack
@@ -75,10 +75,10 @@ bounds:
 
 # Configuration of each rack
 racksConfig:
-  rack1: [1,2,1]    # Heterogeneous rack (With homogenous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
-  rack2: [3,3,3]    # Homogenous STO rack (With homogenous STO blades)
-  rack3: [4,4,4]    # Homogenous STO rack (With homogenous STO blades)
-  rack4: [1,1,1]    # Homogenous STO rack (With homogenous STO blades)
+  rack1: [1,2,1]    # Heterogeneous rack (With homogenous CPU & MEM blades) - TODO Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack2: [2,2,2]    # Homogenous MEM rack (With homogenous MEM blades)
+  rack3: [4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - TODO Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack4: [3,3,3]    # Homogenous STO rack (With homogenous STO blades)
 
 # Types of configurations/setups possible
 setupTypes:

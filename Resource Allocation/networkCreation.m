@@ -64,7 +64,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % 0 = Disconnected
   % 1 = Connected
   
-  completeConnectivityMatrixSize = completeMatrixSize;          % Complete connectivity map
+  completeConnectivityMatrixSize = completeMatrixSize;          % Complete connectivity map size
   completeConnectivity = zeros(completeConnectivityMatrixSize); % Initialize with zeros
   
   %%%%%% RACK (TOR) CONNECTIVITY %%%%%%
@@ -672,7 +672,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   end
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % NETWORK/RESOURCE OCCUPIED & TYPE MAP
+  % IT RESOURCE OCCUPIED & TYPE MAP (Heirarchial)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % VALUE MEANINGS (OCCUPIED)
@@ -685,60 +685,113 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % 3rd dimension = Rack number
   occupiedMap = zeros(nSlots, nBlades, nRacks);
   
-  % VALUE MEANINGS (TYPE)
-  % CPU = 1
-  % 
-  
   % Map to keep track of the type of resource in each slot
   % 1st dimension = Slot number
   % 2nd dimension = Blade number
   % 3rd dimension = Rack number
   resourceMap = cell(nSlots, nBlades, nRacks);
+  
+  % Total number of racks specified in the configuration file
+  racks = fieldnames(dataCenterConfig.racksConfig);
+  
+  % Set the value for each slot to the number of units available in it
+  for rackNo = 1:nRacks
+    rackConfigData = [dataCenterConfig.racksConfig.(racks{rackNo}){:}];
+    for bladeNo = 1:nBlades
+      for slotNo = 1:nSlots
+        switch (rackConfigData(bladeNo))
+          % Check for homogeneous CPU blades
+          case dataCenterConfig.setupTypes.homogenCPU
+            occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeCPU; % Updated occupied map
+            resourceMap{slotNo,bladeNo,rackNo} = 'CPU';                % Store the type of resource
+          % Check for homogeneous MEM blades
+          case dataCenterConfig.setupTypes.homogenMEM
+            occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeMEM; % Updated occupied map
+            resourceMap{slotNo,bladeNo,rackNo} = 'MEM';                % Store the type of resource
+          % Check for homogeneous STO blades
+          case dataCenterConfig.setupTypes.homogenSTO
+            occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeSTO; % Updated occupied map
+            resourceMap{slotNo,bladeNo,rackNo} = 'STO';                % Store the type of resource
+          % Check for heterogeneous CPU & MEM blades
+          case dataCenterConfig.setupTypes.heterogenCPU_MEM
+            % Check for % of CPUs and % of MEMs
+            switch (dataCenterConfig.heterogenSplit.heterogenCPU_MEM)
+              % 50-50 CPU-MEM
+              case 50
+                % Even slots are CPUs
+                if (mod(slotNo,2) == 0)
+                  occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeCPU; % Updated occupied map
+                  resourceMap{slotNo,bladeNo,rackNo} = 'CPU';                % Store the type of resource
+                % Odd slots are MEMs
+                else
+                  occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeMEM; % Updated occupied map
+                  resourceMap{slotNo,bladeNo,rackNo} = 'MEM';                % Store the type of resource
+                end
+              % Add cases to handle other percentages
+              otherwise
+                error('Check configuration file for CPU-MEM distribution percentage. Cases other than 50-50 haven''t been handled yet.');
+            end
+        end
+      end
+    end
+  end
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % IT RESOURCE OCCUPIED & TYPE MAP (Linear)
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  completeResourceMapCellArraySize = nSlots * nBlades * nRacks;     % Complete resource map size
+  completeResourceMap = cell(1,completeResourceMapCellArraySize);   % Initialize cell
+  
+  completeOccupiedMapMatrixSize = nSlots * nBlades * nRacks;        % Complete occupied map size
+  completeOccupiedMap = zeros(1,completeOccupiedMapMatrixSize);     % Initialize with zeros
 
   % Total number of racks specified in the configuration file
-%   racks = fieldnames(dataCenterConfig.racksConfig);
-%   
-%   % Set the value for each slot to the number of units available in it
-%   for rackNo = 1:nRacks
-%     rackConfigData = [dataCenterConfig.racksConfig.(racks{rackNo}){:}];
-%     for bladeNo = 1:nBlades
-%       for slotNo = 1:nSlots
-%         switch (rackConfigData(bladeNo))
-%           % Check for homogeneous CPU blades
-%           case dataCenterConfig.setupTypes.homogenCPU
-%             occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeCPU; % Updated occupied map
-%             resourceMap{slotNo,bladeNo,rackNo} = 'CPU';                % Store the type of resource
-%           % Check for homogeneous MEM blades
-%           case dataCenterConfig.setupTypes.homogenMEM
-%             occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeMEM; % Updated occupied map
-%             resourceMap{slotNo,bladeNo,rackNo} = 'MEM';                % Store the type of resource
-%           % Check for homogeneous STO blades
-%           case dataCenterConfig.setupTypes.homogenSTO
-%             occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeSTO; % Updated occupied map
-%             resourceMap{slotNo,bladeNo,rackNo} = 'STO';                % Store the type of resource
-%           % Check for heterogeneous CPU & MEM blades
-%           case dataCenterConfig.setupTypes.heterogenCPU_MEM
-%             % Check for % of CPUs and % of MEMs
-%             switch (dataCenterConfig.heterogenSplit.heterogenCPU_MEM)
-%               % 50-50 CPU-MEM
-%               case 50
-%                 % Even slots are CPUs
-%                 if (mod(slotNo,2) == 0)
-%                   occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeCPU; % Updated occupied map
-%                   resourceMap{slotNo,bladeNo,rackNo} = 'CPU';                % Store the type of resource
-%                 % Odd slots are MEMs
-%                 else
-%                   occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeMEM; % Updated occupied map
-%                   resourceMap{slotNo,bladeNo,rackNo} = 'MEM';                % Store the type of resource
-%                 end
-%               % Add cases to handle other percentages
-%               otherwise
-%                 error('Check configuration file for CPU-MEM distribution percentage. Cases other than 50-50 haven''t been handled yet.');
-%             end
-%         end
-%       end
-%     end
-%   end
+  racks = fieldnames(dataCenterConfig.racksConfig);
+  
+  % Set the value for each slot to the number of units available in it
+  for rackNo = 1:nRacks
+    rackConfigData = [dataCenterConfig.racksConfig.(racks{rackNo}){:}];
+    for bladeNo = 1:nBlades
+      slotCounter = 1;        % Initialize/Reset slot coutner to zero for every new blade
+      for slotNo = ((nSlots * nBlades * (rackNo - 1)) + (nSlots * (bladeNo - 1) + 1)):((nSlots * bladeNo) + (nSlots * nBlades * (rackNo - 1)))
+        switch (rackConfigData(bladeNo))
+          % Check for homogeneous CPU blades
+          case dataCenterConfig.setupTypes.homogenCPU
+            completeOccupiedMap(slotNo) = nUnits * unitSizeCPU; % Updated occupied map
+            completeResourceMap{slotNo} = 'CPU';                % Store the type of resource
+          % Check for homogeneous MEM blades
+          case dataCenterConfig.setupTypes.homogenMEM
+            completeOccupiedMap(slotNo) = nUnits * unitSizeMEM; % Updated occupied map
+            completeResourceMap{slotNo} = 'MEM';                % Store the type of resource
+          % Check for homogeneous STO blades
+          case dataCenterConfig.setupTypes.homogenSTO
+            completeOccupiedMap(slotNo) = nUnits * unitSizeSTO; % Updated occupied map
+            completeResourceMap{slotNo} = 'STO';                % Store the type of resource
+          % Check for heterogeneous CPU & MEM blades
+          case dataCenterConfig.setupTypes.heterogenCPU_MEM
+            % Check for % of CPUs and % of MEMs
+            switch (dataCenterConfig.heterogenSplit.heterogenCPU_MEM)
+              % 50-50 CPU-MEM
+              case 50
+                % Even slots are CPUs
+                if (mod(slotCounter,2) == 0)
+                  completeOccupiedMap(slotNo) = nUnits * unitSizeCPU; % Updated occupied map
+                  completeResourceMap{slotNo} = 'CPU';                % Store the type of resource
+                % Odd slots are MEMs
+                else
+                  completeOccupiedMap(slotNo) = nUnits * unitSizeMEM; % Updated occupied map
+                  completeResourceMap{slotNo} = 'MEM';                % Store the type of resource
+                end
+              % Add cases to handle other percentages
+              otherwise
+                error('Check configuration file for CPU-MEM distribution percentage. Cases other than 50-50 haven''t been handled yet.');
+            end
+        end
+        slotCounter = slotCounter + 1;    % Increment slot counter
+      end
+    end
+  end
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK BANDWIDTH MAP
@@ -911,7 +964,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   dataCenterMap.hopsMap = hopsMap;
   dataCenterMap.switchMap = switchMap;
   dataCenterMap.occupiedMap = occupiedMap;
+  dataCenterMap.completeOccupiedMap = completeOccupiedMap;
   dataCenterMap.resourceMap = resourceMap;
+  dataCenterMap.completeResourceMap = completeResourceMap;
   dataCenterMap.distanceMap = distanceMap;
   dataCenterMap.latencyMap = latencyMap;
   dataCenterMap.latencyMapLinear = latencyMapLinear;
