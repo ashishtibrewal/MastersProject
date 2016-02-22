@@ -942,6 +942,17 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   bandwidthMap.completeBandwidth = completeBandwidth;
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % RESOURCE (i.e. BLADE) UTILIZED MAP
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % VALUE MEANINGS
+  % 0 = No resources (slots) have been allocated in this blade
+  % 1 = At aleast a single resource (slot) has been allocated in this blade
+  resourceUtilizedMap = zeros(1,(nBlades * nRacks));    % Initialize every blade's value with zero since no slots in it have been utilized
+  % IMPORTANT NOTE: This map is used to optimize bin packing, i.e. need to
+  % pack those bins (i.e. blades and therefore, racks) that have already
+  % had some of their resources (i.e. slots) allocated to earlier requests.
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % HOLD TIME MAP
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % VALUE MEANINGS
@@ -967,6 +978,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   dataCenterMap.completeOccupiedMap = completeOccupiedMap;
   dataCenterMap.resourceMap = resourceMap;
   dataCenterMap.completeResourceMap = completeResourceMap;
+  dataCenterMap.resourceUtilizedMap = resourceUtilizedMap;
   dataCenterMap.distanceMap = distanceMap;
   dataCenterMap.latencyMap = latencyMap;
   dataCenterMap.latencyMapLinear = latencyMapLinear;

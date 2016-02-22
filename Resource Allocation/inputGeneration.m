@@ -46,7 +46,7 @@ function requestDB = inputGeneration(nRequests)
   latencyMaxMS = latencyMaxCM * 10;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (max) latency between MEM & STO
   
   holdTimeMin = 1;          % In s (i.e. seconds)
-  holdTimeMax = 100000;     % In s (i.e. seconds)
+  holdTimeMax = 10000;      % In s (i.e. seconds)
   
   % Add columns for cpu-mem bandwidth and mem-sto bandwidth
   requestDB = zeros(nRequests, 11);  % Matrix to store all generated requests (Each row contains a different request)

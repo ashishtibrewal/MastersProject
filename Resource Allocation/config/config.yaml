@@ -8,6 +8,7 @@ nUnits: 2     # Total number of units (in each slot)
 nTOR: 2       # Number of TOR switches per rack
 nTOB: 2       # Number of TOB switches per blade
 
+# TODO Change unit size to more realistic figures
 unitSize:
   CPU: 1      # >1 signifies multi-core (A simplistic approach)
   MEM: 4      # Each DIMM is 4 GB in size/capacity
