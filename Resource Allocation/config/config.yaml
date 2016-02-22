@@ -3,7 +3,7 @@
 ########################################
 nRacks: 4     # Total number of racks
 nBlades: 3    # Total number of blades (in each rack)
-nSlots: 3     # Total number of slots (in each blade)
+nSlots: 4     # Total number of slots (in each blade) IMPORTANT NOTE: Always keep an even number of slots
 nUnits: 2     # Total number of units (in each slot)
 nTOR: 2       # Number of TOR switches per rack
 nTOB: 2       # Number of TOB switches per blade

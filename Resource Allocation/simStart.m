@@ -54,16 +54,25 @@ for i = 1:numel(rackNo)
   nCPU_MEM = nCPU_MEM + size(find([dataCenterConfig.racksConfig.(rackNo{i}){:}] == dataCenterConfig.setupTypes.heterogenCPU_MEM), 2);
 end
 
+% TODO Need to make this more flexible (Currently breaks for odd number of slots in a blade)
 % Add heterogenous values to nCPUs and nMEMs and evaluate total amount/units of resources available
 CPUs = (nCPUs * dataCenterConfig.nSlots * dataCenterConfig.nUnits * dataCenterConfig.unitSize.CPU) + (((nCPU_MEM * dataCenterConfig.nSlots) * (dataCenterConfig.heterogenSplit.heterogenCPU_MEM/100)) * dataCenterConfig.nUnits * dataCenterConfig.unitSize.CPU);
 MEMs = (nMEMs * dataCenterConfig.nSlots * dataCenterConfig.nUnits * dataCenterConfig.unitSize.MEM) + (((nCPU_MEM * dataCenterConfig.nSlots) * ((100 - dataCenterConfig.heterogenSplit.heterogenCPU_MEM)/100)) * dataCenterConfig.nUnits * dataCenterConfig.unitSize.MEM);
 STOs = (nSTOs * dataCenterConfig.nSlots * dataCenterConfig.nUnits * dataCenterConfig.unitSize.STO);
+
+% Find total number of units of each type of resource
+nCPU_units = CPUs/dataCenterConfig.unitSize.CPU;
+nMEM_units = MEMs/dataCenterConfig.unitSize.MEM;
+nSTO_units = STOs/dataCenterConfig.unitSize.STO;
 
 % Pack number of different types of resource items into a struct (Using a
 % different struct to keep the original YAML struct unmodified)
 dataCenterItems.nCPUs = CPUs;
 dataCenterItems.nMEMs = MEMs;
 dataCenterItems.nSTOs = STOs;
+dataCenterItems.nCPU_units = nCPU_units;
+dataCenterItems.nMEM_units = nMEM_units;
+dataCenterItems.nSTO_units = nSTO_units;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Network creation
@@ -118,8 +127,11 @@ for t = 1:tTime
   % Extract request from the database for current timestep
   request = requestDB(requestDBindex,:);
   
+  testRequest = [5,10,10,1000,1000,50,50,4000,0,0,0];    % Test request used for debugging
+  
   %%%%%%%%%% IT resource allocation %%%%%%%%%%
-  [dataCenterMap, ITallocationResult] = resourceAllocation(request, dataCenterConfig, dataCenterMap);
+  %[dataCenterMap, ITallocationResult] = resourceAllocation(request, dataCenterConfig, dataCenterMap);
+  [dataCenterMap, ITallocationResult] = resourceAllocation(testRequest, dataCenterConfig, dataCenterMap);
   %plotUsage(dataCenterMap, dataCenterConfig);
 
   %%%%%%%%%% Network resource allocation %%%%%%%%%%

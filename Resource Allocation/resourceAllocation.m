@@ -20,23 +20,52 @@ function [dataCenterMap, ITallocationResult] = resourceAllocation(request, dataC
   unitSizeMEM = dataCenterConfig.unitSize.MEM;
   unitSizeSTO = dataCenterConfig.unitSize.STO;
 
-  racksCPU = dataCenterConfig.racksCPU;
-  racksMEM = dataCenterConfig.racksMEM;
-  racksSTO = dataCenterConfig.racksSTO;
-
   % Obtain the required resource values from the request
+  % Column  1 -> CPU
+  % Column  2 -> Memory
+  % Column  3 -> Storage
+  % Column  4 -> Bandwidth (CPU-MEM)
+  % Column  5 -> Bandwidth (MEM-STO)
+  % Column  6 -> Latency (CPU-MEM)
+  % Column  7 -> Latency (MEM-STO)
+  % Column  8 -> Hold time
+  % Column  9 -> IT resource allocation stats (0 = not allocated, 1 = allocated)
+  % Column 10 -> Network resource allocation stats (0 = not allocated, 1 = allocated)
+  % Column 11 -> Request status (0 = not served, 1 = served, 2 = rejected)
   requiredCPU = request(1);
   requiredMEM = request(2);
   requiredSTO = request(3);
-  requiredBAN = request(4);
-  requiredLAT = request(5);
-  requiredHDT = request(6);   % (Same) Hold time applies to both the IT and network resources
+  requiredBAN_CM = request(4);    % MAXIMUM ACCEPTABLE BANDWIDTH (CPU-MEM)
+  requiredBAN_MS = request(5);    % MAXIMUM ACCEPTABLE BANDWIDTH (MEM-STO)
+  requiredLAT_CM = request(6);    % MAXIMUM ACCEPTABLE LATENCY (CPU-MEM)
+  requiredLAT_MS = request(7);    % MAXIMUM ACCEPTABLE LATENCY (MEM-STO)
+  requiredHDT = request(8);   % (Same) Hold time applies to both the IT and network resources
 
   % Flags that are set when a required resource has been alloated
   assignedCPU = 0;
   assignedMEM = 0;
   assignedSTO = 0;
 
+  %%%%%% MAIN RESOURCE ALLOCATION ALGORITHM %%%%%%
+  
+  % IMPORTANT NOTE: A unit can only be allocated to a single request.
+  
+  % Evaluate number of bins (i.e. units inside a slot) required for each
+  % resource (Using the ceil function to round up to the closest integer)
+  reqCPUunits = ceil(requiredCPU/unitSizeCPU);    % Number of CPU slots required
+  reqMEMunits = ceil(requiredMEM/unitSizeMEM);    % Number of MEM slots required
+  reqSTOunits = ceil(requiredSTO/unitSizeSTO);    % Number of STO slots required
+  
+  % Initialize number of bins (i.e. units inside a slot) allocated for each
+  % resource
+  nCPUunitsAllocated = 0;   % Number to CPU units successfully allocated
+  nMEMunitsAllocated = 0;   % Number to MEM units successfully allocated
+  nSTOunitsAllocated = 0;   % Number to STO units successfully allocated
+  
+  % Evaluate contention ratios (Do it in terms of units and not total
+  % values since the allocation is being done in units)
+  
+  
   % NEED TO MAKE SURE THAT ALL RESOURCES THAT ARE BEING ALLOCATED FOR A
   % REQUEST ARE CONNECTED (Currently this is indirectly true since all
   % racks are connected to each, all blades in a rack are connected to each

@@ -63,6 +63,8 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % VALUE MEANINGS
   % 0 = Disconnected
   % 1 = Connected
+  % IMPORTANT NOTE: All units inside a slot are assumed to be
+  % fully-connected
   
   completeConnectivityMatrixSize = completeMatrixSize;          % Complete connectivity map size
   completeConnectivity = zeros(completeConnectivityMatrixSize); % Initialize with zeros
@@ -322,12 +324,21 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % Note that the latency between two "nodes" is dependent on the distance
   % between them (i.e. minimum latency is 5 ns/m)
   
+  % Complete distance map
   completeDistanceMatrixSize = completeMatrixSize;      % Complete distance map
   completeDistance = inf(completeDistanceMatrixSize);   % Initialize with infinity
+  
+  % Complete latency map
+  completeLatencyMatrixSize = completeMatrixSize;       % Complete latency map
+  completeLatency = inf(completeLatencyMatrixSize);     % Initialize with infinity
   
   % Make leading diagonal of a matrix zero (since distance between a node
   % an itself is zero)
   completeDistance(1:(completeDistanceMatrixSize+1):(completeDistanceMatrixSize ^ 2)) = 0;
+  
+  % Make leading diagonal of a matrix zero (since latency between a node
+  % an itself is zero)
+  completeLatency(1:(completeLatencyMatrixSize+1):(completeLatencyMatrixSize ^ 2)) = 0;
   
   TOR_distIntraRack = dataCenterConfig.distances.TOR_IntraRack;
   TOR_distInterRack = dataCenterConfig.distances.TOR_InterRack;
@@ -366,10 +377,11 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     for TOR_NoDim2 = (TOR_NoDim1 + 1):(nTOR * nRacks)
       if (completeConnectivity(TOR_NoDim1,TOR_NoDim2) == 1) % Only has a finite distance if two nodes are connected
         if (ceil(TOR_NoDim2/nTOR) == ceil(TOR_NoDim1/nTOR)) % If both TORs are on the same rack
-          completeDistance(TOR_NoDim1, TOR_NoDim2) = TOR_distIntraRack;
+          completeDistance(TOR_NoDim1,TOR_NoDim2) = TOR_distIntraRack;
         else
-          completeDistance(TOR_NoDim1, TOR_NoDim2) = (ceil(TOR_NoDim2/nTOR) - ceil(TOR_NoDim1/nTOR)) * TOR_distInterRack;
+          completeDistance(TOR_NoDim1,TOR_NoDim2) = (ceil(TOR_NoDim2/nTOR) - ceil(TOR_NoDim1/nTOR)) * TOR_distInterRack;
         end
+        completeLatency(TOR_NoDim1,TOR_NoDim2) = completeDistance(TOR_NoDim1, TOR_NoDim2) * minChannelLatency;   % Update complete latency map
       end
     end
   end
@@ -382,7 +394,8 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
         % TODO Need to get incremental distance to work (Need to be able to
         % extract the blade number) - Currently all TORs-TOBs are equidistant
         % completeDistance(TOR, TOB) = mod(round(TOB/(nTOB * nBlades)), nBlades) * TOR_TOB_dist;
-        completeDistance(TOR, TOB) = TOR_TOB_dist + (bladeCounter * TOR_TOB_dist);
+        completeDistance(TOR,TOB) = TOR_TOB_dist + (bladeCounter * TOR_TOB_dist);
+        completeLatency(TOR,TOB) = completeDistance(TOR, TOB) * minChannelLatency;   % Update complete latency map
       end
       if (mod(TOB, (nTOB * nBlades)) == 0)  % Check if all TOBs have been covered for current rack
         bladeCounter = 0;       % Reset blade counter when iterating for every rack
@@ -426,10 +439,11 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
 %       if (completeConnectivity(TOB_NoDim1,TOB_NoDim2) == 1) % Only has a finite distance if two nodes are connected
 %         [TOB_NoDim1, TOB_NoDim2, ceil(TOB_NoDim1/(nTOB + (nTOR * nRacks))), ceil((TOB_NoDim2 - 1)/(nTOB + (nTOR * nRacks))), (nTOB * nBlades)]
 %         if (ceil(TOB_NoDim2/(nTOB + (nTOR * nRacks))) == ceil(TOB_NoDim1/(nTOB + (nTOR * nRacks)))) % If both TOBs are on the same blade
-%           completeDistance(TOB_NoDim1, TOB_NoDim2) = TOB_distIntraBlade;
+%           completeDistance(TOB_NoDim1,TOB_NoDim2) = TOB_distIntraBlade;
 %         else
-%           completeDistance(TOB_NoDim1, TOB_NoDim2) = (ceil(TOB_NoDim2/(nTOB + (nTOR * nRacks))) - ceil(TOB_NoDim1/(nTOB + (nTOR * nRacks)))) * TOB_distInterBlade;
+%           completeDistance(TOB_NoDim1,TOB_NoDim2) = (ceil(TOB_NoDim2/(nTOB + (nTOR * nRacks))) - ceil(TOB_NoDim1/(nTOB + (nTOR * nRacks)))) * TOB_distInterBlade;
 %         end
+%         completeLatency(TOB_NoDim1,TOB_NoDim2) = completeDistance(TOB_NoDim1, TOB_NoDim2) * minChannelLatency;   % Update complete latency map
 %       end
 %     end
 %   end
@@ -440,8 +454,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
           completeDistance(TOB_NoDim1, TOB_NoDim2) = TOB_distIntraBlade;
         else
           %[TOB_NoDim1, TOB_NoDim2, ceil(TOB_NoDim1/(nTOB + (nTOR * nRacks))), ceil((TOB_NoDim2 - 1)/(nTOB + (nTOR * nRacks))), (nTOB * nBlades)]
-          completeDistance(TOB_NoDim1, TOB_NoDim2) = (ceil(abs(TOB_NoDim2 - TOB_NoDim1)) - 1) * TOB_distInterBlade;
+          completeDistance(TOB_NoDim1,TOB_NoDim2) = (ceil(abs(TOB_NoDim2 - TOB_NoDim1)) - 1) * TOB_distInterBlade;
         end
+        completeLatency(TOB_NoDim1,TOB_NoDim2) = completeDistance(TOB_NoDim1, TOB_NoDim2) * minChannelLatency;   % Update complete latency map
       end
     end
   end
@@ -457,6 +472,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       end
       if (completeConnectivity(TOB,slot) == 1)
         completeDistance(TOB,slot) = slot_counter * TOB_slot_dist;  % Distance based on the slot counter/location
+        completeLatency(TOB,slot) = completeDistance(TOB,slot) * minChannelLatency;   % Update complete latency map
       end
     end
   end
@@ -494,12 +510,14 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % TODO Depending on the slot topology, update distance map. Currently all
   % slots are assumed to be disconnected hence distance map doesn't need to
   % be changed.
+  %completeLatency(slot,slot) = completeDistance(slot,slot) * minChannelLatency;   % Update complete latency map
   
   % Convert upper-triangular matrix to a full matrix (Doing this since the matrix should be complete and symmetric)
   nNodes = size(completeDistance, 1);
   for i = 1:nNodes
     for j = 1:nNodes
       completeDistance(j,i) = completeDistance(i,j);
+      completeLatency(j,i) = completeLatency(i,j);
     end
   end
   
@@ -513,6 +531,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   latencyMap.rackLatency = rackLatency;
   latencyMap.bladeLatency = bladeLatency;
   latencyMap.slotLatency = slotLatency;
+  latencyMap.completeLatency = completeLatency;
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % HOPS MAP (i.e. Inter-node hops)
@@ -621,7 +640,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   shortestPathMap.ksPath = ksPath;
   
   % Latency map struct (Shortest path latency map)
-  latencyMap.completeLatency = ksPath_Latency;
+  shortestPathMap.shortestPathLatency = ksPath_Latency;
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK LATENCY MAP (Linear indexing)
@@ -740,11 +759,17 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % IT RESOURCE OCCUPIED & TYPE MAP (Linear)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
+  % Slot resource map (i.e. what type of resource does a slot contain)
   completeResourceMapCellArraySize = nSlots * nBlades * nRacks;     % Complete resource map size
   completeResourceMap = cell(1,completeResourceMapCellArraySize);   % Initialize cell
   
-  completeOccupiedMapMatrixSize = nSlots * nBlades * nRacks;        % Complete occupied map size
-  completeOccupiedMap = zeros(1,completeOccupiedMapMatrixSize);     % Initialize with zeros
+  % Slot resource occupied map (i.e. number of resources that have been occupied in a slot)
+  completeResourceOccupiedMapMatrixSize = nSlots * nBlades * nRacks;        % Complete resource occupied map size
+  completeResourceOccupiedMap = zeros(1,completeResourceOccupiedMapMatrixSize);     % Initialize with zeros
+  
+  % Slot unit occupied map (i.e. number of slots that have been occupied in a slot)
+  completeUnitOccupiedMapMatrixSize = nSlots * nBlades * nRacks;        % Complete unit occupied map size
+  completeUnitOccupiedMap = zeros(1,completeUnitOccupiedMapMatrixSize);     % Initialize with zeros
 
   % Total number of racks specified in the configuration file
   racks = fieldnames(dataCenterConfig.racksConfig);
@@ -758,15 +783,18 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
         switch (rackConfigData(bladeNo))
           % Check for homogeneous CPU blades
           case dataCenterConfig.setupTypes.homogenCPU
-            completeOccupiedMap(slotNo) = nUnits * unitSizeCPU; % Updated occupied map
+            completeResourceOccupiedMap(slotNo) = nUnits * unitSizeCPU; % Update resource occupied map
+            completeUnitOccupiedMap(slotNo) = nUnits;           % Update unit occupied map
             completeResourceMap{slotNo} = 'CPU';                % Store the type of resource
           % Check for homogeneous MEM blades
           case dataCenterConfig.setupTypes.homogenMEM
-            completeOccupiedMap(slotNo) = nUnits * unitSizeMEM; % Updated occupied map
+            completeResourceOccupiedMap(slotNo) = nUnits * unitSizeMEM; % Update resource occupied map
+            completeUnitOccupiedMap(slotNo) = nUnits;           % Update unit occupied map
             completeResourceMap{slotNo} = 'MEM';                % Store the type of resource
           % Check for homogeneous STO blades
           case dataCenterConfig.setupTypes.homogenSTO
-            completeOccupiedMap(slotNo) = nUnits * unitSizeSTO; % Updated occupied map
+            completeResourceOccupiedMap(slotNo) = nUnits * unitSizeSTO; % Update resource occupied map
+            completeUnitOccupiedMap(slotNo) = nUnits;           % Update unit occupied map
             completeResourceMap{slotNo} = 'STO';                % Store the type of resource
           % Check for heterogeneous CPU & MEM blades
           case dataCenterConfig.setupTypes.heterogenCPU_MEM
@@ -776,17 +804,18 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
               case 50
                 % Even slots are CPUs
                 if (mod(slotCounter,2) == 0)
-                  completeOccupiedMap(slotNo) = nUnits * unitSizeCPU; % Updated occupied map
+                  completeResourceOccupiedMap(slotNo) = nUnits * unitSizeCPU; % Updated occupied map
                   completeResourceMap{slotNo} = 'CPU';                % Store the type of resource
                 % Odd slots are MEMs
                 else
-                  completeOccupiedMap(slotNo) = nUnits * unitSizeMEM; % Updated occupied map
+                  completeResourceOccupiedMap(slotNo) = nUnits * unitSizeMEM; % Updated occupied map
                   completeResourceMap{slotNo} = 'MEM';                % Store the type of resource
                 end
               % Add cases to handle other percentages
               otherwise
                 error('Check configuration file for CPU-MEM distribution percentage. Cases other than 50-50 haven''t been handled yet.');
             end
+            completeUnitOccupiedMap(slotNo) = nUnits;           % Update unit occupied map
         end
         slotCounter = slotCounter + 1;    % Increment slot counter
       end
@@ -965,7 +994,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % 2nd dimension = Blade number
   % 3rd dimension = Rack number
   
-  % THIS NEEDS TO BE CHANGED TO CONSIDER DIFFERENT UNITS INSIDE A SLOT
+  % TODO THIS NEEDS TO BE CHANGED TO CONSIDER DIFFERENT UNITS INSIDE A SLOT
   holdTimeMap = zeros(nSlots, nBlades, nRacks);
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -974,8 +1003,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   dataCenterMap.connectivityMap = connectivityMap;
   dataCenterMap.hopsMap = hopsMap;
   dataCenterMap.switchMap = switchMap;
+  dataCenterMap.completeUnitOccupiedMap = completeUnitOccupiedMap;
   dataCenterMap.occupiedMap = occupiedMap;
-  dataCenterMap.completeOccupiedMap = completeOccupiedMap;
+  dataCenterMap.completeOccupiedMap = completeResourceOccupiedMap;
   dataCenterMap.resourceMap = resourceMap;
   dataCenterMap.completeResourceMap = completeResourceMap;
   dataCenterMap.resourceUtilizedMap = resourceUtilizedMap;
