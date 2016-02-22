@@ -46,10 +46,10 @@ switchDelay:
 
 # Number of channels between two nodes (i.e. a node can be a rack/blade/slot)
 channels:
-  TOR_TOR: 1        # Number of channels between TORs
-  TOR_TOB: 1        # Number of channels between TOR & TOB
-  TOB_TOB: 1        # Number of channels between TOBs
-  TOB_SLOT: 1       # Number of channels between TOB & SLOT
+  TOR_TOR: 5        # Number of channels between TORs
+  TOR_TOB: 4        # Number of channels between TOR & TOB
+  TOB_TOB: 3        # Number of channels between TOBs
+  TOB_SLOT: 2       # Number of channels between TOB & SLOT
   SLOT_SLOT: 1      # Number of channels between SLOTs
 
 # Contraints/bounds in the data center (Minimum channel latency in nanoseconds & maximum channel bandwidth in Gb/s)

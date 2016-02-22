@@ -576,7 +576,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   
   ksPath_Latency = zeros (nNodes,nNodes,kPaths);   % Initialize k-shortest path latency matrix with it's 3rd dimension being of size kPaths 
   
-  profile on;         % Turn on profiler
+  %profile on;         % Turn on profiler
   
   % Run k-shortest path for every node to every other node in the graph
   for sourceNode = 1:nNodes
@@ -610,7 +610,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     end
   end
   
-  profile viewer;     % View profiler results
+  %profile viewer;     % View profiler results
   
   % K-shortest path struct containing the path distance and shortest paths
   ksPath.ksPath_Dist = ksPath_Dist;
@@ -755,6 +755,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % THIS SIMULATION - PRIMARILY BECAUSE OF THE REALLY SHORT DISTANCES
   % BETWEEN RESOURCES
   
+  completeBandwidthMatrixSize = completeMatrixSize;           % Complete bandwidth map
+  completeBandwidth = zeros(completeBandwidthMatrixSize);     % Initialize with zeros
+  
   % INTER-RACK BANDWIDTH
   rackBandwidth = ones(nRacks);
   for rackNoDim1 = 1:nRacks
@@ -771,6 +774,26 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
         end
       else
         rackBandwidth(rackNoDim1,rackNoDim2) = -1;
+      end
+    end
+  end
+  
+  %%%%%% TOR-TOR BANDWIDTH %%%%%%
+  for TOR_NoDim1 = 1:(nTOR * nRacks)
+    for TOR_NoDim2 = (TOR_NoDim1 + 1):(nTOR * nRacks)
+      % Check if the TORs are connected
+      if (completeConnectivity(TOR_NoDim1,TOR_NoDim2) == 1)
+        completeBandwidth(TOR_NoDim1,TOR_NoDim2) = maxChannelBandwidth * nChannelsTOR_TOR;
+      end
+    end
+  end
+  
+  %%%%%% TOR-TOB BANDWIDTH %%%%%%
+  for TOR = 1:(nTOR * nRacks)
+    for TOB = (TOR + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
+      % Check if the TOR & TOB are connected
+      if (completeConnectivity(TOR,TOB) == 1)
+        completeBandwidth(TOR,TOB) = maxChannelBandwidth * nChannelsTOR_TOB;
       end
     end
   end
@@ -793,6 +816,27 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
         else
           bladeBandwidth(bladeNoDim1,bladeNoDim2,rackNo) = -1;
         end
+      end
+    end
+  end
+  
+  %%%%%% TOB-TOB BANDWIDTH %%%%%%
+  for TOB_NoDim1 = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
+    for TOB_NoDim2 = (TOB_NoDim1 + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
+      % Check if the TOBs are connected
+      if (completeConnectivity(TOB_NoDim1,TOB_NoDim2) == 1)
+        completeBandwidth(TOB_NoDim1,TOB_NoDim2) = maxChannelBandwidth * nChannelsTOB_TOB;
+      end
+    end
+  end
+  
+  
+  %%%%%% TOB-SLOT BANDWIDTH %%%%%%
+  for TOB = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
+    for slot = (((nTOR * nRacks) + (nTOB * nBlades * nRacks)) + 1): ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))
+      % Check if the TOB & SLOT are connected
+      if (completeConnectivity(TOB,slot) == 1)
+        completeBandwidth(TOB,slot) = maxChannelBandwidth * nChannelsTOB_SLOT;
       end
     end
   end
@@ -821,13 +865,28 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
         end
       end
     end
+  end 
+  
+  %%%%%% SLOT-SLOT BANDWIDTH %%%%%%
+  for slot_NoDim1 = (((nTOR * nRacks) + (nTOB * nBlades * nRacks)) + 1): ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))
+    for slot_NoDim2 = (slot_NoDim1 + 1): ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))
+      % Check if the SLOTs are connected
+      if (completeConnectivity(slot_NoDim1,slot_NoDim2) == 1)
+        completeBandwidth(slot_NoDim1,slot_NoDim2) = maxChannelBandwidth * nChannelsSLOT_SLOT;
+      end
+    end
   end
+  
+  % Transposing completeBandwidth matrix and adding to fill in remaining elements (i.e. the elements in the bottom half of the matrix).
+  % Since only the upper triangle is filled as specified by the topology (and since an adjacency/connectivity matrix is symmetric), this works perfectly.
+  completeBandwidth = completeBandwidth + completeBandwidth.';
   
   % Network distance map struct containing the rack, blade and slot distance
   % maps
   bandwidthMap.rackBandwidth = rackBandwidth;
   bandwidthMap.bladeBandwidth = bladeBandwidth;
   bandwidthMap.slotBandwidth = slotBandwidth;
+  bandwidthMap.completeBandwidth = completeBandwidth;
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % HOLD TIME MAP
