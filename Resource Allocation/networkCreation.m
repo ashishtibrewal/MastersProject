@@ -750,6 +750,8 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
               otherwise
                 error('Check configuration file for CPU-MEM distribution percentage. Cases other than 50-50 haven''t been handled yet.');
             end
+          otherwise
+            error('Check configuration file for racksConfig. Incorrect blade configurations have been specified for one or more racks.');
         end
       end
     end
