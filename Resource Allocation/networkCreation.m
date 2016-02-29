@@ -823,7 +823,17 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       end
     end
   end
-
+  
+  % Find matrix indexes for each type of resource (i.e. the node number in the graph)
+  CPUlocations = find(strcmp(completeResourceMap, 'CPU')) + ((nTOR * nRacks) + (nTOB * nBlades * nRacks));
+  MEMlocations = find(strcmp(completeResourceMap, 'MEM')) + ((nTOR * nRacks) + (nTOB * nBlades * nRacks));
+  STOlocations = find(strcmp(completeResourceMap, 'STO')) + ((nTOR * nRacks) + (nTOB * nBlades * nRacks));
+  
+  % Pack the locations into the data center items struct
+  locationMap.CPUs = CPUlocations;
+  locationMap.MEMs = MEMlocations;
+  locationMap.STOs = STOlocations;
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK BANDWIDTH MAP
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1010,12 +1020,13 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   dataCenterMap.completeOccupiedMap = completeResourceOccupiedMap;
   dataCenterMap.resourceMap = resourceMap;
   dataCenterMap.completeResourceMap = completeResourceMap;
+  dataCenterMap.locationMap = locationMap;
   dataCenterMap.resourceUtilizedMap = resourceUtilizedMap;
   dataCenterMap.distanceMap = distanceMap;
   dataCenterMap.latencyMap = latencyMap;
   dataCenterMap.latencyMapLinear = latencyMapLinear;
   dataCenterMap.bandwidthMap = bandwidthMap;
   dataCenterMap.holdTimeMap = holdTimeMap;
-  dataCenterMap.shortestPathMap = shortestPathMap;
+  dataCenterMap.shortestPathMap = shortestPathMap; 
   
 end

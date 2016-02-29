@@ -131,7 +131,7 @@ for t = 1:tTime
   
   %%%%%%%%%% IT resource allocation %%%%%%%%%%
   %[dataCenterMap, ITallocationResult] = resourceAllocation(request, dataCenterConfig, dataCenterMap);
-  [dataCenterMap, ITallocationResult] = resourceAllocation(testRequest, dataCenterConfig, dataCenterMap);
+  [dataCenterMap, ITallocationResult] = resourceAllocation(testRequest, dataCenterConfig, dataCenterMap, dataCenterItems);
   %plotUsage(dataCenterMap, dataCenterConfig);
 
   %%%%%%%%%% Network resource allocation %%%%%%%%%%
@@ -176,6 +176,6 @@ displayResults(dataCenterMap, requestDB, nRequests, dataCenterConfig);
 str = sprintf('\n+------- SIMULATION COMPLETE --------+\n');
 disp(str);
 diary off;                       % Turn diary (i.e. logging functionality) off
-str = sprintf('Opening simulation log ...');
-disp(str);
-open('log/log.txt');
+% str = sprintf('Opening simulation log ...');
+% disp(str);
+% open('log/log.txt');
