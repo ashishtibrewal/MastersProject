@@ -762,41 +762,54 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   % Slot resource map (i.e. what type of resource does a slot contain)
-  completeResourceMapCellArraySize = nSlots * nBlades * nRacks;     % Complete resource map size
+  completeResourceMapCellArraySize = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks));     % Complete resource map size
   completeResourceMap = cell(1,completeResourceMapCellArraySize);   % Initialize cell
   
   % Slot resource occupied map (i.e. number of resources that have been occupied in a slot)
-  completeResourceOccupiedMapMatrixSize = nSlots * nBlades * nRacks;        % Complete resource occupied map size
-  completeResourceOccupiedMap = zeros(1,completeResourceOccupiedMapMatrixSize);     % Initialize with zeros
+  completeResourceAvailableMapMatrixSize = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks));        % Complete resource occupied map size
+  completeResourceAvailableMap = zeros(1,completeResourceAvailableMapMatrixSize);     % Initialize with zeros
   
   % Slot unit occupied map (i.e. number of slots that have been occupied in a slot)
-  completeUnitOccupiedMapMatrixSize = nSlots * nBlades * nRacks;        % Complete unit occupied map size
-  completeUnitOccupiedMap = zeros(1,completeUnitOccupiedMapMatrixSize);     % Initialize with zeros
+  completeUnitAvailableMapMatrixSize = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks));        % Complete unit occupied map size
+  completeUnitAvailableMap = zeros(1,completeUnitAvailableMapMatrixSize);     % Initialize with zeros
 
   % Total number of racks specified in the configuration file
   racks = fieldnames(dataCenterConfig.racksConfig);
+  
+  % Fill required matrices and cells with TOR & TOB content
+  completeResourceMap(1,1:(nTOR * nRacks)) = {'TOR'};          % Top of rack switch nodes
+  completeResourceMap(1,((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))) = {'TOB'};  % Top of blade switch nodes
+  
+  completeResourceAvailableMap(1,1:(nTOR * nRacks)) = inf;          % Top of rack switch resource avalibility (infinite availibility)
+  completeResourceAvailableMap(1,((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))) = inf;  % Top of blade switch resource avalibility (infinite availibility)
+  
+  completeUnitAvailableMap(1,1:(nTOR * nRacks)) = inf;          % Top of rack switch unit avalibility (infinite availibility)
+  completeUnitAvailableMap(1,((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))) = inf;  % Top of blade switch unit avalibility (infinite availibility)
+  
+  % Offset to ignore TOR & TOB switch indexes in the cell array
+  switchOffset = (nTOR * nRacks) + (nTOB * nBlades * nRacks);
   
   % Set the value for each slot to the number of units available in it
   for rackNo = 1:nRacks
     rackConfigData = [dataCenterConfig.racksConfig.(racks{rackNo}){:}];
     for bladeNo = 1:nBlades
       slotCounter = 1;        % Initialize/Reset slot coutner to zero for every new blade
-      for slotNo = ((nSlots * nBlades * (rackNo - 1)) + (nSlots * (bladeNo - 1) + 1)):((nSlots * bladeNo) + (nSlots * nBlades * (rackNo - 1)))
+      for slotNo = ((nSlots * nBlades * (rackNo - 1)) + (nSlots * (bladeNo - 1) + 1) + switchOffset):((nSlots * bladeNo) + (nSlots * nBlades * (rackNo - 1)) + switchOffset)
         switch (rackConfigData(bladeNo))
           % Check for homogeneous CPU blades
           case dataCenterConfig.setupTypes.homogenCPU
-            completeResourceOccupiedMap(slotNo) = nUnits * unitSizeCPU; % Update resource occupied map
-            completeUnitOccupiedMap(slotNo) = nUnits;           % Update unit occupied map
+            completeResourceAvailableMap(slotNo) = nUnits * unitSizeCPU; % Update resource occupied map
+            completeUnitAvailableMap(slotNo) = nUnits;           % Update unit occupied map
             completeResourceMap{slotNo} = 'CPU';                % Store the type of resource
           % Check for homogeneous MEM blades
           case dataCenterConfig.setupTypes.homogenMEM
-            completeResourceOccupiedMap(slotNo) = nUnits * unitSizeMEM; % Update resource occupied map
-            completeUnitOccupiedMap(slotNo) = nUnits;           % Update unit occupied map
+            completeResourceAvailableMap(slotNo) = nUnits * unitSizeMEM; % Update resource occupied map
+            completeUnitAvailableMap(slotNo) = nUnits;           % Update unit occupied map
             completeResourceMap{slotNo} = 'MEM';                % Store the type of resource
           % Check for homogeneous STO blades
           case dataCenterConfig.setupTypes.homogenSTO
-            completeResourceOccupiedMap(slotNo) = nUnits * unitSizeSTO; % Update resource occupied map
-            completeUnitOccupiedMap(slotNo) = nUnits;           % Update unit occupied map
+            completeResourceAvailableMap(slotNo) = nUnits * unitSizeSTO; % Update resource occupied map
+            completeUnitAvailableMap(slotNo) = nUnits;           % Update unit occupied map
             completeResourceMap{slotNo} = 'STO';                % Store the type of resource
           % Check for heterogeneous CPU & MEM blades
           case dataCenterConfig.setupTypes.heterogenCPU_MEM
@@ -806,18 +819,18 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
               case 50
                 % Even slots are CPUs
                 if (mod(slotCounter,2) == 0)
-                  completeResourceOccupiedMap(slotNo) = nUnits * unitSizeCPU; % Updated occupied map
+                  completeResourceAvailableMap(slotNo) = nUnits * unitSizeCPU; % Updated occupied map
                   completeResourceMap{slotNo} = 'CPU';                % Store the type of resource
                 % Odd slots are MEMs
                 else
-                  completeResourceOccupiedMap(slotNo) = nUnits * unitSizeMEM; % Updated occupied map
+                  completeResourceAvailableMap(slotNo) = nUnits * unitSizeMEM; % Updated occupied map
                   completeResourceMap{slotNo} = 'MEM';                % Store the type of resource
                 end
               % Add cases to handle other percentages
               otherwise
                 error('Check configuration file for CPU-MEM distribution percentage. Cases other than 50-50 haven''t been handled yet.');
             end
-            completeUnitOccupiedMap(slotNo) = nUnits;           % Update unit occupied map
+            completeUnitAvailableMap(slotNo) = nUnits;           % Update unit occupied map
         end
         slotCounter = slotCounter + 1;    % Increment slot counter
       end
@@ -825,9 +838,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   end
   
   % Find matrix indexes for each type of resource (i.e. the node number in the graph)
-  CPUlocations = find(strcmp(completeResourceMap, 'CPU')) + ((nTOR * nRacks) + (nTOB * nBlades * nRacks));
-  MEMlocations = find(strcmp(completeResourceMap, 'MEM')) + ((nTOR * nRacks) + (nTOB * nBlades * nRacks));
-  STOlocations = find(strcmp(completeResourceMap, 'STO')) + ((nTOR * nRacks) + (nTOB * nBlades * nRacks));
+  CPUlocations = find(strcmp(completeResourceMap, 'CPU'));
+  MEMlocations = find(strcmp(completeResourceMap, 'MEM'));
+  STOlocations = find(strcmp(completeResourceMap, 'STO'));
   
   % Pack the locations into the data center items struct
   locationMap.CPUs = CPUlocations;
@@ -1015,9 +1028,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   dataCenterMap.connectivityMap = connectivityMap;
   dataCenterMap.hopsMap = hopsMap;
   dataCenterMap.switchMap = switchMap;
-  dataCenterMap.completeUnitOccupiedMap = completeUnitOccupiedMap;
+  dataCenterMap.completeUnitAvailableMap = completeUnitAvailableMap;
   dataCenterMap.occupiedMap = occupiedMap;
-  dataCenterMap.completeOccupiedMap = completeResourceOccupiedMap;
+  dataCenterMap.completeResourceAvailableMap = completeResourceAvailableMap;
   dataCenterMap.resourceMap = resourceMap;
   dataCenterMap.completeResourceMap = completeResourceMap;
   dataCenterMap.locationMap = locationMap;

@@ -53,7 +53,7 @@ function [dataCenterMap, ITallocationResult] = resourceAllocation(request, dataC
   
   % Extract required maps from the data center map struct
   completeResourceMap = dataCenterMap.completeResourceMap;
-  unitOccupiedMap = dataCenterMap.completeUnitOccupiedMap;
+  unitAvailableMap = dataCenterMap.completeUnitAvailableMap;
 
   %%%%%% MAIN IT RESOURCE ALLOCATION ALGORITHM %%%%%%
   
