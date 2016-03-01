@@ -37,17 +37,17 @@ str = sprintf('Number of requests/jobs generated: %i', nRequests);
 disp(str);
 
 % Total number of IT resoure allocation failed
-nResourceAllocationFailed_IT = size(find(requestDB(:,9) == 0), 1);
+nResourceAllocationFailed_IT = size(find(cell2mat(requestDB(:,9)) == 0), 1);
 str = sprintf('Number of IT resource allocation failed: %i', nResourceAllocationFailed_IT);
 disp(str);
 
 % Total number of network resource allocation failed
-nResourceAllocationFailed_Network= size(find(requestDB(:,10) == 0), 1);
+nResourceAllocationFailed_Network= size(find(cell2mat(requestDB(:,10)) == 0), 1);
 str = sprintf('Number of network resource allocation failed: %i', nResourceAllocationFailed_Network);
 disp(str);
 
 % Total number of requests failed/dropped
-nRequestDropped = size(find(requestDB(:,11) == 0), 1);
+nRequestDropped = size(find(cell2mat(requestDB(:,11)) == 0), 1);
 str = sprintf('Number of requests dropped: %i', nRequestDropped);
 disp(str);
 

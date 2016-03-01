@@ -37,14 +37,15 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   % Column  9 -> IT resource allocation stats (0 = not allocated, 1 = allocated)
   % Column 10 -> Network resource allocation stats (0 = not allocated, 1 = allocated)
   % Column 11 -> Request status (0 = not served, 1 = served, 2 = rejected)
-  requiredCPU = request(1);
-  requiredMEM = request(2);
-  requiredSTO = request(3);
-  requiredBAN_CM = request(4);    % MAXIMUM ACCEPTABLE BANDWIDTH (CPU-MEM)
-  requiredBAN_MS = request(5);    % MAXIMUM ACCEPTABLE BANDWIDTH (MEM-STO)
-  requiredLAT_CM = request(6);    % MAXIMUM ACCEPTABLE LATENCY (CPU-MEM)
-  requiredLAT_MS = request(7);    % MAXIMUM ACCEPTABLE LATENCY (MEM-STO)
-  requiredHDT = request(8);   % (Same) Hold time applies to both the IT and network resources
+  % Column 12 -> Resource nodes allocated
+  requiredCPU = request{1};
+  requiredMEM = request{2};
+  requiredSTO = request{3};
+  requiredBAN_CM = request{4};    % MAXIMUM ACCEPTABLE BANDWIDTH (CPU-MEM)
+  requiredBAN_MS = request{5};    % MAXIMUM ACCEPTABLE BANDWIDTH (MEM-STO)
+  requiredLAT_CM = request{6};    % MAXIMUM ACCEPTABLE LATENCY (CPU-MEM)
+  requiredLAT_MS = request{7};    % MAXIMUM ACCEPTABLE LATENCY (MEM-STO)
+  requiredHDT = request{8};   % (Same) Hold time applies to both the IT and network resources
 
   % Flags that are set when a required resource has been alloated
   assignedCPU = 0;

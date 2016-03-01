@@ -48,8 +48,7 @@ function requestDB = inputGeneration(nRequests)
   holdTimeMin = 1;          % In s (i.e. seconds)
   holdTimeMax = 10000;      % In s (i.e. seconds)
   
-  % Add columns for cpu-mem bandwidth and mem-sto bandwidth
-  requestDB = zeros(nRequests, 11);  % Matrix to store all generated requests (Each row contains a different request)
+  requestDB = cell(nRequests, 12);  % Matrix to store all generated requests (Each row contains a different request)
   % Column  1 -> CPU
   % Column  2 -> Memory
   % Column  3 -> Storage
@@ -61,6 +60,7 @@ function requestDB = inputGeneration(nRequests)
   % Column  9 -> IT resource allocation stats (0 = not allocated, 1 = allocated)
   % Column 10 -> Network resource allocation stats (0 = not allocated, 1 = allocated)
   % Column 11 -> Request status (0 = not served, 1 = served, 2 = rejected)
+  % Column 12 -> Resource nodes allocated
   
   distributionPlot = 0;   % Flag variable to check if anything needs to be plotted
   scatterPlot = 0;
@@ -140,7 +140,7 @@ function requestDB = inputGeneration(nRequests)
     end
     
     % Collect/store data generated over i iterations
-    requestDB(i,:) = [nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0];
+    requestDB(i,:) = {nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0, 0};
 
     if (scatterPlot == 1)
       % Store all iteration numbers/values
@@ -173,35 +173,35 @@ function requestDB = inputGeneration(nRequests)
     figure ('Name', 'Input (Discrete) Probability Distributions', 'NumberTitle', 'off','Position', [40, 100, 1200, 700]);
 
     subplot(2,4,1);
-    histogram(requestDB(:,1),nbins);
+    histogram(cell2mat(requestDB(:,1)),nbins);
     title('CPU distribution');
 
     subplot(2,4,2);
-    histogram(requestDB(:,2),nbins);
+    histogram(cell2mat(requestDB(:,2)),nbins);
     title('Memory distribution');
     
     subplot(2,4,3);
-    histogram(requestDB(:,4),nbins);
+    histogram(cell2mat(requestDB(:,4)),nbins);
     title('CPU-MEM Bandwidth distribution');
     
     subplot(2,4,4);
-    histogram(requestDB(:,5),nbins);
+    histogram(cell2mat(requestDB(:,5)),nbins);
     title('MEM-STO Bandwidth distribution');
     
     subplot(2,4,5);
-    histogram(requestDB(:,8),nbins);
+    histogram(cell2mat(requestDB(:,8)),nbins);
     title('Holdtime distribution');
 
     subplot(2,4,6);
-    histogram(requestDB(:,3),nbins);
+    histogram(cell2mat(requestDB(:,3)),nbins);
     title('Storage distribution');
 
     subplot(2,4,7);
-    histogram(requestDB(:,6),nbins);
+    histogram(cell2mat(requestDB(:,6)),nbins);
     title('CPU-MEM Latency distribution');
     
     subplot(2,4,8);
-    histogram(requestDB(:,7),nbins);
+    histogram(cell2mat(requestDB(:,7)),nbins);
     title('MEM-STO Latency distribution');
   end 
 

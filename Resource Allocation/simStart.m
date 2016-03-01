@@ -121,7 +121,7 @@ requestStatusColumn = 11;
 
 % USED ONLY FOR DEBUGGING
 %tTime = 1;
-testRequest = [5,10,10,1000,1000,50,50,4000,0,0,0];    % Test request used for debugging
+testRequest = {5,10,10,1000,1000,50,50,4000,0,0,0,0};    % Test request used for debugging
 
 % Main time loop
 for t = 1:tTime
@@ -131,13 +131,16 @@ for t = 1:tTime
   % Extract request from the database for current timestep
   request = requestDB(requestDBindex,:);
   
-  pRequest = request(1:3)
+  % Display required resources for request on the prompt
+  requestString = sprintf(' %d', request{1:3});
+  str = sprintf('Requried resouces (Request no. %d): %s', requestDBindex, requestString);
+  disp(str);
   
   %%%%%%%%%% IT & NET resource allocation %%%%%%%%%%
   [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
   %[dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated] = resourceAllocation(testRequest, dataCenterConfig, dataCenterMap, dataCenterItems);
   %plotUsage(dataCenterMap, dataCenterConfig);
-  requestNodesAllocatedDB(requestDBindex,1) = {ITresourceNodesAllocated};
+  requestDB(requestDBindex,12) = {ITresourceNodesAllocated};
 
   %%%%%%%%%% Network resource allocation %%%%%%%%%%
   % Need to get a better understanding of network resource allocation code
@@ -154,14 +157,14 @@ for t = 1:tTime
   % can be stored in the request database (i.e. requestDB).
   
   % Update IT resource allocation column
-  requestDB(requestDBindex, ITresourceAllocStatusColumn) =  ITallocationResult;
+  requestDB{requestDBindex, ITresourceAllocStatusColumn} =  ITallocationResult;
   
   % Update network resource allocation column
   %requestDB(requestDBindex, networkResourceAllocStatusColumn) =  networkAllocationResult;
   
   % Update request status column
-  if (ITallocationResult == SUCCESS && networkAllocationResult == SUCCESS)
-    requestDB(requestDBindex, requestStatusColumn) = SUCCESS;
+  if (ITallocationResult == 1 && networkAllocationResult == 1)
+    requestDB{requestDBindex, requestStatusColumn} = 1;
   end
 end
 
