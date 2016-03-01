@@ -7,10 +7,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 diaryFileName = 'log/log.txt';  % Log file name/path
 diary(diaryFileName);           % Create new diary with the specified file name
-diary on;                       % Turn diary (i.e. logging functionality) on
 clear;                          % Clear all variables in the workspace
 close all;                      % Close all open figures
 clc;                            % Clear console/command prompt
+diary on;                       % Turn diary (i.e. logging functionality) on
 str = sprintf('\n+-------- SIMULATION STARTED --------+\n');
 disp(str);
 

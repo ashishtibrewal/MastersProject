@@ -85,8 +85,22 @@ function [dataCenterMap, ITallocationResult] = resourceAllocation(request, dataC
   MEMlocations = dataCenterMap.locationMap.MEMs;
   STOlocations = dataCenterMap.locationMap.STOs;
   
+  % Locations of resources that are "held" for the current request
+  heldCPUs = zeros(1,reqCPUunits);
+  heldMEMs = zeros(1,reqMEMunits);
+  heldSTOs = zeros(1,reqSTOunits);
+  
   % Start scanning from the 1st slot (i.e 1st slot in the 1st rack)
   % FOR A SPECIFIC RESOURCE, ONLY SCAN ITS RESPECTIVE LOCATIONS/SLOTS
+  
+  %%%%%% Find availabe CPUs %%%%%%
+  nCPU_SlotsToScan = size(CPUlocations,2);  % Number of slots to scan
+  for slotNo = 1:1
+    resourceNode = BFS(dataCenterMap, CPUlocations(slotNo));
+  end
+  
+  
+  
   
   %%%%%% Find availabe CPUs %%%%%%
   CPU_ScanStartLoc = CPUlocations(1);       % Extract first CPU location to start scan
