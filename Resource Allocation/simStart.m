@@ -130,7 +130,7 @@ for t = 1:tTime
   requestDBindex = t;
   % Extract request from the database for current timestep
   request = requestDB(requestDBindex,:);
-  request = testRequest;
+  %request = testRequest;
   
   % Display required resources for request on the prompt
   requestString = sprintf(' %d', request{1:3});

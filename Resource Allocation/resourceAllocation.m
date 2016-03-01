@@ -174,6 +174,17 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   NETallocationResult = NETresult;
   ITresourceNodesAllocated = ITresourceNodes;
   
+  % Update complete unit/resource available map
+  for i = 1:size(ITresourceNodesAllocated,1)
+    for j = 1:size(ITresourceNodesAllocated,2)
+      if (~isempty(ITresourceNodesAllocated{i,j}))
+        resourceNode = ITresourceNodesAllocated{i,j}{1,1};
+        unitsOccupied = ITresourceNodesAllocated{i,j}{1,2};
+        dataCenterMap.completeUnitAvailableMap(resourceNode) = dataCenterMap.completeUnitAvailableMap(resourceNode) - unitsOccupied;
+      end
+    end
+  end
+  
   
   
   % NEED TO MAKE SURE THAT ALL RESOURCES THAT ARE BEING ALLOCATED FOR A
