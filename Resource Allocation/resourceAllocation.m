@@ -1,4 +1,4 @@
-function [dataCenterMap, ITallocationResult] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems)
+function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems)
   % Function to allocate the IT resources
   % NEED TO PLAN AND TRY DIFFERENT APPROACHES.
   
@@ -53,9 +53,7 @@ function [dataCenterMap, ITallocationResult] = resourceAllocation(request, dataC
   
   % Extract required maps from the data center map struct
   completeResourceMap = dataCenterMap.completeResourceMap;
-  unitAvailableMap = dataCenterMap.completeUnitAvailableMap;
-
-  %%%%%% MAIN IT RESOURCE ALLOCATION ALGORITHM %%%%%%
+  completeunitAvailableMap = dataCenterMap.completeUnitAvailableMap;
   
   % IMPORTANT NOTE: A unit can only be allocated to a single request.
   % Updates/changes are made to the copies of the original maps and the
@@ -68,6 +66,11 @@ function [dataCenterMap, ITallocationResult] = resourceAllocation(request, dataC
   reqMEMunits = ceil(requiredMEM/unitSizeMEM);    % Number of MEM slots required
   reqSTOunits = ceil(requiredSTO/unitSizeSTO);    % Number of STO slots required
   
+  % Pack required resource units into a struct
+  reqResourceUnits.reqCPUunits = reqCPUunits;
+  reqResourceUnits.reqMEMunits = reqMEMunits;
+  reqResourceUnits.reqSTOunits = reqSTOunits;
+  
   % Initialize number of bins (i.e. units inside a slot) allocated for each
   % resource
   nCPUunitsAllocated = 0;   % Number to CPU units successfully allocated
@@ -78,61 +81,95 @@ function [dataCenterMap, ITallocationResult] = resourceAllocation(request, dataC
   % values since the allocation is being done in units)
   crCPU = reqCPUunits/nCPU_units;
   crMEM = reqMEMunits/nMEM_units;
-  crSTO = reqSTOunits/nSTO_units;  
+  crSTO = reqSTOunits/nSTO_units;
+  
+  contentionRatios = [crCPU,crMEM,crSTO];
+  maxCR = max(contentionRatios);
+  maxCRindex = find(contentionRatios == maxCR);
+  switch(maxCRindex)
+    case 1
+      maxCRswitch = 'CPU';
+      str = sprintf('CPU has the highest contention ratio.');
+      disp(str);
+    case 2
+      maxCRswitch = 'MEM';
+      str = sprintf('MEM has the highest contention ratio.');
+      disp(str);
+    case 3
+      maxCRswitch = 'STO';
+      str = sprintf('STO has the highest contention ratio.');
+      disp(str);
+  end
   
   % Extract locations for each type of resource
   CPUlocations = dataCenterMap.locationMap.CPUs;
   MEMlocations = dataCenterMap.locationMap.MEMs;
   STOlocations = dataCenterMap.locationMap.STOs;
   
-  % Locations of resources that are "held" for the current request
-  heldCPUs = zeros(1,reqCPUunits);
-  heldMEMs = zeros(1,reqMEMunits);
-  heldSTOs = zeros(1,reqSTOunits);
-  
-  % Start scanning from the 1st slot (i.e 1st slot in the 1st rack)
-  % FOR A SPECIFIC RESOURCE, ONLY SCAN ITS RESPECTIVE LOCATIONS/SLOTS
-  
-  %%%%%% Find availabe CPUs %%%%%%
-  nCPU_SlotsToScan = size(CPUlocations,2);  % Number of slots to scan
-  for slotNo = 1:1
-    resourceNode = BFS(dataCenterMap, CPUlocations(slotNo));
-  end
-  
-  
-  
-  
-  %%%%%% Find availabe CPUs %%%%%%
-  CPU_ScanStartLoc = CPUlocations(1);       % Extract first CPU location to start scan
-  nCPU_SlotsToScan = size(CPUlocations,2);  % Number of slots to scan
-  for slotNo = CPU_ScanStartLoc:nCPU_SlotsToScan    % Iterate over all slots that need to be scanned
-    scanLoc = CPUlocations(slotNo);     % Current scan slot location
-    if (unitOccupiedMap(scanLoc) >= 1)  % If at least a single unit exists in this slot
-      availableCPUlocations(slotNo) = scanLoc;
+  % Run infinite loop until **both** IT and network resources have been found
+  while (true)
+    %%%%%% MAIN IT RESOURCE ALLOCATION ALGORITHM %%%%%%
+    
+    % Run BFS to find required (avaliable) resources starting at a specific
+    % resoure node with the resource type having the highest contention ratio
+    switch (maxCRswitch)
+      case 'CPU'
+        nCPU_SlotsToScan = size(CPUlocations,2);  % Number of slots to scan
+        for slotNo = 1:nCPU_SlotsToScan
+          [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, CPUlocations(slotNo), reqResourceUnits);
+          % Check if all resources have been successfully found
+          if (ITsuccessful == 1)
+            % Locations of resources that are "held" for the current request
+            heldITresources = ITresourceNodes;
+            break;
+          end
+        end
+
+        case 'MEM'
+        nMEM_SlotsToScan = size(MEMlocations,2);  % Number of slots to scan
+        for slotNo = 1:nMEM_SlotsToScan
+          [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, MEMlocations(slotNo), reqResourceUnits);
+          % Check if all resources have been successfully found
+          if (ITsuccessful == 1)
+            % Locations of resources that are "held" for the current request
+            heldITresources = ITresourceNodes;
+            break;
+          end
+        end
+
+        case 'STO'
+        nSTO_SlotsToScan = size(STOlocations,2);  % Number of slots to scan
+        for slotNo = 1:nSTO_SlotsToScan
+          [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, STOlocations(slotNo), reqResourceUnits);
+          % Check if all resources have been successfully found
+          if (ITsuccessful == 1)
+            % Locations of resources that are "held" for the current request
+            heldITresources = ITresourceNodes;
+            break;
+          end
+        end
     end
+
+    %%%%%% MAIN NETWORK RESOURCE ALLOCATION ALGORITHM %%%%%%
+
+    % Would need to run k-shortest path on held nodes
+    NETsucceful = 1;
+    
+    
+    % Break out of loop if both IT and netowrk resources have been successfully allocated
+    if (ITsuccessful == 1 && NETsucceful == 1)
+      ITresult = 1;
+      NETresult = 1;
+      break;
+    end    
   end
   
-  %%%%%% Find availabe MEMs %%%%%%
-  MEM_ScanStartLoc = MEMlocations(1);       % Extract first MEM location to start scan
-  nMEM_SlotsToScan = size(MEMlocations,2);  % Number of slots to scan
-  for slotNo = MEM_ScanStartLoc:nMEM_SlotsToScan    % Iterate over all slots that need to be scanned
-    scanLoc = MEMlocations(slotNo);     % Current scan slot location
-    if (unitOccupiedMap(scanLoc) >= 1)  % If at least a single unit exists in this slot
-      availableMEMlocations(slotNo) = scanLoc;
-    end
-  end
+  %%%%%% UPDATE GLOBAL MAPS & OUTPUT RESULTS %%%%%% 
+  ITallocationResult = ITresult;
+  NETallocationResult = NETresult;
+  ITresourceNodesAllocated = ITresourceNodes;
   
-  %%%%%% Find availabe STOs %%%%%%
-  STO_ScanStartLoc = STOlocations(1);       % Extract first STO location to start scan
-  nSTO_SlotsToScan = size(STOlocations,2);  % Number of slots to scan
-  for slotNo = STO_ScanStartLoc:nSTO_SlotsToScan    % Iterate over all slots that need to be scanned
-    scanLoc = STOlocations(slotNo);     % Current scan slot location
-    if (unitOccupiedMap(scanLoc) >= 1)  % If at least a single unit exists in this slot
-      availableSTOlocations(slotNo) = scanLoc;
-    end
-  end
   
-  ITallocationResult = 0;
   
   % NEED TO MAKE SURE THAT ALL RESOURCES THAT ARE BEING ALLOCATED FOR A
   % REQUEST ARE CONNECTED (Currently this is indirectly true since all
@@ -260,7 +297,5 @@ function [dataCenterMap, ITallocationResult] = resourceAllocation(request, dataC
 %   % current status of the occupied resource after having allocated the
 %   % current resource
 %   dataCenterMap.occupiedMap = occupiedMap;
-
-%%%%%% MAIN NETWORK RESOURCE ALLOCATION ALGORITHM %%%%%%
   
 end

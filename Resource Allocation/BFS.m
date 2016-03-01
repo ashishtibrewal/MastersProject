@@ -1,13 +1,35 @@
-function resourceNode = BFS(dataCenterMap, startNode)
-  % Function to implement the Breadth-First Search (BFS) algorithm
+function [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startNode, reqResourceUnits)
+  % Function to implement the "customised" Breadth-First Search (BFS) algorithm
+  % resourceNodes - 1st row = CPUs, 2nd row = MEMs, 3rd row = STOs
+  % successful - Only set if all resources have been found
 
   % Import required packages
   import java.util.LinkedList     % Import java LinkedList package to be able to use queues
 
   % Extract required maps from the data center map struct
   completeResourceMap = dataCenterMap.completeResourceMap;
-  unitAvailableMap = dataCenterMap.completeUnitAvailableMap;
+  completeunitAvailableMap = dataCenterMap.completeUnitAvailableMap;
   completeConnectivityMap = dataCenterMap.connectivityMap.completeConnectivity;
+  
+  % Required resource units
+  CPUunitsRequired = reqResourceUnits.reqCPUunits;
+  MEMunitsRequired = reqResourceUnits.reqMEMunits;
+  STOunitsRequired = reqResourceUnits.reqSTOunits;
+  
+  % Pre-allocate (and initialize) output variable
+  ITresourceNodes = cell(3,max([CPUunitsRequired,MEMunitsRequired,STOunitsRequired]));    % This caters for worst-case allocation (i.e. one unit on each slot)
+  ITsuccessful = 0;
+  
+  % Initialize utility variables
+  CPUindex = 1;
+  MEMindex = 1;
+  STOindex = 1;
+  CPUunitsFound = 0;
+  MEMunitsFound = 0;
+  STOunitsFound = 0;
+  CPUsBreakWhile = false;
+  MEMsBreakWhile = false;
+  STOsBreakWhile = false;
   
   % Create graph and initialize distances with infinity
   % 1st 'row' holds the node's distance from the source
@@ -37,8 +59,82 @@ function resourceNode = BFS(dataCenterMap, startNode)
         graphNodes{1,neighbours(nNode)} = graphNodes{1,currentNode(3,:)} + 1;   %TODO Could potentially add real distance values
         graphNodes{2,neighbours(nNode)} = graphNodes{3,currentNode(3,:)};
         q.add(graphNodes(:,neighbours(nNode)));
+        
+        % Find CPU units
+        if (CPUunitsFound < CPUunitsRequired)
+          % If a required type of resource node is found that's got at least a single unit free, store it's location
+          if (strcmp('CPU',completeResourceMap(neighbours(nNode))) && completeunitAvailableMap(neighbours(nNode)) > 0)
+            unitsFound = completeunitAvailableMap(neighbours(nNode));
+            if ((CPUunitsRequired - CPUunitsFound) >= unitsFound)
+              CPUunitsFound = CPUunitsFound + unitsFound;
+              ITresourceNodes{1,CPUindex} = {neighbours(nNode),unitsFound};
+            else
+              unitsRequired = CPUunitsRequired - CPUunitsFound;
+              CPUunitsFound = CPUunitsFound + unitsRequired;
+              ITresourceNodes{1,CPUindex} = {neighbours(nNode),unitsRequired};
+            end
+            CPUindex = CPUindex + 1;    % Increment index
+          end
+          % If the required number of CPU units have been found
+          if (CPUunitsFound == CPUunitsRequired)
+            CPUsBreakWhile = true;
+            break;
+          end
+        end
+        
+        % Find MEM units
+        if (MEMunitsFound < MEMunitsRequired)
+          % If a required type of resource node is found that's got at least a single unit free, store it's location
+          if (strcmp('MEM',completeResourceMap(neighbours(nNode))) && completeunitAvailableMap(neighbours(nNode)) > 0)
+            unitsFound = completeunitAvailableMap(neighbours(nNode));
+            if ((MEMunitsRequired - MEMunitsFound) >= unitsFound)
+              MEMunitsFound = MEMunitsFound + unitsFound;
+              ITresourceNodes{2,MEMindex} = {neighbours(nNode),unitsFound};
+            else
+              unitsRequired = MEMunitsRequired - MEMunitsFound;
+              MEMunitsFound = MEMunitsFound + unitsRequired;
+              ITresourceNodes{2,MEMindex} = {neighbours(nNode),unitsRequired};
+            end
+            MEMindex = MEMindex + 1;    % Increment index
+          end
+          % If the required number of MEM units have been found
+          if (MEMunitsFound == MEMunitsRequired)
+            MEMsBreakWhile = true;
+            break;
+          end
+        end
+        
+        % Find STO units
+        if (STOunitsFound < STOunitsRequired)
+          % If a required type of resource node is found that's got at least a single unit free, store it's location
+          if (strcmp('STO',completeResourceMap(neighbours(nNode))) && completeunitAvailableMap(neighbours(nNode)) > 0)
+            unitsFound = completeunitAvailableMap(neighbours(nNode));
+            if ((STOunitsRequired - STOunitsFound) >= unitsFound)
+              STOunitsFound = STOunitsFound + unitsFound;
+              ITresourceNodes{3,STOindex} = {neighbours(nNode),unitsFound};
+            else
+              unitsRequired = STOunitsRequired - STOunitsFound;
+              STOunitsFound = STOunitsFound + unitsRequired;
+              ITresourceNodes{3,STOindex} = {neighbours(nNode),unitsRequired};
+            end
+            STOindex = STOindex + 1;    % Increment index
+          end
+          % If the required number of STO units have been found
+          if (STOunitsFound == STOunitsRequired)
+            STOsBreakWhile = true;
+            break;
+          end
+        end
       end
     end
+    
+    % If all required resources have been found break out of the while loop
+    if (CPUsBreakWhile == true && MEMsBreakWhile == true && STOsBreakWhile == true)
+      ITsuccessful = 1;
+      break;
+    else
+      ITsuccessful = 0;
+    end
   end
-  resourceNode = 0;
+  
 end

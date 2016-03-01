@@ -119,6 +119,10 @@ requestStatusColumn = 11;
 % Open figure - Updated when each request's resource allocation is complete
 %figure ('Name', 'Data Center Rack Usage (1st rack of each type)', 'NumberTitle', 'off', 'Position', [40, 100, 1200, 700]);
 
+% USED ONLY FOR DEBUGGING
+%tTime = 1;
+testRequest = [5,10,10,1000,1000,50,50,4000,0,0,0];    % Test request used for debugging
+
 % Main time loop
 for t = 1:tTime
   % Each timestep, look at it's corresponding request in the request database
@@ -127,12 +131,13 @@ for t = 1:tTime
   % Extract request from the database for current timestep
   request = requestDB(requestDBindex,:);
   
-  testRequest = [5,10,10,1000,1000,50,50,4000,0,0,0];    % Test request used for debugging
+  pRequest = request(1:3)
   
-  %%%%%%%%%% IT resource allocation %%%%%%%%%%
-  %[dataCenterMap, ITallocationResult] = resourceAllocation(request, dataCenterConfig, dataCenterMap);
-  [dataCenterMap, ITallocationResult] = resourceAllocation(testRequest, dataCenterConfig, dataCenterMap, dataCenterItems);
+  %%%%%%%%%% IT & NET resource allocation %%%%%%%%%%
+  [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
+  %[dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated] = resourceAllocation(testRequest, dataCenterConfig, dataCenterMap, dataCenterItems);
   %plotUsage(dataCenterMap, dataCenterConfig);
+  requestNodesAllocatedDB(requestDBindex,1) = {ITresourceNodesAllocated};
 
   %%%%%%%%%% Network resource allocation %%%%%%%%%%
   % Need to get a better understanding of network resource allocation code
@@ -166,7 +171,7 @@ disp(str);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Generate and plot results (Analysis)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-str = sprintf('Displaying results ...\n');
+str = sprintf('Displaying results ...');
 disp(str);
 
 displayResults(dataCenterMap, requestDB, nRequests, dataCenterConfig);
