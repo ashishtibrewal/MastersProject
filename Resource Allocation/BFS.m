@@ -31,7 +31,7 @@ function [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startNode, reqReso
   MEMsBreakWhile = false;
   STOsBreakWhile = false;
   
-  % Create graph and initialize distances with infinity
+  % Create graph and initialize distances with infinity (Each column is a node)
   % 1st 'row' holds the node's distance from the source
   % 2nd 'row' holds the node's parent/predecessor
   % 3rd 'row' holds the node's number (i.e. it's label/name)
@@ -47,10 +47,71 @@ function [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startNode, reqReso
   graphNodes{1,startNode} = 0;
   q.add(graphNodes(:,startNode));
   
+  % Check source node (i.e. start node) for available resource units
+  % Check source node (i.e. start node) for available CPU units
+  if (CPUunitsFound < CPUunitsRequired)
+    if (strcmp('CPU',completeResourceMap(startNode)) && completeunitAvailableMap(startNode) > 0)
+      unitsFound = completeunitAvailableMap(startNode);
+      if ((CPUunitsRequired - CPUunitsFound) >= unitsFound)
+        CPUunitsFound = CPUunitsFound + unitsFound;
+        ITresourceNodes{1,CPUindex} = {startNode,unitsFound};
+      else
+        unitsRequired = CPUunitsRequired - CPUunitsFound;
+        CPUunitsFound = CPUunitsFound + unitsRequired;
+        ITresourceNodes{1,CPUindex} = {startNode,unitsRequired};
+      end
+      CPUindex = CPUindex + 1;    % Increment index
+      % If the required number of CPU units have been found
+      if (CPUunitsFound == CPUunitsRequired)
+        CPUsBreakWhile = true;
+      end
+    end
+  end
+  
+  % Check source node (i.e. start node) for available MEM units
+  if (MEMunitsFound < MEMunitsRequired)
+    if (strcmp('MEM',completeResourceMap(startNode)) && completeunitAvailableMap(startNode) > 0)
+      unitsFound = completeunitAvailableMap(startNode);
+      if ((MEMunitsRequired - MEMunitsFound) >= unitsFound)
+        MEMunitsFound = MEMunitsFound + unitsFound;
+        ITresourceNodes{2,MEMindex} = {startNode,unitsFound};
+      else
+        unitsRequired = MEMunitsRequired - MEMunitsFound;
+        MEMunitsFound = MEMunitsFound + unitsRequired;
+        ITresourceNodes{2,MEMindex} = {startNode,unitsRequired};
+      end
+      MEMindex = MEMindex + 1;    % Increment index
+      % If the required number of CPU units have been found
+      if (MEMunitsFound == MEMunitsRequired)
+        MEMsBreakWhile = true;
+      end
+    end
+  end
+  
+  % Check source node (i.e. start node) for available STO units
+  if (STOunitsFound < STOunitsRequired)
+    if (strcmp('STO',completeResourceMap(startNode)) && completeunitAvailableMap(startNode) > 0)
+      unitsFound = completeunitAvailableMap(startNode);
+      if ((STOunitsRequired - STOunitsFound) >= unitsFound)
+        STOunitsFound = STOunitsFound + unitsFound;
+        ITresourceNodes{3,STOindex} = {startNode,unitsFound};
+      else
+        unitsRequired = STOunitsRequired - STOunitsFound;
+        STOunitsFound = STOunitsFound + unitsRequired;
+        ITresourceNodes{3,STOindex} = {startNode,unitsRequired};
+      end
+      STOindex = STOindex + 1;    % Increment index
+      % If the required number of CPU units have been found
+      if (STOunitsFound == STOunitsRequired)
+        STOsBreakWhile = true;
+      end
+    end
+  end
+  
   % Run until the queue is empty (i.e. the whole graph is traversed)
   while (q.size() > 0)
     currentNode = q.remove();     % Remove head of queue
-    adjaceny = completeConnectivityMap(currentNode(3,:),:);   % Extract it's information from the connectivity/adjacency matrix
+    adjaceny = completeConnectivityMap(currentNode(3),:);   % Extract it's information from the connectivity/adjacency matrix
     neighbours = find(adjaceny == 1);   % Find current nodes neighbours
     
     % Iterate through all it's neighbours
@@ -78,8 +139,9 @@ function [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startNode, reqReso
           % If the required number of CPU units have been found
           if (CPUunitsFound == CPUunitsRequired)
             CPUsBreakWhile = true;
-            break;
           end
+        else
+          CPUsBreakWhile = true;
         end
         
         % Find MEM units
@@ -100,8 +162,9 @@ function [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startNode, reqReso
           % If the required number of MEM units have been found
           if (MEMunitsFound == MEMunitsRequired)
             MEMsBreakWhile = true;
-            break;
           end
+        else
+          MEMsBreakWhile = true;
         end
         
         % Find STO units
@@ -122,8 +185,9 @@ function [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startNode, reqReso
           % If the required number of STO units have been found
           if (STOunitsFound == STOunitsRequired)
             STOsBreakWhile = true;
-            break;
           end
+        else
+          STOsBreakWhile = true;
         end
       end
     end

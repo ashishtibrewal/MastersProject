@@ -87,6 +87,10 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   contentionRatios = [crCPU,crMEM,crSTO];
   maxCR = max(contentionRatios);
   maxCRindex = find(contentionRatios == maxCR);
+  % If all types have equal contention ratios, prioritise CPUs 
+  if (size(maxCRindex,2) > 1)
+    maxCRindex = 1;
+  end
   switch(maxCRindex)
     case 1
       maxCRswitch = 'CPU';

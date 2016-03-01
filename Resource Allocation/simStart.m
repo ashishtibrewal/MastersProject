@@ -130,6 +130,7 @@ for t = 1:tTime
   requestDBindex = t;
   % Extract request from the database for current timestep
   request = requestDB(requestDBindex,:);
+  request = testRequest;
   
   % Display required resources for request on the prompt
   requestString = sprintf(' %d', request{1:3});
@@ -138,9 +139,12 @@ for t = 1:tTime
   
   %%%%%%%%%% IT & NET resource allocation %%%%%%%%%%
   [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
-  %[dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated] = resourceAllocation(testRequest, dataCenterConfig, dataCenterMap, dataCenterItems);
-  %plotUsage(dataCenterMap, dataCenterConfig);
+  
+  % Update request database
   requestDB(requestDBindex,12) = {ITresourceNodesAllocated};
+  
+  % Plot usage
+  %plotUsage(dataCenterMap, dataCenterConfig);
 
   %%%%%%%%%% Network resource allocation %%%%%%%%%%
   % Need to get a better understanding of network resource allocation code
