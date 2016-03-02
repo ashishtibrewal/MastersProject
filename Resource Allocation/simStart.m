@@ -107,42 +107,9 @@ disp(str);
 % disp(str);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Generate custom heatmap
+% Generate plot for resource location
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-startNode = (size(dataCenterMap.switchMap.TOR_indexes,2) + size(dataCenterMap.switchMap.TOB_indexes,2));
-endNode = size(dataCenterMap.completeUnitAvailableMap,2);
-
-hmap = zeros(64,64,3);
-hmapScaled = zeros(64*8,64*8,3);
-
-rhmap = zeros(64,64,3);
-rhmapScaled = zeros(64 * 8,64 * 8,3);
-
-% for r = 1:64
-%   for c = 1:64
-%     nodeType = dataCenterMap.completeResourceMap(startNode + ((r - 1) * 64) + c);
-%     if (strcmp(nodeType, 'CPU') == 1)
-%         rhmap(r,c,:) = [0,0,0];
-%     elseif (strcmp(nodeType, 'MEM') == 1)
-%         rhmap(r,c,:) = [1,1,1];
-%     elseif (strcmp(nodeType, 'STO') == 1)
-%         rhmap(r,c,:) = [0.5,0.5,0.5];
-%     end
-%   end
-% end
-% 
-% for r = 1:64
-%   for c = 1:64
-%     rhmapScaled((((r - 1) * 8) + 1):(r * 8),(((c - 1) * 8) + 1):(c * 8),1) = rhmap(r,c,1);
-%     rhmapScaled((((r - 1) * 8) + 1):(r * 8),(((c - 1) * 8) + 1):(c * 8),2) = rhmap(r,c,2);
-%     rhmapScaled((((r - 1) * 8) + 1):(r * 8),(((c - 1) * 8) + 1):(c * 8),3) = rhmap(r,c,3);
-%   end
-% end
-% 
-% figure ('Name', 'Data Center Heatmap', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
-% subplot(1,2,1);
-% imshow(rhmapScaled);
-% title('Resource type - CPUs = Black, MEMs = While, STOs = Grey');
+plotHeatMap(dataCenterConfig, dataCenterMap, 'locationMap');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Resource allocation main time loop
@@ -161,9 +128,8 @@ requestStatusColumn = 11;
 %tTime = 1;
 testRequest = {5,10,10,1000,1000,50,50,4000,0,0,0,0};    % Test request used for debugging
 time = 1:tTime;
-%figure;
 
-nBlocked = [];
+nBlocked = zeros(1,size(time,2));
 
 % Main time loop
 for t = 1:tTime
@@ -187,39 +153,12 @@ for t = 1:tTime
   
   % Plot usage
   %plotUsage(dataCenterMap, dataCenterConfig);
-%   for r = 1:64
-%     for c = 1:64
-%       nodeVal = dataCenterMap.completeUnitAvailableMap(startNode + ((r - 1) * 64) + c);
-%       switch (nodeVal)
-%         case 0
-%           hmap(r,c,:) = [1,0,0];
-%         case 1
-%           hmap(r,c,:) = [1,1,0];
-%         case 2
-%           hmap(r,c,:) = [0,1,0];
-%       end
-%     end
-%   end
-%   
-%   for r = 1:64
-%     for c = 1:64
-%       hmapScaled((((r - 1) * 8) + 1):(r * 8),(((c - 1) * 8) + 1):(c * 8),1) = hmap(r,c,1);
-%       hmapScaled((((r - 1) * 8) + 1):(r * 8),(((c - 1) * 8) + 1):(c * 8),2) = hmap(r,c,2);
-%       hmapScaled((((r - 1) * 8) + 1):(r * 8),(((c - 1) * 8) + 1):(c * 8),3) = hmap(r,c,3);
-%     end
-%   end
-%   
-%   subplot(1,2,2);
-%   imshow(hmapScaled);
-%   title('Resource Utilization - Green = Max free, Yellow = Min free, STOs = None free');
+
+  % Plot heat map (Updated everytime a new request is being allocated/handled)
+  plotHeatMap(dataCenterConfig, dataCenterMap, 'heatMap');
   
   blocked = find(cell2mat(requestDB(1:t,9)) == 0);
-  nBlocked = [nBlocked,size(blocked,1)];
-  %subplot(1,3,3);
-  %plot(nBlocked,t);
-  %title('Blocking probability');
-  pause(0.01);
-  
+  nBlocked(t) = size(blocked,1);
 
   %%%%%%%%%% Network resource allocation %%%%%%%%%%
   % Need to get a better understanding of network resource allocation code
@@ -247,6 +186,7 @@ for t = 1:tTime
   end
 end
 
+figure ('Name', 'BLocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
 semilogy(time,(nBlocked/tTime));
 title('Blocking probability');
 

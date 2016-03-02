@@ -33,6 +33,10 @@ function plotDataCenterLayout(dataCenterMap, dataCenterConfig)
   
   % Fourth plot to be used for intra-slot (Unit) topology  
   % subplot(2,2,4);
+  
+  %%%%%% NEW NON-HIERARCHIAL GRAPH %%%%%%
+  G = graph(dataCenterMap.connectivityMap.completeConnectivity);    % Use inbuilt graph function to create a graph object, passing it the adjacency matrix
+  plot(G);      % plot graph
 
 end
 
