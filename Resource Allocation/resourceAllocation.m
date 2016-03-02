@@ -4,7 +4,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   
   % Extract data center network maps
   connectivityMap = dataCenterMap.connectivityMap;
-  occupiedMap = dataCenterMap.occupiedMap;
+  availableMap = dataCenterMap.availableMap;
   distanceMap = dataCenterMap.distanceMap;
   latencyMap = dataCenterMap.latencyMap;
   bandwidthMap = dataCenterMap.bandwidthMap;
@@ -115,8 +115,13 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   while (true)
     %%%%%% MAIN IT RESOURCE ALLOCATION ALGORITHM %%%%%%
     
+    resourceUnavailable = 0;      % Initialize resource unavailable
+    
     % Run BFS to find required (avaliable) resources starting at a specific
     % resoure node with the resource type having the highest contention ratio
+    % TODO Start from first unit available node rather than the first node
+    % of a specific unit type - This could have a huge performance
+    % improvement
     switch (maxCRswitch)
       case 'CPU'
         nCPU_SlotsToScan = size(CPUlocations,2);  % Number of slots to scan
@@ -126,6 +131,9 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           if (ITsuccessful == 1)
             % Locations of resources that are "held" for the current request
             heldITresources = ITresourceNodes;
+            break;
+          elseif (slotNo == 2)
+            resourceUnavailable = 1;
             break;
           end
         end
@@ -139,6 +147,9 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
             % Locations of resources that are "held" for the current request
             heldITresources = ITresourceNodes;
             break;
+          elseif (slotNo == 2)
+            resourceUnavailable = 1;
+            break;
           end
         end
 
@@ -151,6 +162,9 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
             % Locations of resources that are "held" for the current request
             heldITresources = ITresourceNodes;
             break;
+          elseif (slotNo == 2)
+            resourceUnavailable = 1;
+            break;
           end
         end
     end
@@ -160,11 +174,16 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     % Would need to run k-shortest path on held nodes
     NETsucceful = 1;
     
-    
     % Break out of loop if both IT and netowrk resources have been successfully allocated
     if (ITsuccessful == 1 && NETsucceful == 1)
       ITresult = 1;
       NETresult = 1;
+      break;
+    elseif (resourceUnavailable == 1)       % Break out of while loop if enough resources couldn't be found
+      ITresult = 0;
+      NETresult = 1;
+      str = sprintf('Resource unavailable for current request.');
+      disp(str);
       break;
     end    
   end

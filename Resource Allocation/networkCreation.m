@@ -550,13 +550,13 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     end
   end
   
-  % Implement Floyd-Warshall algorithm on the (boolean) connectivity/adjaceny matrix. 
-  % This finds the shortest distance between between every node to every other node.
-	for k = 1:nNodes
-		i2k = repmat(hopsMap(:,k), 1, nNodes);
-		k2j = repmat(hopsMap(k,:), nNodes, 1);
-		hopsMap = min(hopsMap, (i2k + k2j));
-  end
+%   % Implement Floyd-Warshall algorithm on the (boolean) connectivity/adjaceny matrix. 
+%   % This finds the shortest distance between between every node to every other node.
+% 	for k = 1:nNodes
+% 		i2k = repmat(hopsMap(:,k), 1, nNodes);
+% 		k2j = repmat(hopsMap(k,:), nNodes, 1);
+% 		hopsMap = min(hopsMap, (i2k + k2j));
+%   end
   
   % Loop over hops matrix to reduce every element by one (since the Floyd-Warshall algorithm gives 
   % the shortest-path and not the number of hops). In general, nHops = nNodeTraversed - 1.
@@ -579,11 +579,11 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   
   % Implement Floyd-Warshall algorithm (Shortest path between every node to
   % every other node)
-	for k = 1:nNodes
-		i2k = repmat(sPath(:,k), 1, nNodes);
-		k2j = repmat(sPath(k,:), nNodes, 1);
-		sPath = min(sPath, (i2k + k2j));
-  end
+% 	for k = 1:nNodes
+% 		i2k = repmat(sPath(:,k), 1, nNodes);
+% 		k2j = repmat(sPath(k,:), nNodes, 1);
+% 		sPath = min(sPath, (i2k + k2j));
+%   end
   
   %%%%%% K-shortest path %%%%%%
   weightedEdgeSparseGraph = sparse(distanceMap.completeDistance);   % Extract complete distance matrix and make it a sparse matrix
@@ -598,36 +598,36 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   %profile on;         % Turn on profiler
   
   % Run k-shortest path for every node to every other node in the graph
-  for sourceNode = 1:nNodes
-    for destNode = 1:nNodes
-      if (sourceNode ~= destNode)    % Ignore diagonal (since distance between a node to itself if 0)
-        % Use the k-shortest paths algorithm
-        [ksPath_Dist(sourceNode,destNode,:),ksPath_Paths{sourceNode,destNode}] = graphkshortestpaths(weightedEdgeSparseGraph, sourceNode, destNode, kPaths);
-        % Store distance found for a specific set of source and destination nodes to the latency matrix
-        ksPath_Latency(sourceNode,destNode,:) = ksPath_Dist(sourceNode,destNode,:) * minChannelLatency;
-        % Find if the path found contains any switches for every k-th path
-        for k = 1:kPaths
-          % Extract k-th path for current source and destination nodes exluding the destination node (hence, the -1)
-          kth_Path = ksPath_Paths{sourceNode,destNode}{k}(1:numel(ksPath_Paths{sourceNode,destNode}{k}) - 1);
-          % Find TOR swithces
-          TOR_Switches = ismember(switchMap.TOR_indexes, kth_Path);
-          % Find TOB switches
-          TOB_Swithces = ismember(switchMap.TOB_indexes, kth_Path);
-          % If any switches exist in the shortest path
-          if (nnz(TOR_Switches) || nnz(TOB_Swithces))
-            % Find the total number of TOR swithces
-            nTOR_Switches = sum(histcounts(kth_Path,switchMap.TOR_indexes));
-            % Find the total number of TOB swithces
-            nTOB_Switches = sum(histcounts(kth_Path,switchMap.TOB_indexes));
-            % Find total switch delay on the path
-            totalSwitchDelay = (nTOR_Switches * TOR_delay) + (nTOB_Switches * TOB_delay);
-            % Update latency map
-            ksPath_Latency(sourceNode,destNode,k) = ksPath_Latency(sourceNode,destNode,k) + totalSwitchDelay;
-          end
-        end
-      end
-    end
-  end
+%   for sourceNode = 1:nNodes
+%     for destNode = 1:nNodes
+%       if (sourceNode ~= destNode)    % Ignore diagonal (since distance between a node to itself if 0)
+%         % Use the k-shortest paths algorithm
+%         [ksPath_Dist(sourceNode,destNode,:),ksPath_Paths{sourceNode,destNode}] = graphkshortestpaths(weightedEdgeSparseGraph, sourceNode, destNode, kPaths);
+%         % Store distance found for a specific set of source and destination nodes to the latency matrix
+%         ksPath_Latency(sourceNode,destNode,:) = ksPath_Dist(sourceNode,destNode,:) * minChannelLatency;
+%         % Find if the path found contains any switches for every k-th path
+%         for k = 1:kPaths
+%           % Extract k-th path for current source and destination nodes exluding the destination node (hence, the -1)
+%           kth_Path = ksPath_Paths{sourceNode,destNode}{k}(1:numel(ksPath_Paths{sourceNode,destNode}{k}) - 1);
+%           % Find TOR swithces
+%           TOR_Switches = ismember(switchMap.TOR_indexes, kth_Path);
+%           % Find TOB switches
+%           TOB_Swithces = ismember(switchMap.TOB_indexes, kth_Path);
+%           % If any switches exist in the shortest path
+%           if (nnz(TOR_Switches) || nnz(TOB_Swithces))
+%             % Find the total number of TOR swithces
+%             nTOR_Switches = sum(histcounts(kth_Path,switchMap.TOR_indexes));
+%             % Find the total number of TOB swithces
+%             nTOB_Switches = sum(histcounts(kth_Path,switchMap.TOB_indexes));
+%             % Find total switch delay on the path
+%             totalSwitchDelay = (nTOR_Switches * TOR_delay) + (nTOB_Switches * TOB_delay);
+%             % Update latency map
+%             ksPath_Latency(sourceNode,destNode,k) = ksPath_Latency(sourceNode,destNode,k) + totalSwitchDelay;
+%           end
+%         end
+%       end
+%     end
+%   end
   
   %profile viewer;     % View profiler results
   
@@ -702,7 +702,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % 1st dimension = Slot number
   % 2nd dimension = Blade number
   % 3rd dimension = Rack number
-  occupiedMap = zeros(nSlots, nBlades, nRacks);
+  availableMap = zeros(nSlots, nBlades, nRacks);
   
   % Map to keep track of the type of resource in each slot
   % 1st dimension = Slot number
@@ -721,15 +721,15 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
         switch (rackConfigData(bladeNo))
           % Check for homogeneous CPU blades
           case dataCenterConfig.setupTypes.homogenCPU
-            occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeCPU; % Updated occupied map
+            availableMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeCPU; % Updated occupied map
             resourceMap{slotNo,bladeNo,rackNo} = 'CPU';                % Store the type of resource
           % Check for homogeneous MEM blades
           case dataCenterConfig.setupTypes.homogenMEM
-            occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeMEM; % Updated occupied map
+            availableMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeMEM; % Updated occupied map
             resourceMap{slotNo,bladeNo,rackNo} = 'MEM';                % Store the type of resource
           % Check for homogeneous STO blades
           case dataCenterConfig.setupTypes.homogenSTO
-            occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeSTO; % Updated occupied map
+            availableMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeSTO; % Updated occupied map
             resourceMap{slotNo,bladeNo,rackNo} = 'STO';                % Store the type of resource
           % Check for heterogeneous CPU & MEM blades
           case dataCenterConfig.setupTypes.heterogenCPU_MEM
@@ -739,11 +739,11 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
               case 50
                 % Even slots are CPUs
                 if (mod(slotNo,2) == 0)
-                  occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeCPU; % Updated occupied map
+                  availableMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeCPU; % Updated occupied map
                   resourceMap{slotNo,bladeNo,rackNo} = 'CPU';                % Store the type of resource
                 % Odd slots are MEMs
                 else
-                  occupiedMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeMEM; % Updated occupied map
+                  availableMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeMEM; % Updated occupied map
                   resourceMap{slotNo,bladeNo,rackNo} = 'MEM';                % Store the type of resource
                 end
               % Add cases to handle other percentages
@@ -1029,7 +1029,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   dataCenterMap.hopsMap = hopsMap;
   dataCenterMap.switchMap = switchMap;
   dataCenterMap.completeUnitAvailableMap = completeUnitAvailableMap;
-  dataCenterMap.occupiedMap = occupiedMap;
+  dataCenterMap.availableMap = availableMap;
   dataCenterMap.completeResourceAvailableMap = completeResourceAvailableMap;
   dataCenterMap.resourceMap = resourceMap;
   dataCenterMap.completeResourceMap = completeResourceMap;
