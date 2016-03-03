@@ -17,7 +17,7 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
   startNode = (nTORs + nTOBs);
   endNode = startNode + nNodes;
   
-  % Find factors (multiples) of nNodes
+  % Find factors (multiples) of nNodes to be able to create a scalable heatmap
   nNodesFactors = [];
   for i = 1:nNodes
     if (mod(nNodes,i) == 0)

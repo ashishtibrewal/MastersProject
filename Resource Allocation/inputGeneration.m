@@ -25,7 +25,7 @@ function requestDB = inputGeneration(nRequests)
   % NOTE : CM = CPU-MEM & MS = MEM-STO
 
   cpuMin = 1;               % In cores
-  cpuMax = 64;              % In cores
+  cpuMax = 32;              % In cores
 
   memoryMin = 1;            % In GBs
   memoryMax = 32;           % In GBs

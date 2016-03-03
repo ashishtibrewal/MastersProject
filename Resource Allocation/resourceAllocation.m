@@ -209,7 +209,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     end
   end
   
-  % Update bandwidth map
+  % Update bandwidth map (i.e. subtract amount of bandwidth used on a link)
   
   % Update holdtime map (Need one for resources and one for bandwidth)
   
