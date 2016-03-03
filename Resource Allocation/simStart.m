@@ -18,8 +18,10 @@ disp(str);
 % Miscellaneous simulation "variables" (including macros)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Macro definitions
-SUCCESS = 1;
-FAILURE = 0;
+global SUCCESS;       % Declare macro as global
+global FAILURE;       % Declare macro as global
+SUCCESS = 1;          % Assign a value to global macro
+FAILURE = 0;          % Assign a value to global macro
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Import configuration file (YAML config files)

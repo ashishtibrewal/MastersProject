@@ -2,6 +2,10 @@ function [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startNode, reqReso
   % Function to implement the "customised" Breadth-First Search (BFS) algorithm
   % resourceNodes - 1st row = CPUs, 2nd row = MEMs, 3rd row = STOs
   % successful - Only set if all resources have been found
+  
+  % Import global macros
+  global SUCCESS;
+  global FAILURE;
 
   % Import required packages
   import java.util.LinkedList     % Import java LinkedList package to be able to use queues
@@ -194,10 +198,10 @@ function [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startNode, reqReso
     
     % If all required resources have been found break out of the while loop
     if (CPUsBreakWhile == true && MEMsBreakWhile == true && STOsBreakWhile == true)
-      ITsuccessful = 1;
+      ITsuccessful = SUCCESS;
       break;
     else
-      ITsuccessful = 0;
+      ITsuccessful = FAILURE;
     end
   end
   

@@ -16,46 +16,63 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
   
   startNode = (nTORs + nTOBs);
   endNode = startNode + nNodes;
+  
+  % Find factors (multiples) of nNodes
+  nNodesFactors = [];
+  for i = 1:nNodes
+    if (mod(nNodes,i) == 0)
+      nNodesFactors = [nNodesFactors,i];
+    end
+  end
+  
+  nNodesFactorsSize = size(nNodesFactors,2);
+  if (mod(nNodesFactorsSize,2) == 0)
+    hmSize = [nNodesFactors(nNodesFactorsSize/2), nNodesFactors((nNodesFactorsSize/2) + 1)];
+  else
+    hmSize = [nNodesFactors(ceil(nNodesFactorsSize/2)), nNodesFactors(ceil(nNodesFactorsSize/2))];
+  end
 
-  hmap = zeros(64,64,3);
-  hmapScaled = zeros(64*8,64*8,3);
+  scaleFactor = 8;
 
-  rhmap = zeros(64,64,3);
-  rhmapScaled = zeros(64 * 8,64 * 8,3);
+  rmap = zeros([hmSize,3]);
+  rmapScaled = zeros([(hmSize * scaleFactor),3]);
+  
+  hmap = zeros([hmSize,3]);
+  hmapScaled = zeros([(hmSize * scaleFactor),3]);
   
   switch (updateType)
     case 'locationMap'
-      for r = 1:64
-        for c = 1:64
-          nodeType = dataCenterMap.completeResourceMap(startNode + ((r - 1) * 64) + c);
+      for r = 1:hmSize(1)
+        for c = 1:hmSize(2)
+          nodeType = dataCenterMap.completeResourceMap(startNode + ((r - 1) * hmSize(2)) + c);
           if (strcmp(nodeType, 'CPU') == 1)
-              rhmap(r,c,:) = [0,0,0];
+              rmap(r,c,:) = [0,0,0];
           elseif (strcmp(nodeType, 'MEM') == 1)
-              rhmap(r,c,:) = [1,1,1];
+              rmap(r,c,:) = [1,1,1];
           elseif (strcmp(nodeType, 'STO') == 1)
-              rhmap(r,c,:) = [0.5,0.5,0.5];
+              rmap(r,c,:) = [0.5,0.5,0.5];
           end
         end
       end
 
-      for r = 1:64
-        for c = 1:64
-          rhmapScaled((((r - 1) * 8) + 1):(r * 8),(((c - 1) * 8) + 1):(c * 8),1) = rhmap(r,c,1);
-          rhmapScaled((((r - 1) * 8) + 1):(r * 8),(((c - 1) * 8) + 1):(c * 8),2) = rhmap(r,c,2);
-          rhmapScaled((((r - 1) * 8) + 1):(r * 8),(((c - 1) * 8) + 1):(c * 8),3) = rhmap(r,c,3);
+      for r = 1:hmSize(1)
+        for c = 1:hmSize(2)
+          rmapScaled((((r - 1) * scaleFactor) + 1):(r * scaleFactor),(((c - 1) * scaleFactor) + 1):(c * scaleFactor),1) = rmap(r,c,1);
+          rmapScaled((((r - 1) * scaleFactor) + 1):(r * scaleFactor),(((c - 1) * scaleFactor) + 1):(c * scaleFactor),2) = rmap(r,c,2);
+          rmapScaled((((r - 1) * scaleFactor) + 1):(r * scaleFactor),(((c - 1) * scaleFactor) + 1):(c * scaleFactor),3) = rmap(r,c,3);
         end
       end
 
       % Open new figure
       figure ('Name', 'Data Center Heatmap', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
       subplot(1,2,1);
-      imshow(rhmapScaled);
+      imshow(rmapScaled);
       title('Resource type - CPUs = Black, MEMs = While, STOs = Grey');
       
     case 'heatMap'
-      for r = 1:64
-        for c = 1:64
-          nodeVal = dataCenterMap.completeUnitAvailableMap(startNode + ((r - 1) * 64) + c);
+      for r = 1:hmSize(1)
+        for c = 1:hmSize(2)
+          nodeVal = dataCenterMap.completeUnitAvailableMap(startNode + ((r - 1) * hmSize(2)) + c);
           switch (nodeVal)
             case 0
               hmap(r,c,:) = [1,0,0];
@@ -67,11 +84,11 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
         end
       end
 
-      for r = 1:64
-        for c = 1:64
-          hmapScaled((((r - 1) * 8) + 1):(r * 8),(((c - 1) * 8) + 1):(c * 8),1) = hmap(r,c,1);
-          hmapScaled((((r - 1) * 8) + 1):(r * 8),(((c - 1) * 8) + 1):(c * 8),2) = hmap(r,c,2);
-          hmapScaled((((r - 1) * 8) + 1):(r * 8),(((c - 1) * 8) + 1):(c * 8),3) = hmap(r,c,3);
+      for r = 1:hmSize(1)
+        for c = 1:hmSize(2)
+          hmapScaled((((r - 1) * scaleFactor) + 1):(r * scaleFactor),(((c - 1) * scaleFactor) + 1):(c * scaleFactor),1) = hmap(r,c,1);
+          hmapScaled((((r - 1) * scaleFactor) + 1):(r * scaleFactor),(((c - 1) * scaleFactor) + 1):(c * scaleFactor),2) = hmap(r,c,2);
+          hmapScaled((((r - 1) * scaleFactor) + 1):(r * scaleFactor),(((c - 1) * scaleFactor) + 1):(c * scaleFactor),3) = hmap(r,c,3);
         end
       end
 

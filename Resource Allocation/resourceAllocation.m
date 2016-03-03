@@ -2,6 +2,10 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   % Function to allocate the IT resources
   % NEED TO PLAN AND TRY DIFFERENT APPROACHES.
   
+  % Import global macros
+  global SUCCESS;
+  global FAILURE;
+  
   % Extract data center network maps
   connectivityMap = dataCenterMap.connectivityMap;
   availableMap = dataCenterMap.availableMap;
@@ -128,7 +132,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         for slotNo = 1:nCPU_SlotsToScan
           [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, CPUlocations(slotNo), reqResourceUnits);
           % Check if all resources have been successfully found
-          if (ITsuccessful == 1)
+          if (ITsuccessful == SUCCESS)
             % Locations of resources that are "held" for the current request
             heldITresources = ITresourceNodes;
             break;
@@ -143,7 +147,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         for slotNo = 1:nMEM_SlotsToScan
           [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, MEMlocations(slotNo), reqResourceUnits);
           % Check if all resources have been successfully found
-          if (ITsuccessful == 1)
+          if (ITsuccessful == SUCCESS)
             % Locations of resources that are "held" for the current request
             heldITresources = ITresourceNodes;
             break;
@@ -158,7 +162,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         for slotNo = 1:nSTO_SlotsToScan
           [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, STOlocations(slotNo), reqResourceUnits);
           % Check if all resources have been successfully found
-          if (ITsuccessful == 1)
+          if (ITsuccessful == SUCCESS)
             % Locations of resources that are "held" for the current request
             heldITresources = ITresourceNodes;
             break;
@@ -170,18 +174,19 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     end
 
     %%%%%% MAIN NETWORK RESOURCE ALLOCATION ALGORITHM %%%%%%
-
     % Would need to run k-shortest path on held nodes
-    NETsucceful = 1;
+    % First check for latency between held nodes, if successful, then find
+    % bandwidth on these links
+    NETsucceful = SUCCESS;
     
     % Break out of loop if both IT and netowrk resources have been successfully allocated
-    if (ITsuccessful == 1 && NETsucceful == 1)
-      ITresult = 1;
-      NETresult = 1;
+    if (ITsuccessful == SUCCESS && NETsucceful == SUCCESS)
+      ITresult = SUCCESS;
+      NETresult = SUCCESS;
       break;
     elseif (resourceUnavailable == 1)       % Break out of while loop if enough resources couldn't be found
-      ITresult = 0;
-      NETresult = 1;
+      ITresult = FAILURE;
+      NETresult = SUCCESS;      % TODO Change later
       str = sprintf('Resource unavailable for current request.');
       disp(str);
       break;
@@ -196,7 +201,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   % Update complete unit/resource available map
   for i = 1:size(ITresourceNodesAllocated,1)
     for j = 1:size(ITresourceNodesAllocated,2)
-      if (~isempty(ITresourceNodesAllocated{i,j}))
+      if (~isempty(ITresourceNodesAllocated{i,j}) && ITresult == SUCCESS)
         resourceNode = ITresourceNodesAllocated{i,j}{1,1};
         unitsOccupied = ITresourceNodesAllocated{i,j}{1,2};
         dataCenterMap.completeUnitAvailableMap(resourceNode) = dataCenterMap.completeUnitAvailableMap(resourceNode) - unitsOccupied;
@@ -204,133 +209,8 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     end
   end
   
+  % Update bandwidth map
   
-  
-  % NEED TO MAKE SURE THAT ALL RESOURCES THAT ARE BEING ALLOCATED FOR A
-  % REQUEST ARE CONNECTED (Currently this is indirectly true since all
-  % racks are connected to each, all blades in a rack are connected to each
-  % other and all slots in a blade are connected to each other.
-  % 1. NEED TO CHECK FOR CONNECTIVITY
-  % 2. NEED TO CHECK FOR HOLD TIME
-  % ALLOCATE ONLY IF BOTH CONDITIONS ARE PASSED
-  % TODO Need to be able to split required resources over multiple
-  % racks/blades/slots
-
-  % Scan through all racks
-%   for rackNo = 1:nRacks
-%     % Scan through all blades
-%     for bladeNo = 1:nBlades
-%       % Scan through all slots
-%       for slotNo = 1:nSlots
-% 
-%         % If the current rack is a CPU rack
-%         if (racksCPU(racksCPU == rackNo))
-%           % If the required CPU units haven't been allocated
-%           if (assignedCPU == 0)
-%             % If a CPU unit is free on a slot/blade/rack
-%             if (requiredCPU <= occupiedMap(slotNo,bladeNo,rackNo))
-%               % Required amount of CPU is assigned (i.e. can be allocated) 
-%               assignedCPU = 1;
-%               
-%               % Store the CPU slot, blade and rack number that are ASSIGNED
-%               % TO THIS REQUEST BUT NOT YET ALLOCATED.
-%               slotNoCPU = slotNo;
-%               bladeNoCPU = bladeNo;
-%               rackNoCPU = rackNo;
-%               
-%               %str = sprintf('CPU assigned for this request !!!');
-%               %disp(str);
-%             end
-%           end
-%         end
-% 
-%         % If the current rack is a MEM rack
-%         if (racksMEM(racksMEM == rackNo))
-%           % If the required memory units haven't been allocated
-%           if (assignedMEM == 0)
-%             % If a MEM unit is free on a slot/blade/rack
-%             if (requiredMEM <= occupiedMap(slotNo,bladeNo,rackNo))
-%               % Required amount of MEM is assigned (i.e. can be allocated)
-%               assignedMEM = 1;
-%               
-%               % Store the MEM slot, blade and rack number that are ASSIGNED
-%               % TO THIS REQUEST BUT NOT YET ALLOCATED.
-%               slotNoMEM = slotNo;
-%               bladeNoMEM = bladeNo;
-%               rackNoMEM = rackNo;
-%               
-%               %str = sprintf('MEM assigned for this request !!!');
-%               %disp(str);
-%             end
-%           end
-%         end
-% 
-%         % If the current rack is a STO rack
-%         if (racksSTO(racksSTO == rackNo))
-%           % If the required storage units haven't been allocated
-%           if (assignedSTO == 0)
-%             % If a STO unit is free on a slot/blade/rack
-%             if (requiredSTO <= occupiedMap(slotNo,bladeNo,rackNo))
-%               % Required amount of STO is assigned (i.e. can be allocated)
-%               assignedSTO = 1;
-%               
-%               % Store the MEM slot, blade and rack number that are ASSIGNED
-%               % TO THIS REQUEST BUT NOT YET ALLOCATED.
-%               slotNoSTO = slotNo;
-%               bladeNoSTO = bladeNo;
-%               rackNoSTO = rackNo;
-%               
-%               %str = sprintf('STO assigned for this request !!!');
-%               %disp(str);
-%             end
-%           end
-%         end
-%         
-%         % Check to break out of the inner most loop
-%         if (assignedCPU == 1 && assignedMEM == 1 && assignedSTO == 1)          
-%           % Update occupiedMap to reflect reduced available/free CPU units
-%           occupiedMap(slotNoCPU,bladeNoCPU,rackNoCPU) = occupiedMap(slotNoCPU,bladeNoCPU,rackNoCPU) - requiredCPU;
-%           
-%           % Update occupiedMap to reflect reduced available/free MEM units
-%           occupiedMap(slotNoMEM,bladeNoMEM,rackNoMEM) = occupiedMap(slotNoMEM,bladeNoMEM,rackNoMEM) - requiredMEM;
-%           
-%           % Update occupiedMap to reflect reduced available/free STO units
-%           occupiedMap(slotNoSTO,bladeNoSTO,rackNoSTO) = occupiedMap(slotNoSTO,bladeNoSTO,rackNoSTO) - requiredSTO;
-%           
-%           ITallocationResult = 1;
-%           %str = sprintf('Complete resource allocation for this request successful !!!');
-%           %disp(str);
-%           break;        % Break out of the loop since the request has been 
-%         else
-%           ITallocationResult = 0;
-%         end
-%       end
-%       
-%       % Check to break out of the middle loop
-%       if (assignedCPU == 1 && assignedMEM == 1 && assignedSTO == 1)
-%         ITallocationResult = 1;
-%         %str = sprintf('Complete resource allocation for request %i !!!', i);
-%         %disp(str);
-%         break;        % Break out of the loop since the request has been 
-%       else
-%         ITallocationResult = 0;
-%       end
-%     end
-%     
-%     % Check to break out of the outer most loop
-%     if (assignedCPU == 1 && assignedMEM == 1 && assignedSTO == 1)
-%       ITallocationResult = 1;
-%       %str = sprintf('Complete resource allocation for request %i !!!', i);
-%       %disp(str);
-%       break;        % Break out of the loop since the request has been 
-%     else
-%       ITallocationResult = 0;
-%     end
-%   end
-%   
-%   % Update the occupied map in the data center map struct to reflect the
-%   % current status of the occupied resource after having allocated the
-%   % current resource
-%   dataCenterMap.occupiedMap = occupiedMap;
+  % Update holdtime map (Need one for resources and one for bandwidth)
   
 end
