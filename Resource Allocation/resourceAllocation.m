@@ -58,7 +58,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   
   % Extract required maps from the data center map struct
   completeResourceMap = dataCenterMap.completeResourceMap;
-  completeunitAvailableMap = dataCenterMap.completeUnitAvailableMap;
+  completeUnitAvailableMap = dataCenterMap.completeUnitAvailableMap;
   
   % IMPORTANT NOTE: A unit can only be allocated to a single request.
   % Updates/changes are made to the copies of the original maps and the
@@ -115,6 +115,16 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   MEMlocations = dataCenterMap.locationMap.MEMs;
   STOlocations = dataCenterMap.locationMap.STOs;
   
+  % Find number of units in slots of specific resource types
+  CPUunitsInSlots = [CPUlocations; completeUnitAvailableMap(CPUlocations)];
+  MEMunitsInSlots = [MEMlocations; completeUnitAvailableMap(MEMlocations)];
+  STOunitsInSlots = [STOlocations; completeUnitAvailableMap(STOlocations)];
+  
+  % Find slots of specific resource that have at least a single unit free/available
+  availableCPUslots = find(CPUunitsInSlots(2,:) > 0);
+  availableMEMslots = find(MEMunitsInSlots(2,:) > 0);
+  availableSTOslots = find(STOunitsInSlots(2,:) > 0);
+  
   % Run infinite loop until **both** IT and network resources have been found
   while (true)
     %%%%%% MAIN IT RESOURCE ALLOCATION ALGORITHM %%%%%%
@@ -123,14 +133,22 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     
     % Run BFS to find required (avaliable) resources starting at a specific
     % resoure node with the resource type having the highest contention ratio
-    % TODO Start from first unit available node rather than the first node
-    % of a specific unit type - This could have a huge performance
-    % improvement
+    % Starting from first unit available node rather than from the first node
+    % of a specific unit type - This can potentially have a huge performance
+    % improvement because you avoid running BFS from nodes (i.e. slots that 
+    % are already completely occupied) - THIS ALSO IMPROVES THE LOCALITY
+    % FACTOR (SPECIALLY LOCALITY BETWEEN CPU & MEM, WHICH IS REALLY
+    % IMPORTANT DUE TO LATENCY CONSTRAINTS) SINCE BFS IS RUN STARTING ON A
+    % NODE THAT HAS AT LEAST A SINGLE UNIT FREE OF THE RESOURCE TYPE WITH
+    % THE HIGHEST CONTENTION RATIO.
     switch (maxCRswitch)
       case 'CPU'
-        nCPU_SlotsToScan = size(CPUlocations,2);  % Number of slots to scan
+        nCPU_SlotsToScan = size(availableCPUslots,2);  % Number of slots to scan
         for slotNo = 1:nCPU_SlotsToScan
-          [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, CPUlocations(slotNo), reqResourceUnits);
+          %str = sprintf('Starting CPU node: %d, %d, %d \n', CPUlocations(availableCPUslots(slotNo)), CPUlocations(availableCPUslots(1,slotNo)),CPUunitsInSlots(1,availableCPUslots(slotNo)));
+          %disp(str);
+          startCPUslot = CPUunitsInSlots(1,availableCPUslots(slotNo)); % CPU start slot/node
+          [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startCPUslot, reqResourceUnits);
           % Check if all resources have been successfully found
           if (ITsuccessful == SUCCESS)
             % Locations of resources that are "held" for the current request
@@ -143,9 +161,10 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         end
 
         case 'MEM'
-        nMEM_SlotsToScan = size(MEMlocations,2);  % Number of slots to scan
+        nMEM_SlotsToScan = size(availableMEMslots,2);  % Number of slots to scan
         for slotNo = 1:nMEM_SlotsToScan
-          [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, MEMlocations(slotNo), reqResourceUnits);
+          startMEMslot = MEMunitsInSlots(1,availableMEMslots(slotNo)); % MEM start slot/node
+          [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startMEMslot, reqResourceUnits);
           % Check if all resources have been successfully found
           if (ITsuccessful == SUCCESS)
             % Locations of resources that are "held" for the current request
@@ -158,9 +177,10 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         end
 
         case 'STO'
-        nSTO_SlotsToScan = size(STOlocations,2);  % Number of slots to scan
+        nSTO_SlotsToScan = size(availableSTOslots,2);  % Number of slots to scan
         for slotNo = 1:nSTO_SlotsToScan
-          [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, STOlocations(slotNo), reqResourceUnits);
+          startSTOslot = STOunitsInSlots(1,availableSTOslots(slotNo)); % STO start slot/node
+          [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startSTOslot, reqResourceUnits);
           % Check if all resources have been successfully found
           if (ITsuccessful == SUCCESS)
             % Locations of resources that are "held" for the current request

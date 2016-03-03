@@ -128,7 +128,7 @@ requestStatusColumn = 11;
 
 % USED ONLY FOR DEBUGGING
 %tTime = 1;
-testRequest = {5,10,10,1000,1000,50,50,4000,0,0,0,0};    % Test request used for debugging
+testRequest = {10,10,10,10000,10000,50,50,4000,0,0,0,0};    % Test request used for debugging
 time = 1:tTime;
 
 nBlocked = zeros(1,size(time,2));
@@ -140,7 +140,7 @@ for t = 1:tTime
   requestDBindex = t;
   % Extract request from the database for current timestep
   request = requestDB(requestDBindex,:);
-  %request = testRequest;
+  request = testRequest;
   
   % Display required resources for request on the prompt
   requestString = sprintf(' %d', request{1:3});
