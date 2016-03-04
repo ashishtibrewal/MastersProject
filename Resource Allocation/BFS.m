@@ -14,6 +14,7 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
   completeResourceMap = dataCenterMap.completeResourceMap;
   completeunitAvailableMap = dataCenterMap.completeUnitAvailableMap;
   completeConnectivityMap = dataCenterMap.connectivityMap.completeConnectivity;
+  completeDistanceMap = dataCenterMap.distanceMap.completeDistance;
   
   % Required resource units
   CPUunitsRequired = reqResourceUnits.reqCPUunits;
@@ -37,7 +38,7 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
   % Create graph and initialize distances with infinity (Each column is a node)
   % 1st 'row' holds the node's distance from the source
   % 2nd 'row' holds the node's parent/predecessor
-  % 3rd 'row' holds the node's number (i.e. it's label/name)
+  % 3rd 'row' holds the node's number (i.e. it's linear label/name)
   graphNodes = cell(3,size(completeConnectivityMap,2));
   graphNodes(1,:) = {inf};    % Initialize all distances to infinity
   graphNodes(2,:) = {0};      % Initialize all parent/predecessor to 0
@@ -47,8 +48,8 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
   q = LinkedList();
   
   % Initialize and enqueue start node
-  graphNodes{1,startNode} = 0;
-  q.add(graphNodes(:,startNode));
+  graphNodes{1,startNode} = 0;        % Initialize start node's distance to zero
+  q.add(graphNodes(:,startNode));     % Add start node to the queue
   
   % Check source node (i.e. start node) for available resource units
   % Check source node (i.e. start node) for available CPU units
@@ -120,8 +121,8 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
     % Iterate through all it's neighbours
     for nNode = 1:size(neighbours,2)
       if (graphNodes{1,neighbours(nNode)} == inf)
-        graphNodes{1,neighbours(nNode)} = graphNodes{1,currentNode(3,:)} + 1;   %TODO Could potentially add real distance values
-        graphNodes{2,neighbours(nNode)} = graphNodes{3,currentNode(3,:)};
+        graphNodes{1,neighbours(nNode)} = graphNodes{1,currentNode(3)} + completeDistanceMap(currentNode(3),neighbours(nNode));
+        graphNodes{2,neighbours(nNode)} = graphNodes{3,currentNode(3)};
         q.add(graphNodes(:,neighbours(nNode)));
         
         % Find CPU units

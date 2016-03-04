@@ -116,7 +116,7 @@ plotHeatMap(dataCenterConfig, dataCenterMap, 'locationMap');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Resource allocation main time loop
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-str = sprintf('Resource allocation started ...');
+str = sprintf('Resource allocation started ...\n');
 disp(str);
 
 ITresourceAllocStatusColumn = 9;
@@ -140,7 +140,7 @@ for t = 1:tTime
   requestDBindex = t;
   % Extract request from the database for current timestep
   request = requestDB(requestDBindex,:);
-  %request = testRequest;
+  request = testRequest;
   
   % Display required resources for request on the prompt
   requestString = sprintf(' %d', request{1:3});

@@ -191,6 +191,12 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               % TODO Add network allocation code - if network is
               % successful, break out else start search for new IT slots
               % from next available resource node
+              
+              
+              
+              % TODO Update completeUnitAvailableMap removing all units
+              % from the nodes/slots held in the previous iteration for
+              % which the network allocation failed
               break;    % TODO Can only break out of the for loop if **both** IT and network resources are satisfied
             else
               ITresourceUnavailable = 1;
