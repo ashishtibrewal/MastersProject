@@ -1,4 +1,4 @@
-function [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startNode, reqResourceUnits)
+function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startNode, reqResourceUnits)
   % Function to implement the "customised" Breadth-First Search (BFS) algorithm
   % resourceNodes - 1st row = CPUs, 2nd row = MEMs, 3rd row = STOs
   % successful - Only set if all resources have been found
@@ -22,7 +22,6 @@ function [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startNode, reqReso
   
   % Pre-allocate (and initialize) output variable
   ITresourceNodes = cell(3,max([CPUunitsRequired,MEMunitsRequired,STOunitsRequired]));    % This caters for worst-case allocation (i.e. one unit on each slot)
-  ITsuccessful = 0;
   
   % Initialize utility variables
   CPUindex = 1;
@@ -196,12 +195,37 @@ function [ITresourceNodes, ITsuccessful] = BFS(dataCenterMap, startNode, reqReso
       end
     end
     
-    % If all required resources have been found break out of the while loop
+    % If all required resources have been found break out of the while loop else keep searching
     if (CPUsBreakWhile == true && MEMsBreakWhile == true && STOsBreakWhile == true)
       ITsuccessful = SUCCESS;
+      ITfailureCause = 'NONE';
       break;
     else
       ITsuccessful = FAILURE;
+      % Failure cause possible values
+      % NONE = 0
+      % CPU = 1
+      % MEM = 2
+      % STO = 3
+      % CPU & MEM = 4
+      % CPU & STO = 5
+      % MEM & STO = 6
+      CPUfailed = (CPUunitsRequired - CPUunitsFound);
+      MEMfailed = (MEMunitsRequired - MEMunitsFound);
+      STOfailed = (STOunitsRequired - STOunitsFound);
+      if (CPUfailed > 0)
+        ITfailureCause = 'CPU';
+      elseif (MEMfailed > 0)
+        ITfailureCause = 'MEM';
+      elseif (STOfailed > 0)
+        ITfailureCause = 'STO';
+      elseif ((CPUfailed > 0) && (MEMfailed > 0))
+        ITfailureCause = 'CPU-MEM';
+      elseif ((CPUfailed > 0) && (STOfailed > 0))
+        ITfailureCause = 'CPU-STO';
+      elseif ((MEMfailed > 0) && (STOfailed > 0))
+        ITfailureCause = 'MEM-STO';
+      end
     end
   end
   

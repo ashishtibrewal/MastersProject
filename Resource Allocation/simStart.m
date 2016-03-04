@@ -32,7 +32,7 @@ dataCenterConfig = ReadYaml(yaml_configFile);   % Read file and store it into a 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Evaluate IT & Network constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-nRequests = 100;      % Number of requests to generate
+nRequests = 500;      % Number of requests to generate
 tTime = nRequests;    % Total time to simulate for (1 second for each request)
 
 % Initialize counter variables
@@ -140,7 +140,7 @@ for t = 1:tTime
   requestDBindex = t;
   % Extract request from the database for current timestep
   request = requestDB(requestDBindex,:);
-  request = testRequest;
+  %request = testRequest;
   
   % Display required resources for request on the prompt
   requestString = sprintf(' %d', request{1:3});
@@ -148,10 +148,10 @@ for t = 1:tTime
   disp(str);
   
   %%%%%%%%%% IT & NET resource allocation %%%%%%%%%%
-  [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
+  [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, ITfailureCause] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
   
   % Update request database
-  requestDB(requestDBindex,12) = {ITresourceNodesAllocated};
+  requestDB(requestDBindex,12:13) = {ITresourceNodesAllocated,ITfailureCause};
   
   % Plot usage
   %plotUsage(dataCenterMap, dataCenterConfig);
@@ -188,7 +188,7 @@ for t = 1:tTime
   end
 end
 
-figure ('Name', 'BLocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
 semilogy(time,(nBlocked/tTime));
 title('Blocking probability');
 
