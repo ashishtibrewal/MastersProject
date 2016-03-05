@@ -48,7 +48,7 @@ function requestDB = inputGeneration(nRequests)
   holdTimeMin = 1;          % In s (i.e. seconds)
   holdTimeMax = 10000;      % In s (i.e. seconds)
   
-  requestDB = cell(nRequests, 13);  % Matrix to store all generated requests (Each row contains a different request)
+  requestDB = cell(nRequests, 15);  % Matrix to store all generated requests (Each row contains a different request)
   % Column  1 -> CPU
   % Column  2 -> Memory
   % Column  3 -> Storage
@@ -60,8 +60,10 @@ function requestDB = inputGeneration(nRequests)
   % Column  9 -> IT resource allocation stats (0 = not allocated, 1 = allocated)
   % Column 10 -> Network resource allocation stats (0 = not allocated, 1 = allocated)
   % Column 11 -> Request status (0 = not served, 1 = served, 2 = rejected)
-  % Column 12 -> Resource nodes allocated
-  % Column 13 -> IT failure cause
+  % Column 12 -> IT resource nodes allocated
+  % Column 13 -> NET resource (links) allocated
+  % Column 14 -> IT failure cause
+  % Column 15 -> NET failure cause
   
   distributionPlot = 0;   % Flag variable to check if anything needs to be plotted
   scatterPlot = 0;
@@ -141,7 +143,7 @@ function requestDB = inputGeneration(nRequests)
     end
     
     % Collect/store data generated over i iterations
-    requestDB(i,:) = {nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0, 0,'NONE'};
+    requestDB(i,:) = {nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0, {}, {},'NONE','NONE'};
 
     if (scatterPlot == 1)
       % Store all iteration numbers/values

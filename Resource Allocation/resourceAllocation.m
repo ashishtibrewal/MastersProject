@@ -1,4 +1,4 @@
-function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, ITfailureCause] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems)
+function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems)
   % Function to allocate the IT resources
   % NEED TO PLAN AND TRY DIFFERENT APPROACHES.
   
@@ -157,6 +157,8 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     NETsuccessful = FAILURE;      % Initialize/reset NET successful for every iteration of the loop
     heldITresources = [];         % Initialize/reset held IT resources for every iteration of the loop
     heldNETresources = [];        % Initialize/reset held NET resources for every iteration of the loop
+    ITfailureCause = 'NONE';      % Initialize/reset IT resource allocation failure cause for every iteration of the loop
+    NETfailureCause = 'NONE';     % Initialize/reset NET resource allocation failure cause for every iteration of the loop
     
     % Run BFS to find required (avaliable) resources starting at a specific
     % resoure node with the resource type having the highest contention ratio
@@ -191,13 +193,16 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               % TODO Add network allocation code - if network is
               % successful, break out else start search for new IT slots
               % from next available resource node
+              [NETresourceLinks, NETsuccessful, NETfailureCause] = networkAllocation(heldITresources);
               
-              
-              
+              NETsuccessful = SUCCESS;
               % TODO Update completeUnitAvailableMap removing all units
               % from the nodes/slots held in the previous iteration for
               % which the network allocation failed
-              break;    % TODO Can only break out of the for loop if **both** IT and network resources are satisfied
+              if (NETsuccessful == SUCCESS)
+                heldNETresources = NETresourceLinks;
+                break;    % TODO Can only break out of the for loop if **both** IT and network resources are satisfied
+              end
             else
               ITresourceUnavailable = 1;
               heldITresources = [];
@@ -281,6 +286,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   ITallocationResult = ITresult;
   NETallocationResult = NETresult;
   ITresourceNodesAllocated = heldITresources;
+  NETresourcesAllocaed = heldNETresources;
   
   % Update complete unit/resource available map
   for i = 1:size(ITresourceNodesAllocated,1)

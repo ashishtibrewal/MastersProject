@@ -32,7 +32,7 @@ dataCenterConfig = ReadYaml(yaml_configFile);   % Read file and store it into a 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Evaluate IT & Network constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-nRequests = 500;      % Number of requests to generate
+nRequests = 100;      % Number of requests to generate
 tTime = nRequests;    % Total time to simulate for (1 second for each request)
 
 % Initialize counter variables
@@ -148,10 +148,10 @@ for t = 1:tTime
   disp(str);
   
   %%%%%%%%%% IT & NET resource allocation %%%%%%%%%%
-  [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, ITfailureCause] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
+  [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
   
   % Update request database
-  requestDB(requestDBindex,12:13) = {ITresourceNodesAllocated,ITfailureCause};
+  requestDB(requestDBindex,12:15) = {ITresourceNodesAllocated,NETresourcesAllocaed,ITfailureCause,NETfailureCause};
   
   % Plot usage
   %plotUsage(dataCenterMap, dataCenterConfig);

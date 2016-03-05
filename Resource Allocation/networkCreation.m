@@ -550,23 +550,23 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     end
   end
   
-%   % Implement Floyd-Warshall algorithm on the (boolean) connectivity/adjaceny matrix. 
-%   % This finds the shortest distance between between every node to every other node.
+  % Implement Floyd-Warshall algorithm on the (boolean) connectivity/adjaceny matrix. 
+  % This finds the shortest distance between between every node to every other node.
 % 	for k = 1:nNodes
 % 		i2k = repmat(hopsMap(:,k), 1, nNodes);
 % 		k2j = repmat(hopsMap(k,:), nNodes, 1);
 % 		hopsMap = min(hopsMap, (i2k + k2j));
 %   end
-  
-  % Loop over hops matrix to reduce every element by one (since the Floyd-Warshall algorithm gives 
-  % the shortest-path and not the number of hops). In general, nHops = nNodeTraversed - 1.
-  for sourceNode = 1:nNodes
-    for destNode = 1:nNodes
-      if (sourceNode ~= destNode)    % Ignore diagonal (since it's already zero)
-        hopsMap(sourceNode,destNode) = hopsMap(sourceNode,destNode) - 1;    % Subtract one from every non-diagonal element
-      end
-    end
-  end
+%   
+%   % Loop over hops matrix to reduce every element by one (since the Floyd-Warshall algorithm gives 
+%   % the shortest-path and not the number of hops). In general, nHops = nNodeTraversed - 1.
+%   for sourceNode = 1:nNodes
+%     for destNode = 1:nNodes
+%       if (sourceNode ~= destNode)    % Ignore diagonal (since it's already zero)
+%         hopsMap(sourceNode,destNode) = hopsMap(sourceNode,destNode) - 1;    % Subtract one from every non-diagonal element
+%       end
+%     end
+%   end
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % SHORTEST PATH MAP
