@@ -126,9 +126,6 @@ requestStatusColumn = 11;
 % Open figure - Updated when each request's resource allocation is complete
 %figure ('Name', 'Data Center Rack Usage (1st rack of each type)', 'NumberTitle', 'off', 'Position', [40, 100, 1200, 700]);
 
-% USED ONLY FOR DEBUGGING
-%tTime = 1;
-testRequest = {10,10,10,10000,10000,50,50,4000,0,0,0,0};    % Test request used for debugging
 time = 1:tTime;
 
 nBlocked = zeros(1,size(time,2));
@@ -140,15 +137,19 @@ for t = 1:tTime
   requestDBindex = t;
   % Extract request from the database for current timestep
   request = requestDB(requestDBindex,:);
-  request = testRequest;
   
   % Display required resources for request on the prompt
   requestString = sprintf(' %d', request{1:3});
   str = sprintf('Requried resouces (Request no. %d): %s', requestDBindex, requestString);
   disp(str);
   
+  %profile on;         % Turn on profiler
+  
   %%%%%%%%%% IT & NET resource allocation %%%%%%%%%%
   [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
+  
+  %profile off;         % Turn off profiler
+  %profile viewer;     % View profiler results
   
   % Update request database
   requestDB(requestDBindex,12:15) = {ITresourceNodesAllocated,NETresourcesAllocaed,ITfailureCause,NETfailureCause};
@@ -159,12 +160,12 @@ for t = 1:tTime
   % Plot heat map (Updated everytime a new request is being allocated/handled)
   plotHeatMap(dataCenterConfig, dataCenterMap, 'heatMap');
   
-  blocked = find(cell2mat(requestDB(1:t,9)) == 0);
-  nBlocked(t) = size(blocked,1);
+  blocked = find(cell2mat(requestDB(1:t,9)) == 0);    % Find requests that have been blocked upto time t
+  nBlocked(t) = size(blocked,1);                      % Count the number of requests found
 
   %%%%%%%%%% Network resource allocation %%%%%%%%%%
   % Need to get a better understanding of network resource allocation code
-  networkAllocationResult = FAILURE;
+  %NETallocationResult = FAILURE;
 
   %%%%%%%%%% Update requests database %%%%%%%%%%
   % Doing this to "simulate parallelism" with IT and network resource
@@ -180,17 +181,18 @@ for t = 1:tTime
   requestDB{requestDBindex, ITresourceAllocStatusColumn} =  ITallocationResult;
   
   % Update network resource allocation column
-  %requestDB(requestDBindex, networkResourceAllocStatusColumn) =  networkAllocationResult;
+  requestDB{requestDBindex, networkResourceAllocStatusColumn} =  NETallocationResult;
   
   % Update request status column
-  if (ITallocationResult == SUCCESS && networkAllocationResult == SUCCESS)
+  if (ITallocationResult == SUCCESS && NETallocationResult == SUCCESS)
     requestDB{requestDBindex, requestStatusColumn} = SUCCESS;
   end
 end
 
-figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
-semilogy(time,(nBlocked/tTime));
-title('Blocking probability');
+% Plot blocking probability
+% figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+% semilogy(time,(nBlocked/tTime));
+% title('Blocking probability');
 
 str = sprintf('Resource allocation complete.\n');
 disp(str);

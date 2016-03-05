@@ -557,9 +557,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
 % 		k2j = repmat(hopsMap(k,:), nNodes, 1);
 % 		hopsMap = min(hopsMap, (i2k + k2j));
 %   end
-%   
-%   % Loop over hops matrix to reduce every element by one (since the Floyd-Warshall algorithm gives 
-%   % the shortest-path and not the number of hops). In general, nHops = nNodeTraversed - 1.
+   
+   % Loop over hops matrix to reduce every element by one (since the Floyd-Warshall algorithm gives 
+   % the shortest-path and not the number of hops). In general, nHops = nNodeTraversed - 1.
 %   for sourceNode = 1:nNodes
 %     for destNode = 1:nNodes
 %       if (sourceNode ~= destNode)    % Ignore diagonal (since it's already zero)
@@ -590,10 +590,10 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
 	nNodes = size(weightedEdgeSparseGraph, 1);                % Obtain size of the matrix
   kPaths = 1;     % Specify number of shortest paths to find
   
-  ksPath_Dist = zeros (nNodes,nNodes,kPaths);   % Initialize k-shortest path distance matrix with it's 3rd dimension being of size kPaths
+  ksPath_Dist = zeros(nNodes,nNodes,kPaths);   % Initialize k-shortest path distance matrix with it's 3rd dimension being of size kPaths
   ksPath_Paths = cell(nNodes,nNodes);    % Initialize k-shortest path paths cell
   
-  ksPath_Latency = zeros (nNodes,nNodes,kPaths);   % Initialize k-shortest path latency matrix with it's 3rd dimension being of size kPaths 
+  ksPath_Latency = zeros(nNodes,nNodes,kPaths);   % Initialize k-shortest path latency matrix with it's 3rd dimension being of size kPaths 
   
   %profile on;         % Turn on profiler
   

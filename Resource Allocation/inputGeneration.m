@@ -33,14 +33,14 @@ function requestDB = inputGeneration(nRequests)
   storageMin = 1;           % In GBs
   storageMax = 256;         % In GBs
 
-  bandwidthMinCM = 50;      % In Gb/s
-  bandwidthMaxCM = 400;     % In Gb/s
+  bandwidthMinCM = 10;      % In Gb/s
+  bandwidthMaxCM = 20;     % In Gb/s
   
   bandwidthMinMS = bandwidthMinCM/5;      % In Gb/s -> 5x LOWER acceptable (min) bandwidth between MEM & STO
   bandwidthMaxMS = bandwidthMaxCM/5;      % In Gb/s -> 5x LOWER acceptable (max) bandwidth between MEM & STO
   
-  latencyMinCM = 5;         % In ns (i.e. nanoseconds)
-  latencyMaxCM = 100;       % In ns (i.e. nanoseconds)
+  latencyMinCM = 10000;         % In ns (i.e. nanoseconds)
+  latencyMaxCM = 100000;       % In ns (i.e. nanoseconds)
   
   latencyMinMS = latencyMinCM * 10;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (min) latency between MEM & STO
   latencyMaxMS = latencyMaxCM * 10;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (max) latency between MEM & STO
@@ -143,6 +143,8 @@ function requestDB = inputGeneration(nRequests)
     end
     
     % Collect/store data generated over i iterations
+    %testRequest = {10,10,10,50,50,50000,50000,4000,0,0,0,{},{},'NONE','NONE'};    % Test request used for debugging
+    %requestDB(i,:) = testRequest;
     requestDB(i,:) = {nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0, {}, {},'NONE','NONE'};
 
     if (scatterPlot == 1)
