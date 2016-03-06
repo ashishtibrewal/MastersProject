@@ -897,7 +897,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   
   %%%%%% TOR-TOB BANDWIDTH %%%%%%
   for TOR = 1:(nTOR * nRacks)
-    for TOB = (TOR + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
+    for TOB = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
       % Check if the TOR & TOB are connected
       if (completeConnectivity(TOR,TOB) == 1)
         completeBandwidth(TOR,TOB) = maxChannelBandwidth * nChannelsTOR_TOB;
