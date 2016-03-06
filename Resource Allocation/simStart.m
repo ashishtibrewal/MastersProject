@@ -139,7 +139,7 @@ for t = 1:tTime
   request = requestDB(requestDBindex,:);
   
   % Display required resources for request on the prompt
-  requestString = sprintf(' %d', request{1:3});
+  requestString = sprintf(' %d', request{1:7});
   str = sprintf('Requried resouces (Request no. %d): %s', requestDBindex, requestString);
   disp(str);
   
@@ -190,9 +190,9 @@ for t = 1:tTime
 end
 
 % Plot blocking probability
-% figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
-% semilogy(time,(nBlocked/tTime));
-% title('Blocking probability');
+figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+semilogy(time,(nBlocked/tTime));
+title('Blocking probability');
 
 str = sprintf('Resource allocation complete.\n');
 disp(str);

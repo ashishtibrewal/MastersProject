@@ -33,20 +33,20 @@ function requestDB = inputGeneration(nRequests)
   storageMin = 1;           % In GBs
   storageMax = 256;         % In GBs
 
-  bandwidthMinCM = 10;      % In Gb/s
-  bandwidthMaxCM = 20;     % In Gb/s
+  bandwidthMinCM = 64;      % In Gb/s
+  bandwidthMaxCM = 256;     % In Gb/s
   
   bandwidthMinMS = bandwidthMinCM/5;      % In Gb/s -> 5x LOWER acceptable (min) bandwidth between MEM & STO
   bandwidthMaxMS = bandwidthMaxCM/5;      % In Gb/s -> 5x LOWER acceptable (max) bandwidth between MEM & STO
   
-  latencyMinCM = 10000;         % In ns (i.e. nanoseconds)
-  latencyMaxCM = 100000;       % In ns (i.e. nanoseconds)
+  latencyMinCM = 4000;         % In ns (i.e. nanoseconds)
+  latencyMaxCM = 16000;       % In ns (i.e. nanoseconds)
   
   latencyMinMS = latencyMinCM * 10;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (min) latency between MEM & STO
   latencyMaxMS = latencyMaxCM * 10;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (max) latency between MEM & STO
   
   holdTimeMin = 1;          % In s (i.e. seconds)
-  holdTimeMax = 10000;      % In s (i.e. seconds)
+  holdTimeMax = 1000;      % In s (i.e. seconds)
   
   requestDB = cell(nRequests, 15);  % Matrix to store all generated requests (Each row contains a different request)
   % Column  1 -> CPU

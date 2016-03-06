@@ -1,4 +1,4 @@
-function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startNode, reqResourceUnits)
+function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startNode, reqResourceUnits, updatedUnitAvailableMap)
   % Function to implement the "customised" Breadth-First Search (BFS) algorithm
   % resourceNodes - 1st row = CPUs, 2nd row = MEMs, 3rd row = STOs
   % successful - Only set if all resources have been found
@@ -12,7 +12,7 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
 
   % Extract required maps from the data center map struct
   completeResourceMap = dataCenterMap.completeResourceMap;
-  completeUnitAvailableMap = dataCenterMap.completeUnitAvailableMap;
+  %completeUnitAvailableMap = dataCenterMap.completeUnitAvailableMap;
   completeConnectivityMap = dataCenterMap.connectivityMap.completeConnectivity;
   completeDistanceMap = dataCenterMap.distanceMap.completeDistance;
   
@@ -54,8 +54,8 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
   % Check source node (i.e. start node) for available resource units
   % Check source node (i.e. start node) for available CPU units
   if (CPUunitsFound < CPUunitsRequired)
-    if (strcmp('CPU',completeResourceMap(startNode)) && completeUnitAvailableMap(startNode) > 0)
-      unitsFound = completeUnitAvailableMap(startNode);
+    if (strcmp('CPU',completeResourceMap(startNode)) && updatedUnitAvailableMap(startNode) > 0)
+      unitsFound = updatedUnitAvailableMap(startNode);
       if ((CPUunitsRequired - CPUunitsFound) >= unitsFound)
         CPUunitsFound = CPUunitsFound + unitsFound;
         ITresourceNodes{1,CPUindex} = {startNode,unitsFound};
@@ -74,8 +74,8 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
   
   % Check source node (i.e. start node) for available MEM units
   if (MEMunitsFound < MEMunitsRequired)
-    if (strcmp('MEM',completeResourceMap(startNode)) && completeUnitAvailableMap(startNode) > 0)
-      unitsFound = completeUnitAvailableMap(startNode);
+    if (strcmp('MEM',completeResourceMap(startNode)) && updatedUnitAvailableMap(startNode) > 0)
+      unitsFound = updatedUnitAvailableMap(startNode);
       if ((MEMunitsRequired - MEMunitsFound) >= unitsFound)
         MEMunitsFound = MEMunitsFound + unitsFound;
         ITresourceNodes{2,MEMindex} = {startNode,unitsFound};
@@ -94,8 +94,8 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
   
   % Check source node (i.e. start node) for available STO units
   if (STOunitsFound < STOunitsRequired)
-    if (strcmp('STO',completeResourceMap(startNode)) && completeUnitAvailableMap(startNode) > 0)
-      unitsFound = completeUnitAvailableMap(startNode);
+    if (strcmp('STO',completeResourceMap(startNode)) && updatedUnitAvailableMap(startNode) > 0)
+      unitsFound = updatedUnitAvailableMap(startNode);
       if ((STOunitsRequired - STOunitsFound) >= unitsFound)
         STOunitsFound = STOunitsFound + unitsFound;
         ITresourceNodes{3,STOindex} = {startNode,unitsFound};
@@ -128,8 +128,8 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
         % Find CPU units
         if (CPUunitsFound < CPUunitsRequired)
           % If a required type of resource node is found that's got at least a single unit free, store it's location
-          if (strcmp('CPU',completeResourceMap(neighbours(nNode))) && completeUnitAvailableMap(neighbours(nNode)) > 0)
-            unitsFound = completeUnitAvailableMap(neighbours(nNode));
+          if (strcmp('CPU',completeResourceMap(neighbours(nNode))) && updatedUnitAvailableMap(neighbours(nNode)) > 0)
+            unitsFound = updatedUnitAvailableMap(neighbours(nNode));
             if ((CPUunitsRequired - CPUunitsFound) >= unitsFound)
               CPUunitsFound = CPUunitsFound + unitsFound;
               ITresourceNodes{1,CPUindex} = {neighbours(nNode),unitsFound};
@@ -151,8 +151,8 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
         % Find MEM units
         if (MEMunitsFound < MEMunitsRequired)
           % If a required type of resource node is found that's got at least a single unit free, store it's location
-          if (strcmp('MEM',completeResourceMap(neighbours(nNode))) && completeUnitAvailableMap(neighbours(nNode)) > 0)
-            unitsFound = completeUnitAvailableMap(neighbours(nNode));
+          if (strcmp('MEM',completeResourceMap(neighbours(nNode))) && updatedUnitAvailableMap(neighbours(nNode)) > 0)
+            unitsFound = updatedUnitAvailableMap(neighbours(nNode));
             if ((MEMunitsRequired - MEMunitsFound) >= unitsFound)
               MEMunitsFound = MEMunitsFound + unitsFound;
               ITresourceNodes{2,MEMindex} = {neighbours(nNode),unitsFound};
@@ -174,8 +174,8 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
         % Find STO units
         if (STOunitsFound < STOunitsRequired)
           % If a required type of resource node is found that's got at least a single unit free, store it's location
-          if (strcmp('STO',completeResourceMap(neighbours(nNode))) && completeUnitAvailableMap(neighbours(nNode)) > 0)
-            unitsFound = completeUnitAvailableMap(neighbours(nNode));
+          if (strcmp('STO',completeResourceMap(neighbours(nNode))) && updatedUnitAvailableMap(neighbours(nNode)) > 0)
+            unitsFound = updatedUnitAvailableMap(neighbours(nNode));
             if ((STOunitsRequired - STOunitsFound) >= unitsFound)
               STOunitsFound = STOunitsFound + unitsFound;
               ITresourceNodes{3,STOindex} = {neighbours(nNode),unitsFound};

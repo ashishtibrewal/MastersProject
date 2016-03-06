@@ -52,6 +52,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   % Extract required maps from the data center map struct
   completeResourceMap = dataCenterMap.completeResourceMap;
   completeUnitAvailableMap = dataCenterMap.completeUnitAvailableMap;
+  updatedUnitAvailableMap = completeUnitAvailableMap;   % Copy of the original unit available map on which changes are made
   
   % IMPORTANT NOTE: A unit can only be allocated to a single request.
   % Updates/changes are made to the copies of the original maps and the
@@ -177,11 +178,11 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         heldITresources = [];
         ITfailureCause = 'CPU';   % Allocation failed due to unavailibility of CPUs
       else
-        for slotNo = 1:nCPU_SlotsToScan
+        for slotNo = 1:nSlots:nCPU_SlotsToScan
           %str = sprintf('Starting CPU node: %d, %d, %d \n', CPUlocations(availableCPUslots(slotNo)), CPUlocations(availableCPUslots(1,slotNo)),CPUunitsInSlots(1,availableCPUslots(slotNo)));
           %disp(str);
           startCPUslot = CPUunitsInSlots(1,availableCPUslots(slotNo)); % CPU start slot/node
-          [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startCPUslot, reqResourceUnits);
+          [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startCPUslot, reqResourceUnits, updatedUnitAvailableMap);
           % Check if all resources have been successfully found
           if (ITsuccessful == SUCCESS)
             % Locations of resources that are "held" for the current request
@@ -196,6 +197,55 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               heldNETresources = [];
               NETresourceUnavailable = 1;
               disp(NETfailureCause);
+              % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
+              % Initialize empty matrices to hold slot/node numbers
+              CPUnodes = [];
+              MEMnodes = [];
+              STOnodes = [];
+              % Extract slot/node numbers/locations to be able to update updatedUnitAvailableMap
+              for i = 1:size(heldITresources,1)
+                for j = 1:size(heldITresources,2)
+                  % Extract current cell from the heldITresources cell array
+                  currentCell = heldITresources{i,j};
+                  if (~isempty(currentCell))
+                    switch (i)
+                      % CPU nodes
+                      case 1
+                        CPUnodes = [CPUnodes, currentCell{1}];
+                      % MEM nodes
+                      case 2
+                        MEMnodes = [MEMnodes, currentCell{1}];
+                      % STO nodes
+                      case 3
+                        STOnodes = [STOnodes, currentCell{1}];
+                    end
+                  end
+                end
+              end
+              % Concatenate all nodes into a single matrix (Horizontal concatenation)
+              ALLnodes = horzcat(CPUnodes,MEMnodes,STOnodes); 
+              updatedUnitAvailableMap(ALLnodes) = 0;
+              
+              % Find number of units in slots of specific resource types
+              CPUunitsInSlots_updated = [CPUlocations; updatedUnitAvailableMap(CPUlocations)];
+              MEMunitsInSlots_updated = [MEMlocations; updatedUnitAvailableMap(MEMlocations)];
+              STOunitsInSlots_updated = [STOlocations; updatedUnitAvailableMap(STOlocations)];
+
+              % Find slots of specific resource that have at least a single unit free/available
+              availableCPUslots_updated = find(CPUunitsInSlots_updated(2,:) > 0);
+              availableMEMslots_updated = find(MEMunitsInSlots_updated(2,:) > 0);
+              availableSTOslots_updated = find(STOunitsInSlots_updated(2,:) > 0);
+
+              % Find total units available in the available slots
+              availableCPUunits_updated =  sum(CPUunitsInSlots_updated(2,availableCPUslots_updated),2);
+              availableMEMunits_updated =  sum(MEMunitsInSlots_updated(2,availableMEMslots_updated),2);
+              availableSTOunits_updated =  sum(STOunitsInSlots_updated(2,availableSTOslots_updated),2);
+              
+              % Need to do this check since the actual failure cause is not unavailibility of IT resources but the 
+              % unavailibility of NET resources
+              if (availableCPUunits_updated < reqCPUunits || availableMEMunits_updated < reqMEMunits || availableSTOunits_updated < reqSTOunits)
+                break;
+              end
             end
           else
             ITresourceUnavailable = 1;
@@ -211,9 +261,9 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         heldITresources = [];
         ITfailureCause = 'MEM';   % Allocation failed due to unavailibility of MEMs
       else
-        for slotNo = 1:nMEM_SlotsToScan
+        for slotNo = 1:nSlots:nMEM_SlotsToScan
           startMEMslot = MEMunitsInSlots(1,availableMEMslots(slotNo)); % MEM start slot/node
-          [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startMEMslot, reqResourceUnits);
+          [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startMEMslot, reqResourceUnits, updatedUnitAvailableMap);
           % Check if all resources have been successfully found
           if (ITsuccessful == SUCCESS)
             % Locations of resources that are "held" for the current request
@@ -228,6 +278,55 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               heldNETresources = [];
               NETresourceUnavailable = 1;
               disp(NETfailureCause);
+              % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
+              % Initialize empty matrices to hold slot/node numbers
+              CPUnodes = [];
+              MEMnodes = [];
+              STOnodes = [];
+              % Extract slot/node numbers/locations to be able to update updatedUnitAvailableMap
+              for i = 1:size(heldITresources,1)
+                for j = 1:size(heldITresources,2)
+                  % Extract current cell from the heldITresources cell array
+                  currentCell = heldITresources{i,j};
+                  if (~isempty(currentCell))
+                    switch (i)
+                      % CPU nodes
+                      case 1
+                        CPUnodes = [CPUnodes, currentCell{1}];
+                      % MEM nodes
+                      case 2
+                        MEMnodes = [MEMnodes, currentCell{1}];
+                      % STO nodes
+                      case 3
+                        STOnodes = [STOnodes, currentCell{1}];
+                    end
+                  end
+                end
+              end
+              % Concatenate all nodes into a single matrix (Horizontal concatenation)
+              ALLnodes = horzcat(CPUnodes,MEMnodes,STOnodes); 
+              updatedUnitAvailableMap(ALLnodes) = 0;
+              
+              % Find number of units in slots of specific resource types
+              CPUunitsInSlots_updated = [CPUlocations; updatedUnitAvailableMap(CPUlocations)];
+              MEMunitsInSlots_updated = [MEMlocations; updatedUnitAvailableMap(MEMlocations)];
+              STOunitsInSlots_updated = [STOlocations; updatedUnitAvailableMap(STOlocations)];
+
+              % Find slots of specific resource that have at least a single unit free/available
+              availableCPUslots_updated = find(CPUunitsInSlots_updated(2,:) > 0);
+              availableMEMslots_updated = find(MEMunitsInSlots_updated(2,:) > 0);
+              availableSTOslots_updated = find(STOunitsInSlots_updated(2,:) > 0);
+
+              % Find total units available in the available slots
+              availableCPUunits_updated =  sum(CPUunitsInSlots_updated(2,availableCPUslots_updated),2);
+              availableMEMunits_updated =  sum(MEMunitsInSlots_updated(2,availableMEMslots_updated),2);
+              availableSTOunits_updated =  sum(STOunitsInSlots_updated(2,availableSTOslots_updated),2);
+              
+              % Need to do this check since the actual failure cause is not unavailibility of IT resources but the 
+              % unavailibility of NET resources
+              if (availableCPUunits_updated < reqCPUunits || availableMEMunits_updated < reqMEMunits || availableSTOunits_updated < reqSTOunits)
+                break;
+              end
             end
           else
             ITresourceUnavailable = 1;
@@ -243,9 +342,9 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         heldITresources = [];
         ITfailureCause = 'STO';   % Allocation failed due to unavailibility of STOs
       else
-        for slotNo = 1:nSTO_SlotsToScan
+        for slotNo = 1:nSlots:nSTO_SlotsToScan
           startSTOslot = STOunitsInSlots(1,availableSTOslots(slotNo)); % STO start slot/node
-          [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startSTOslot, reqResourceUnits);
+          [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startSTOslot, reqResourceUnits, updatedUnitAvailableMap);
           % Check if all resources have been successfully found
           if (ITsuccessful == SUCCESS)
             % Locations of resources that are "held" for the current request
@@ -260,6 +359,55 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               heldNETresources = [];
               NETresourceUnavailable = 1;
               disp(NETfailureCause);
+              % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
+              % Initialize empty matrices to hold slot/node numbers
+              CPUnodes = [];
+              MEMnodes = [];
+              STOnodes = [];
+              % Extract slot/node numbers/locations to be able to find bandwidth available and latency between them
+              for i = 1:size(heldITresources,1)
+                for j = 1:size(heldITresources,2)
+                  % Extract slot/node numbers/locations to be able to update updatedUnitAvailableMap
+                  currentCell = heldITresources{i,j};
+                  if (~isempty(currentCell))
+                    switch (i)
+                      % CPU nodes
+                      case 1
+                        CPUnodes = [CPUnodes, currentCell{1}];
+                      % MEM nodes
+                      case 2
+                        MEMnodes = [MEMnodes, currentCell{1}];
+                      % STO nodes
+                      case 3
+                        STOnodes = [STOnodes, currentCell{1}];
+                    end
+                  end
+                end
+              end
+              % Concatenate all nodes into a single matrix (Horizontal concatenation)
+              ALLnodes = horzcat(CPUnodes,MEMnodes,STOnodes); 
+              updatedUnitAvailableMap(ALLnodes) = 0;
+              
+              % Find number of units in slots of specific resource types
+              CPUunitsInSlots_updated = [CPUlocations; updatedUnitAvailableMap(CPUlocations)];
+              MEMunitsInSlots_updated = [MEMlocations; updatedUnitAvailableMap(MEMlocations)];
+              STOunitsInSlots_updated = [STOlocations; updatedUnitAvailableMap(STOlocations)];
+
+              % Find slots of specific resource that have at least a single unit free/available
+              availableCPUslots_updated = find(CPUunitsInSlots_updated(2,:) > 0);
+              availableMEMslots_updated = find(MEMunitsInSlots_updated(2,:) > 0);
+              availableSTOslots_updated = find(STOunitsInSlots_updated(2,:) > 0);
+
+              % Find total units available in the available slots
+              availableCPUunits_updated =  sum(CPUunitsInSlots_updated(2,availableCPUslots_updated),2);
+              availableMEMunits_updated =  sum(MEMunitsInSlots_updated(2,availableMEMslots_updated),2);
+              availableSTOunits_updated =  sum(STOunitsInSlots_updated(2,availableSTOslots_updated),2);
+              
+              % Need to do this check since the actual failure cause is not unavailibility of IT resources but the 
+              % unavailibility of NET resources
+              if (availableCPUunits_updated < reqCPUunits || availableMEMunits_updated < reqMEMunits || availableSTOunits_updated < reqSTOunits)
+                break;
+              end
             end
           else
             ITresourceUnavailable = 1;
