@@ -33,8 +33,8 @@ function requestDB = inputGeneration(nRequests)
   storageMin = 1;           % In GBs
   storageMax = 256;         % In GBs
 
-  bandwidthMinCM = 64;      % In Gb/s
-  bandwidthMaxCM = 256;     % In Gb/s
+  bandwidthMinCM = 32;      % In Gb/s
+  bandwidthMaxCM = 128;     % In Gb/s
   
   bandwidthMinMS = bandwidthMinCM/5;      % In Gb/s -> 5x LOWER acceptable (min) bandwidth between MEM & STO
   bandwidthMaxMS = bandwidthMaxCM/5;      % In Gb/s -> 5x LOWER acceptable (max) bandwidth between MEM & STO

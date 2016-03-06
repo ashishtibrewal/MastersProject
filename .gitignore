@@ -1,3 +1,5 @@
 *.m~
 *.*~
+*.swp
 Resource Allocation/log/
+Resource Allocation/fig/

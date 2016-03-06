@@ -12,7 +12,7 @@ nTOB: 2       # Number of TOB switches per blade
 unitSize:
   CPU: 1      # >1 signifies multi-core (A simplistic approach)
   MEM: 4      # Each DIMM is 4 GB in size/capacity
-  STO: 128    # Each HDD is 128 GB in size /capacity
+  STO: 32    # Each HDD is 128 GB in size /capacity
 
 # TODO change these to more realistic values (such as 1U, 2U .. rack unit sizes)
 distances:
