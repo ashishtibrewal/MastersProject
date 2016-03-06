@@ -164,6 +164,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   % Cell array to store all contention ratios (i.e. for each i-th iteration)
   CRs = cell(1,size(contentionRatios,2));
 
+  % Main loop to iterate over all possible contention ratio switches starting from the primary contention ratio switch
   for iCR = 1:size(contentionRatios,2)
     ITresourceUnavailable = 0;    % Initialize/reset IT resource unavailable for every iteration of the loop
     NETresourceUnavailable = 0;   % Initialize/reset NET resource unavailable for every iteration of the loop
@@ -291,11 +292,16 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
             else
               ITresourceUnavailable = 1;
               heldITresources = [];
+              break;      % Break out of the inner loop since required number of IT resources couldn't be found
             end
           end
           if (ITsuccessful == SUCCESS && NETsuccessful == SUCCESS)
             break;    % Break out of outer loop
           end
+        end
+        % Break out of the outer loop if required number of IT resources are unavailable
+        if (ITresourceUnavailable == 1)
+          break;    % Break out of outer loop
         end
 
         case 'MEM'
@@ -377,11 +383,16 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
             else
               ITresourceUnavailable = 1;
               heldITresources = [];
+              break;      % Break out of the inner loop since required number of IT resources couldn't be found
             end
           end
           if (ITsuccessful == SUCCESS && NETsuccessful == SUCCESS)
             break;    % Break out of outer loop
           end
+        end
+        % Break out of the outer loop if required number of IT resources are unavailable
+        if (ITresourceUnavailable == 1)
+          break;    % Break out of outer loop
         end
 
         case 'STO'
@@ -463,11 +474,16 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
             else
               ITresourceUnavailable = 1;
               heldITresources = [];
+              break;      % Break out of the inner loop since required number of IT resources couldn't be found
             end
           end
           if (ITsuccessful == SUCCESS && NETsuccessful == SUCCESS)
             break;    % Break out of outer loop
           end
+        end
+        % Break out of the outer loop if required number of IT resources are unavailable
+        if (ITresourceUnavailable == 1)
+          break;    % Break out of outer loop
         end
     end
   end
