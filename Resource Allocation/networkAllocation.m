@@ -1,4 +1,4 @@
-function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig)
+function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, failureNodes] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig)
   % Network allocation algorithm
   
   % Import global macros
@@ -48,6 +48,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap] 
   BANsuccess = SUCCESS;
   pathTaken = 0;
   updatedBandwidtMap = completeBandwidthMap;    % Initialize updated bandwidth map with complete bandwitdh map
+  failureNodesInternal = [];    % Nodes that caused latency/bandwidth checks to fail
   
   % Initialize empty matrices to hold slot/node numbers
   CPUnodes = [];
@@ -134,12 +135,13 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap] 
         % Check latency between the nodes and if any of them go over, break
         if (ksPath_Latency(i,j,k) > requiredLAT_CM)
           LATsuccess = FAILURE;
+          failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
           break;
         end
       end
-      if (LATsuccess == FAILURE)
-        break;
-      end
+%       if (LATsuccess == FAILURE)
+%         break;
+%       end
     end
     if (LATsuccess == SUCCESS)
       pathTaken = k;
@@ -161,27 +163,29 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap] 
           %disp(str);
           if (updatedBandwidtMap(path(node),path(node + 1)) < requiredBAN_CM)
             BANsuccess = FAILURE;
+            failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
           else
           % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
           updatedBandwidtMap(path(node),path(node + 1)) = updatedBandwidtMap(path(node),path(node + 1)) - requiredBAN_CM;
           updatedBandwidtMap(path(node + 1),path(node)) = updatedBandwidtMap(path(node + 1),path(node)) - requiredBAN_CM;
           end
         end
-        if (BANsuccess == FAILURE)
-          break;
-        end
+%         if (BANsuccess == FAILURE)
+%           break;
+%         end
       end
-      if (BANsuccess == FAILURE)
-        break;
-      end
+%       if (BANsuccess == FAILURE)
+%         break;
+%       end
     end
   end
-  
+
   % Update outputs
   if (LATsuccess == SUCCESS && BANsuccess == SUCCESS)
     NETsuccessful = SUCCESS;
     NETfailureCause = 'NONE';
     NETresourceLinks = ksPath_Paths(:,:);
+    failureNodes = [];
   else
     NETsuccessful = FAILURE;
     if (LATsuccess == FAILURE)
@@ -190,5 +194,6 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap] 
       NETfailureCause = 'BAN';
     end
     NETresourceLinks = [];
+    failureNodes = unique(failureNodesInternal,'first');
   end
 end

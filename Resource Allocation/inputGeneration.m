@@ -30,7 +30,7 @@ function requestDB = inputGeneration(nRequests)
   memoryMin = 1;            % In GBs
   memoryMax = 32;           % In GBs
 
-  storageMin = 1;           % In GBs
+  storageMin = 64;           % In GBs
   storageMax = 256;         % In GBs
 
   bandwidthMinCM = 32;      % In Gb/s

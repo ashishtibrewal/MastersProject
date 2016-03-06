@@ -228,7 +228,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               heldITresources = ITresourceNodes;
               % TODO Add network allocation code - if network is successful, break out else start search for new 
               % IT slots from next available resource node
-              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
+              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
               if (NETsuccessful == SUCCESS)
                 heldNETresources = NETresourceLinks;
                 break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
@@ -264,7 +264,8 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
                 % Concatenate all nodes into a single matrix (Horizontal concatenation)
                 ALLnodes = horzcat(CPUnodes,MEMnodes,STOnodes); 
                 %updatedUnitAvailableMap(ALLnodes) = 0;
-                updatedUnitAvailableMap(CPUnodes) = 0;
+                %updatedUnitAvailableMap(CPUnodes) = 0;
+                updatedUnitAvailableMap(failureNodes) = 0;
 
                 % Find number of units in slots of specific resource types
                 CPUunitsInSlots_updated = [CPUlocations; updatedUnitAvailableMap(CPUlocations)];
@@ -313,7 +314,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               heldITresources = ITresourceNodes;
               % TODO Add network allocation code - if network is successful, break out else start search for new 
               % IT slots from next available resource node
-              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
+              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
               if (NETsuccessful == SUCCESS)
                 heldNETresources = NETresourceLinks;
                 break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
@@ -349,7 +350,8 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
                 % Concatenate all nodes into a single matrix (Horizontal concatenation)
                 ALLnodes = horzcat(CPUnodes,MEMnodes,STOnodes); 
                 %updatedUnitAvailableMap(ALLnodes) = 0;
-                updatedUnitAvailableMap(MEMnodes) = 0;
+                %updatedUnitAvailableMap(MEMnodes) = 0;
+                updatedUnitAvailableMap(failureNodes) = 0;
 
                 % Find number of units in slots of specific resource types
                 CPUunitsInSlots_updated = [CPUlocations; updatedUnitAvailableMap(CPUlocations)];
@@ -398,7 +400,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               heldITresources = ITresourceNodes;
               % TODO Add network allocation code - if network is successful, break out else start search for new 
               % IT slots from next available resource node
-              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
+              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
               if (NETsuccessful == SUCCESS)
                 heldNETresources = NETresourceLinks;
                 break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
@@ -434,7 +436,8 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
                 % Concatenate all nodes into a single matrix (Horizontal concatenation)
                 ALLnodes = horzcat(CPUnodes,MEMnodes,STOnodes); 
                 %updatedUnitAvailableMap(ALLnodes) = 0;
-                updatedUnitAvailableMap(STOnodes) = 0;
+                %updatedUnitAvailableMap(STOnodes) = 0;
+                updatedUnitAvailableMap(failureNodes) = 0;
 
                 % Find number of units in slots of specific resource types
                 CPUunitsInSlots_updated = [CPUlocations; updatedUnitAvailableMap(CPUlocations)];
