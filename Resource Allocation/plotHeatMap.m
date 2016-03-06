@@ -73,14 +73,8 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
       for r = 1:hmSize(1)
         for c = 1:hmSize(2)
           nodeVal = dataCenterMap.completeUnitAvailableMap(startNode + ((r - 1) * hmSize(2)) + c);
-          switch (nodeVal)
-            case 0
-              hmap(r,c,:) = [1,0,0];
-            case 1
-              hmap(r,c,:) = [1,1,0];
-            case 2
-              hmap(r,c,:) = [0,1,0];
-          end
+          avalibilityRatio = nodeVal/nUnits;
+          hmap(r,c,:) = [(1 - avalibilityRatio), avalibilityRatio, 0];
         end
       end
 
