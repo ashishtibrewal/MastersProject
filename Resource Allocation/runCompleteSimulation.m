@@ -64,6 +64,35 @@ requestDB_3 = simStart(yaml_configFile);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % NEED TO THINK OF GRAPHS THAT CAN BE PLOTTED TO DEPICT SIMULATION RESULTS
 
+% BLOCKING PROBABILITY (Request vs BP)
+nRequests = 200;      % Number of requests to generate
+tTime = nRequests;    % Total time to simulate for (1 second for each request)
+time = 1:tTime;
+nBlocked_1 = zeros(1,size(time,2));
+nBlocked_2 = zeros(1,size(time,2));
+nBlocked_3 = zeros(1,size(time,2));
+% Main time loop
+for t = 1:tTime
+  blocked_1 = find(cell2mat(requestDB_1(1:t,9)) == 0);    % Find requests that have been blocked upto time t
+  blocked_2 = find(cell2mat(requestDB_2(1:t,9)) == 0);    % Find requests that have been blocked upto time t
+  blocked_3 = find(cell2mat(requestDB_3(1:t,9)) == 0);    % Find requests that have been blocked upto time t
+  nBlocked_1(t) = size(blocked_1,1);                      % Count the number of requests found
+  nBlocked_2(t) = size(blocked_2,1);                      % Count the number of requests found
+  nBlocked_3(t) = size(blocked_3,1);                      % Count the number of requests found
+end
+
+figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+hold on;
+semilogy(time,(nBlocked_1/nRequests));
+semilogy(time,(nBlocked_2/nRequests));
+semilogy(time,(nBlocked_3/nRequests));
+title('Blocking probability');
+
+% BLOCKING PROBABILITY (CPU,MEM,STO Utilisation vs BP)
+
+% LATENCY ALLOCATION (REQUEST group vs LATENCY ALLOCATED - min, average, max graph)
+
+% UTILIZATION (REQUEST group vs NET,CPU,MEM,STO utilisation)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Clean up & display log

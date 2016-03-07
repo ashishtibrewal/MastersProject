@@ -96,7 +96,7 @@ function requestDB = simStart (yaml_configFile)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Generate plot for resource location
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %plotHeatMap(dataCenterConfig, dataCenterMap, 'locationMap');
+  plotHeatMap(dataCenterConfig, dataCenterMap, 'allMapsSetup');
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Resource allocation main time loop
@@ -111,9 +111,9 @@ function requestDB = simStart (yaml_configFile)
   % Open figure - Updated when each request's resource allocation is complete
   %figure ('Name', 'Data Center Rack Usage (1st rack of each type)', 'NumberTitle', 'off', 'Position', [40, 100, 1200, 700]);
 
-  time = 1:tTime;
+  %time = 1:tTime;
 
-  nBlocked = zeros(1,size(time,2));
+  %nBlocked = zeros(1,size(time,2));
 
   % Main time loop
   for t = 1:tTime
@@ -143,10 +143,12 @@ function requestDB = simStart (yaml_configFile)
     %plotUsage(dataCenterMap, dataCenterConfig);
 
     % Plot heat map (Updated everytime a new request is being allocated/handled)
-    %plotHeatMap(dataCenterConfig, dataCenterMap, 'heatMap');
+    if (mod(t,10) == 0)   % Plot (after) every 10 requests to avoid slowing down the simulation
+      plotHeatMap(dataCenterConfig, dataCenterMap, 'allMaps');
+    end
 
-    blocked = find(cell2mat(requestDB(1:t,9)) == 0);    % Find requests that have been blocked upto time t
-    nBlocked(t) = size(blocked,1);                      % Count the number of requests found
+    %blocked = find(cell2mat(requestDB(1:t,9)) == 0);    % Find requests that have been blocked upto time t
+    %nBlocked(t) = size(blocked,1);                      % Count the number of requests found
 
     %%%%%%%%%% Network resource allocation %%%%%%%%%%
     % Need to get a better understanding of network resource allocation code

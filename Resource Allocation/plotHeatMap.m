@@ -76,7 +76,7 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
   
   switch (updateType)
     case 'locationMap'
-      % Open new figure
+      % Open new figure (Done once before starting the main time loop)
       figure ('Name', 'Data Center Heatmap', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
       figNo = 1;
       for i = 1:nRacks
@@ -223,16 +223,124 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
           figNo = figNo + 1;
         end
       end
-
+      
       %title('Resource Utilization - Green = Max free, Yellow = Min free, Red = None free');
       
-      %blocked = find(cell2mat(requestDB(1:t,9)) == 0);
-      %nBlocked = [nBlocked,size(blocked,1)];
-      %subplot(1,3,3);
-      %plot(nBlocked,t);
-      %title('Blocking probability');
+    case 'allMapsSetup' 
+      % Open new figure (Done once before starting the main time loop)
+      figure ('Name', 'Data Center Heatmap', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+      figNo_s = 1;
+      figNo_h = nSubFigs(2) + 1;
+      for i = 1:nRacks
+        % Plot rack setup
+        startNode_s = (nTORs + nTOBs) + ((i - 1) * (nSlots * nBlades));
+        subtightplot(nSubFigs(1),nSubFigs(2),figNo_s,[0.03,0.01],[0.01,0.03],[0.01,0.01]);
+        for r = 1:hmSize(1)
+          for c = 1:hmSize(2)
+            nodeType = dataCenterMap.completeResourceMap(startNode_s + ((r - 1) * hmSize(2)) + c);
+            if (strcmp(nodeType, 'CPU') == 1)
+                colorRGB = [0,0,0];
+                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB, 'EdgeColor', [1,1,1]);
+            elseif (strcmp(nodeType, 'MEM') == 1)
+                colorRGB = [1,1,1];
+                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+            elseif (strcmp(nodeType, 'STO') == 1)
+                colorRGB = [0.5,0.5,0.5];
+                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+            end
+          end
+        end
+        axis off;
+        str = sprintf('Rack %d Setup', i);
+        title(str);
+        if (mod(i,nSubFigs(2)) == 0)
+          figNo_s = figNo_s + (nSubFigs(2) + 1);
+        else
+          figNo_s = figNo_s + 1;
+        end
+        
+        % Plot rack utilization
+        startNode_h = (nTORs + nTOBs) + ((i - 1) * (nSlots * nBlades));
+        subtightplot(nSubFigs(1),nSubFigs(2),figNo_h,[0.03,0.01],[0.01,0.03],[0.01,0.01]);
+        for r = 1:hmSize(1)
+          for c = 1:hmSize(2)
+            nodeVal = dataCenterMap.completeUnitAvailableMap(startNode_h + ((r - 1) * hmSize(2)) + c);
+            avalibilityRatio = nodeVal/nUnits;
+            colorRGB = [(1 - avalibilityRatio), avalibilityRatio, 0];
+            rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+          end
+        end
+        axis off;
+        str = sprintf('Rack %d Utilisation', i);
+        title(str);
+        if (mod(i,nSubFigs(2)) == 0)
+          figNo_h = figNo_h + (nSubFigs(2) + 1);
+        else
+          figNo_h = figNo_h + 1;
+        end
+      end
       
-      pause(0.01);      % Pause to update the plot/figure (Pausing for 100 ms)
+    case 'allMaps' 
+      figNo_s = 1;
+      figNo_h = nSubFigs(2) + 1;
+      % Clear figure before plotting
+      clf;
+      for i = 1:nRacks
+        % Plot rack setup
+        startNode_s = (nTORs + nTOBs) + ((i - 1) * (nSlots * nBlades));
+        subtightplot(nSubFigs(1),nSubFigs(2),figNo_s,[0.03,0.01],[0.01,0.03],[0.01,0.01]);
+        for r = 1:hmSize(1)
+          for c = 1:hmSize(2)
+            nodeType = dataCenterMap.completeResourceMap(startNode_s + ((r - 1) * hmSize(2)) + c);
+            if (strcmp(nodeType, 'CPU') == 1)
+                colorRGB = [0,0,0];
+                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB, 'EdgeColor', [1,1,1]);
+            elseif (strcmp(nodeType, 'MEM') == 1)
+                colorRGB = [1,1,1];
+                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+            elseif (strcmp(nodeType, 'STO') == 1)
+                colorRGB = [0.5,0.5,0.5];
+                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+            end
+          end
+        end
+        axis off;
+        str = sprintf('Rack %d Setup', i);
+        title(str);
+        if (mod(i,nSubFigs(2)) == 0)
+          figNo_s = figNo_s + (nSubFigs(2) + 1);
+        else
+          figNo_s = figNo_s + 1;
+        end
+        
+        % Plot rack utilization
+        startNode_h = (nTORs + nTOBs) + ((i - 1) * (nSlots * nBlades));
+        subtightplot(nSubFigs(1),nSubFigs(2),figNo_h,[0.03,0.01],[0.01,0.03],[0.01,0.01]);
+        for r = 1:hmSize(1)
+          for c = 1:hmSize(2)
+            nodeVal = dataCenterMap.completeUnitAvailableMap(startNode_h + ((r - 1) * hmSize(2)) + c);
+            avalibilityRatio = nodeVal/nUnits;
+            colorRGB = [(1 - avalibilityRatio), avalibilityRatio, 0];
+            rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+          end
+        end
+        axis off;
+        str = sprintf('Rack %d Utilisation', i);
+        title(str);
+        if (mod(i,nSubFigs(2)) == 0)
+          figNo_h = figNo_h + (nSubFigs(2) + 1);
+        else
+          figNo_h = figNo_h + 1;
+        end
+      end
   end
+      
+  %blocked = find(cell2mat(requestDB(1:t,9)) == 0);
+  %nBlocked = [nBlocked,size(blocked,1)];
+  %subplot(1,3,3);
+  %plot(nBlocked,t);
+  %title('Blocking probability');
+
+  pause(0.01);      % Pause to update the plot/figure (Pausing for 100 ms)
 
 end
