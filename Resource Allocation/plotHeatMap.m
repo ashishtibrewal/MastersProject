@@ -232,7 +232,7 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
       %plot(nBlocked,t);
       %title('Blocking probability');
       
-      pause(0.05);      % Pause to update the plot/figure (Pausing for 100 ms)
+      pause(0.01);      % Pause to update the plot/figure (Pausing for 100 ms)
   end
 
 end

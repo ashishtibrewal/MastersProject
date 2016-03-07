@@ -1,0 +1,119 @@
+########################################
+# Resource unit dimensions to prevent going out of bounds/limit
+########################################
+nRacks: 12     # Total number of racks
+nBlades: 16    # Total number of blades (in each rack)
+nSlots: 8     # Total number of slots (in each blade) IMPORTANT NOTE: Always keep an even number of slots
+nUnits: 8     # Total number of units (in each slot)
+nTOR: 2       # Number of TOR switches per rack
+nTOB: 2       # Number of TOB switches per blade
+
+# TODO Change unit size to more realistic figures
+unitSize:
+  CPU: 4      # >1 signifies multi-core (A simplistic approach)
+  MEM: 4      # Each DIMM is 4 GB in size/capacity
+  STO: 64    # Each HDD is 128 GB in size /capacity
+
+# TODO change these to more realistic values (such as 1U, 2U .. rack unit sizes)
+distances:
+  TOR_IntraRack: 5    # Distance between TORs within the same rack
+  TOR_InterRack: 30   # Distance between TORs between different racks
+  TOR_TOB: 15         # Distance between TORs and TOBs within the same rack
+  TOB_IntraBlade: 2   # Distance between TOBs within the same blade (within the same rack)
+  TOB_InterBlade: 5   # Distance between TOBs between different blades (within the same rack)
+  TOB_slot: 10        # Distance between TOBs and and slots within the same blade (within the same rack)
+  slot: 2             # Distance between slots within the same blad (within the same rack)
+  
+########################################
+# Specify the network topology and switch delays for each 
+# hierarchial level (i.e. for rack-level, blade-level and slot-level
+# topologies and switches)
+# Note that units in each slot are fully connected
+########################################
+
+# Topologies at different levels
+topology:
+  rack: 'Fully-connected'
+  rack_blade: 'Star'
+  blade: 'Disconnected'
+  blade_slot: 'Star'
+  slot: 'Disconnected'
+
+# Switch delays at different levels (in nanoseconds) - Used in the latency map
+switchDelay:
+  TOD: 300          # Main (Top of data center) switch delay - Currently not used
+  TOR: 200          # Top of rack switch delay
+  TOB: 100          # Top of blade switch delay
+
+# Number of channels between two nodes (i.e. a node can be a rack/blade/slot)
+channels:
+  TOR_TOR: 32        # Number of channels between TORs
+  TOR_TOB: 32        # Number of channels between TOR & TOB
+  TOB_TOB: 16        # Number of channels between TOBs
+  TOB_SLOT: 16       # Number of channels between TOB & SLOT
+  SLOT_SLOT: 1      # Number of channels between SLOTs
+
+# Contraints/bounds in the data center (Minimum channel latency in nanoseconds & maximum channel bandwidth in Gb/s)
+# Maximum bandwidth available on a link connecting any two "nodes" in the network (i.e 400 Gb/s)
+# Minimum latency between two connected (adjacent) nodes is 5 ns (Assuming they are 1 meter apart)
+# Note that the latency is 5 ns/m - Higher the distance, higher the latency
+bounds:
+  minChannelLatency: 5
+  maxChannelBandwidth: 400 
+
+########################################
+# Specify blade configuration on each rack
+# Homogeneous
+#   CPUs only = 1
+#   MEMs only = 2
+#   STOs only = 3
+# Heterogeneous
+#   CPUs, MEMs = 4 (50-50 of each CPU slots and MEM slots on a blade)
+# Declaring it this way creates a 1x1 struct called 'racksConfig' that 
+# 'nRacks' number of fields (i.e. each field is a rack configuration). Each
+# of these fields are a cell of size 1xp, where p is 'nBlades'.
+########################################
+
+# Configuration of each rack
+racksConfig:
+  rack1: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack2: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack3: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack4: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack5: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack6: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack7: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack8: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack9: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack10: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack11: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack12: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack13: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack14: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack15: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack16: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack17: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack18: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack19: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack20: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack21: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack22: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack23: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack24: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack25: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack26: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack27: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack28: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+  rack19: [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]    # Heterogeneous rack (With heterogeneous CPU & MEM blades) - Change ratio between the two types and evaluate the change in performance (Currently 50-50)
+  rack30: [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]    # Homogenous STO rack (With homogenous STO blades)
+
+# Types of configurations/setups possible
+setupTypes:
+  homogenCPU: 1
+  homogenMEM: 2
+  homogenSTO: 3
+  heterogenCPU_MEM: 4
+
+# Percentage of CPU slots in a heterogeneous blade, therefore, percentage of MEM slots is (100 - percentage of CPU)
+heterogenSplit:
+  heterogenCPU_MEM: 50    # Change this to the number of slots rather than a percentage to avoid floating point results during calculations - WOULD ALSO NEED TO MAKE THE NECESSARY CHANGES IN THE simStart.m script/file
