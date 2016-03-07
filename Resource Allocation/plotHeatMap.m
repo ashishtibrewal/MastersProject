@@ -159,7 +159,7 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
       %title('Resource type - CPUs = Black, MEMs = While, STOs = Grey');
       
     case 'heatMap'
-      figNo = nSubFigs + 1;
+      figNo = nSubFigs(2) + 1;
       for i = 1:nRacks
         startNode = (nTORs + nTOBs) + ((i - 1) * (nSlots * nBlades));
         for r = 1:hmSize(1)
@@ -232,7 +232,7 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
       %plot(nBlocked,t);
       %title('Blocking probability');
       
-      pause(0.01);      % Pause to update the plot/figure
+      pause(0.05);      % Pause to update the plot/figure (Pausing for 100 ms)
   end
 
 end
