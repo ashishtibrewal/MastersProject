@@ -30,7 +30,7 @@ FAILURE = 0;          % Assign a value to global macro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Evaluate constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-numRequests = 250;     % Total number of requests to generate
+numRequests = 1000;     % Total number of requests to generate
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Type 1
@@ -79,19 +79,24 @@ nBlocked_2 = zeros(1,size(time,2));
 nBlocked_3 = zeros(1,size(time,2));
 % Main time loop
 for t = 1:tTime
-  blocked_1 = find(cell2mat(requestDB_1(1:t,9)) == 0);    % Find requests that have been blocked upto time t
-  blocked_2 = find(cell2mat(requestDB_2(1:t,9)) == 0);    % Find requests that have been blocked upto time t
-  blocked_3 = find(cell2mat(requestDB_3(1:t,9)) == 0);    % Find requests that have been blocked upto time t
+  blocked_1 = find(cell2mat(requestDB_1(1:t,11)) == 0);    % Find requests that have been blocked upto time t
+  blocked_2 = find(cell2mat(requestDB_2(1:t,11)) == 0);    % Find requests that have been blocked upto time t
+  blocked_3 = find(cell2mat(requestDB_3(1:t,11)) == 0);    % Find requests that have been blocked upto time t
   nBlocked_1(t) = size(blocked_1,1);                      % Count the number of requests found
   nBlocked_2(t) = size(blocked_2,1);                      % Count the number of requests found
   nBlocked_3(t) = size(blocked_3,1);                      % Count the number of requests found
 end
 
+%yFactor = eps;
+yFactor = 1/(2 * nRequests);
 figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
-semilogy(time,(nBlocked_1/nRequests));
+semilogy(time,max(yFactor,(nBlocked_1/nRequests)),'x-');
 hold on;
-semilogy(time,(nBlocked_2/nRequests));
-semilogy(time,(nBlocked_3/nRequests));
+semilogy(time,max(yFactor,(nBlocked_2/nRequests)),'x-');
+semilogy(time,max(yFactor,(nBlocked_3/nRequests)),'x-');
+xlabel('Request no.');
+ylabel('Blocking probability');
+legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
 title('Blocking probability');
 
 % BLOCKING PROBABILITY (CPU,MEM,STO Utilisation vs BP)
