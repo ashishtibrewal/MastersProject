@@ -26,6 +26,12 @@ global FAILURE;       % Declare macro as global
 SUCCESS = 1;          % Assign a value to global macro
 FAILURE = 0;          % Assign a value to global macro
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Evaluate constants
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+numRequests = 250;     % Total number of requests to generate
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Type 1
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -33,7 +39,7 @@ str = sprintf('Running simulation for Type 1 ....\n');
 disp(str);
 
 yaml_configFile = 'config/configType1.yaml';  % File to import (File path)
-requestDB_1 = simStart(yaml_configFile);
+requestDB_1 = simStart(yaml_configFile, numRequests);
 
 str = sprintf('\nx-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x\n');
 disp(str);
@@ -45,7 +51,7 @@ str = sprintf('Running simulation for Type 2 ....\n');
 disp(str);
 
 yaml_configFile = 'config/configType2.yaml';  % File to import (File path)
-requestDB_2 = simStart(yaml_configFile);
+requestDB_2 = simStart(yaml_configFile, numRequests);
 
 str = sprintf('\nx-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x\n');
 disp(str);
@@ -57,7 +63,7 @@ str = sprintf('Running simulation for Type 3 ....\n');
 disp(str);
 
 yaml_configFile = 'config/configType3.yaml';  % File to import (File path)
-requestDB_3 = simStart(yaml_configFile);
+requestDB_3 = simStart(yaml_configFile, numRequests);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plot results/graphs
@@ -65,8 +71,8 @@ requestDB_3 = simStart(yaml_configFile);
 % NEED TO THINK OF GRAPHS THAT CAN BE PLOTTED TO DEPICT SIMULATION RESULTS
 
 % BLOCKING PROBABILITY (Request vs BP)
-nRequests = 200;      % Number of requests to generate
-tTime = nRequests;    % Total time to simulate for (1 second for each request)
+nRequests = numRequests; % Number of requests generated
+tTime = nRequests;       % Total time simulated
 time = 1:tTime;
 nBlocked_1 = zeros(1,size(time,2));
 nBlocked_2 = zeros(1,size(time,2));
@@ -82,8 +88,8 @@ for t = 1:tTime
 end
 
 figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
-hold on;
 semilogy(time,(nBlocked_1/nRequests));
+hold on;
 semilogy(time,(nBlocked_2/nRequests));
 semilogy(time,(nBlocked_3/nRequests));
 title('Blocking probability');

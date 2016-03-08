@@ -1,4 +1,4 @@
-function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems)
+function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems)
   % Function to allocate the IT resources
   % NEED TO PLAN AND TRY DIFFERENT APPROACHES.
   
@@ -44,6 +44,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   % Column 13 -> NET resource (links) allocated
   % Column 14 -> IT failure cause
   % Column 15 -> NET failure cause
+  % Column 16 -> Allocated path latencies
   requiredCPU = request{1};
   requiredMEM = request{2};
   requiredSTO = request{3};
@@ -170,10 +171,11 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     NETresourceUnavailable = 0;   % Initialize/reset NET resource unavailable for every iteration of the loop
     ITsuccessful = FAILURE;       % Initialize/reset IT successful for every iteration of the loop
     NETsuccessful = FAILURE;      % Initialize/reset NET successful for every iteration of the loop
-    heldITresources = [];         % Initialize/reset held IT resources for every iteration of the loop
-    heldNETresources = [];        % Initialize/reset held NET resources for every iteration of the loop
+    heldITresources = {};         % Initialize/reset held IT resources for every iteration of the loop
+    heldNETresources = {};        % Initialize/reset held NET resources for every iteration of the loop
     ITfailureCause = 'NONE';      % Initialize/reset IT resource allocation failure cause for every iteration of the loop
     NETfailureCause = 'NONE';     % Initialize/reset NET resource allocation failure cause for every iteration of the loop
+    pathLatenciesAllocated = {};  % Initialize/reset path latencies for every iteration of the loop
 
     % Store contention ratios
     CRs{iCR} = maxCRswitch;
@@ -215,7 +217,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         % TODO Change elseif slotNo section to else 
         if ((nCPU_SlotsToScan == 0) || (nCPU_SlotsToScan < minReqCPUslots))    % Break out of while loop since no (or not enough) CPU slots are available
           ITresourceUnavailable = 1;
-          heldITresources = [];
+          heldITresources = {};
           ITfailureCause = 'CPU';   % Allocation failed due to unavailibility of CPUs
         else
           for slotNo = 1:nSlots:nCPU_SlotsToScan
@@ -229,7 +231,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               heldITresources = ITresourceNodes;
               % TODO Add network allocation code - if network is successful, break out else start search for new 
               % IT slots from next available resource node
-              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
+              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes, pathLatenciesAllocated] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
               if (NETsuccessful == SUCCESS)
                 heldNETresources = NETresourceLinks;
                 break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
@@ -291,7 +293,8 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               end
             else
               ITresourceUnavailable = 1;
-              heldITresources = [];
+              heldITresources = {};
+              pathLatenciesAllocated = {};
               break;      % Break out of the inner loop since required number of IT resources couldn't be found
             end
           end
@@ -308,7 +311,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         nMEM_SlotsToScan = size(availableMEMslots,2);  % Number of slots to scan
         if ((nMEM_SlotsToScan == 0) || (nMEM_SlotsToScan < minReqMEMslots))    % Break out of while loop since no (or not enough) MEM slots are available
           ITresourceUnavailable = 1;
-          heldITresources = [];
+          heldITresources = {};
           ITfailureCause = 'MEM';   % Allocation failed due to unavailibility of MEMs
         else
           for slotNo = 1:nSlots:nMEM_SlotsToScan
@@ -320,7 +323,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               heldITresources = ITresourceNodes;
               % TODO Add network allocation code - if network is successful, break out else start search for new 
               % IT slots from next available resource node
-              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
+              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes, pathLatenciesAllocated] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
               if (NETsuccessful == SUCCESS)
                 heldNETresources = NETresourceLinks;
                 break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
@@ -382,7 +385,8 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               end
             else
               ITresourceUnavailable = 1;
-              heldITresources = [];
+              heldITresources = {};
+              pathLatenciesAllocated = {};
               break;      % Break out of the inner loop since required number of IT resources couldn't be found
             end
           end
@@ -399,7 +403,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         nSTO_SlotsToScan = size(availableSTOslots,2);  % Number of slots to scan
         if ((nSTO_SlotsToScan == 0) || (nSTO_SlotsToScan < minReqSTOslots))    % Break out of while loop since no (or not enough) STO slots are available
           ITresourceUnavailable = 1;
-          heldITresources = [];
+          heldITresources = {};
           ITfailureCause = 'STO';   % Allocation failed due to unavailibility of STOs
         else
           for slotNo = 1:nSlots:nSTO_SlotsToScan
@@ -411,7 +415,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               heldITresources = ITresourceNodes;
               % TODO Add network allocation code - if network is successful, break out else start search for new 
               % IT slots from next available resource node
-              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
+              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes, pathLatenciesAllocated] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
               if (NETsuccessful == SUCCESS)
                 heldNETresources = NETresourceLinks;
                 break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
@@ -473,7 +477,8 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               end
             else
               ITresourceUnavailable = 1;
-              heldITresources = [];
+              heldITresources = {};
+              pathLatenciesAllocated = {};
               break;      % Break out of the inner loop since required number of IT resources couldn't be found
             end
           end

@@ -2,7 +2,7 @@
 %%% Function that starts the simulation %%%
 %%+++++++++++++++++++++++++++++++++++++%%
 
-function requestDB = simStart (yaml_configFile)
+function requestDB = simStart (yaml_configFile, numRequests)
   % Function that sets up and starts the requried simulation
   
   % Import global macros
@@ -17,8 +17,8 @@ function requestDB = simStart (yaml_configFile)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Evaluate IT & Network constants
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  nRequests = 500;      % Number of requests to generate
-  tTime = nRequests;    % Total time to simulate for (1 second for each request)
+  nRequests = numRequests;    % Number of requests to generate
+  tTime = nRequests;          % Total time to simulate for (1 second for each request)
 
   % Initialize counter variables
   nCPUs = 0;
@@ -131,13 +131,13 @@ function requestDB = simStart (yaml_configFile)
     %profile on;         % Turn on profiler
 
     %%%%%%%%%% IT & NET resource allocation %%%%%%%%%%
-    [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
+    [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
 
     %profile off;         % Turn off profiler
     %profile viewer;     % View profiler results
 
     % Update request database
-    requestDB(requestDBindex,12:15) = {ITresourceNodesAllocated,NETresourcesAllocaed,ITfailureCause,NETfailureCause};
+    requestDB(requestDBindex,12:16) = {ITresourceNodesAllocated,NETresourcesAllocaed,ITfailureCause,NETfailureCause,pathLatenciesAllocated};
 
     % Plot usage
     %plotUsage(dataCenterMap, dataCenterConfig);

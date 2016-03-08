@@ -33,8 +33,8 @@ function requestDB = inputGeneration(nRequests)
   storageMin = 64;           % In GBs
   storageMax = 256;         % In GBs
 
-  bandwidthMinCM = 32;      % In Gb/s
-  bandwidthMaxCM = 128;     % In Gb/s
+  bandwidthMinCM = 25;      % In Gb/s
+  bandwidthMaxCM = 100;     % In Gb/s
   
   bandwidthMinMS = bandwidthMinCM/5;      % In Gb/s -> 5x LOWER acceptable (min) bandwidth between MEM & STO
   bandwidthMaxMS = bandwidthMaxCM/5;      % In Gb/s -> 5x LOWER acceptable (max) bandwidth between MEM & STO
@@ -48,7 +48,7 @@ function requestDB = inputGeneration(nRequests)
   holdTimeMin = 1;          % In s (i.e. seconds)
   holdTimeMax = 1000;      % In s (i.e. seconds)
   
-  requestDB = cell(nRequests, 15);  % Matrix to store all generated requests (Each row contains a different request)
+  requestDB = cell(nRequests, 16);  % Matrix to store all generated requests (Each row contains a different request)
   % Column  1 -> CPU
   % Column  2 -> Memory
   % Column  3 -> Storage
@@ -64,6 +64,7 @@ function requestDB = inputGeneration(nRequests)
   % Column 13 -> NET resource (links) allocated
   % Column 14 -> IT failure cause
   % Column 15 -> NET failure cause
+  % Column 16 -> Allocated path latencies
   
   distributionPlot = 0;   % Flag variable to check if anything needs to be plotted
   scatterPlot = 0;
@@ -87,7 +88,7 @@ function requestDB = inputGeneration(nRequests)
     nCPU = round(cpuMax * rand(1));
     nMEM = round(logb(nCPU,logBaseCPU_MEM));   %nMEM = round(logb(nCPU,2));
     nSTO = round(storageMax * rand(1));
-    nBAN_CM = round(bandwidthMaxCM * rand(1));
+    nBAN_CM = round(rand(1) * (bandwidthMaxCM/bandwidthMinCM)) * bandwidthMinCM;
     nBAN_MS = round(bandwidthMaxMS * rand(1));
     nLAT_CM = round(latencyMaxCM * rand(1));
     nLAT_MS = round(latencyMaxMS * rand(1));
@@ -143,9 +144,9 @@ function requestDB = inputGeneration(nRequests)
     end
     
     % Collect/store data generated over i iterations
-    testRequest = {10,10,10,50,50,50000,50000,4000,0,0,0,{},{},'NONE','NONE'};    % Test request used for debugging
+    testRequest = {10,10,10,50,50,50000,50000,4000,0,0,0,{},{},'NONE','NONE',{}};    % Test request used for debugging
     %requestDB(i,:) = testRequest;
-    requestDB(i,:) = {nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0, {}, {},'NONE','NONE'};
+    requestDB(i,:) = {nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0, {}, {},'NONE','NONE',{}};
 
     if (scatterPlot == 1)
       % Store all iteration numbers/values

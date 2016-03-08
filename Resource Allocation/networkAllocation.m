@@ -1,4 +1,4 @@
-function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, failureNodes] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig)
+function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, failureNodes, pathLatenciesAllocated] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig)
   % Network allocation algorithm
   
   % Import global macros
@@ -38,6 +38,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   % Column 13 -> NET resource (links) allocated
   % Column 14 -> IT failure cause
   % Column 15 -> NET failure cause
+  % Column 16 -> Allocated path latencies
   requiredBAN_CM = request{4};    % MAXIMUM ACCEPTABLE BANDWIDTH (CPU-MEM)
   requiredBAN_MS = request{5};    % MAXIMUM ACCEPTABLE BANDWIDTH (MEM-STO)
   requiredLAT_CM = request{6};    % MAXIMUM ACCEPTABLE LATENCY (CPU-MEM)
@@ -48,7 +49,8 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   BANsuccess = SUCCESS;
   pathTaken = 0;
   updatedBandwidtMap = completeBandwidthMap;    % Initialize updated bandwidth map with complete bandwitdh map
-  failureNodesInternal = [];    % Nodes that caused latency/bandwidth checks to fail
+  failureNodesInternal = [];    % Nodes that caused latency/bandwidth checks to fail (Initialize as empty matrix)
+  pathLatenciesAllocated = {};
   
   % Initialize empty matrices to hold slot/node numbers
   CPUnodes = [];
@@ -138,6 +140,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
           failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
           break;
         end
+        pathLatenciesAllocated = [pathLatenciesAllocated, ksPath_Latency(i,j,k)];
       end
 %       if (LATsuccess == FAILURE)
 %         break;
