@@ -124,6 +124,8 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
             end
           end
         end
+        %axis([0,(nSlots * 2),0,(nBlades * 2)]);
+        axis tight;   % Extend plot to the edges
         axis off;
         str = sprintf('Rack %d Setup', i);
         title(str);
@@ -192,6 +194,8 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
             rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB);
           end
         end
+        %axis([0,(nSlots * 2),0,(nBlades * 2)]);
+        axis tight;   % Extend plot to the edges
         axis off;
         str = sprintf('Rack %d Utilisation', i);
         title(str);
@@ -254,6 +258,8 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
             end
           end
         end
+        %axis([0,(nSlots * 2),0,(nBlades * 2)]);
+        axis tight;   % Extend plot to the edges
         axis off;
         str = sprintf('Rack %d Setup', i);
         title(str);
@@ -274,6 +280,8 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
             rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB);
           end
         end
+        %axis([0,(nSlots * 2),0,(nBlades * 2)]);
+        axis tight;   % Extend plot to the edges
         axis off;
         str = sprintf('Rack %d Utilisation', i);
         title(str);
@@ -308,6 +316,8 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
             end
           end
         end
+        %axis([0,(nSlots * 2),0,(nBlades * 2)]);
+        axis tight;   % Extend plot to the edges
         axis off;
         str = sprintf('Rack %d Setup', i);
         title(str);
@@ -328,6 +338,8 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
             rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB);
           end
         end
+        %axis([0,(nSlots * 2),0,(nBlades * 2)]);
+        axis tight;   % Extend plot to the edges
         axis off;
         str = sprintf('Rack %d Utilisation', i);
         title(str);
