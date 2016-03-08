@@ -50,6 +50,11 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
   end
 
   hmSize = [nBlades, nSlots];
+  
+  % Sub tight plot parameters
+  gap = [0.05,0.01];
+  margin_tb = [0.02,0.04];
+  margin_rl = [0.02,0.02];
 
   scaleFactor = 8;
 
@@ -102,21 +107,20 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
           end
         end
 
-        subtightplot(nSubFigs(1),nSubFigs(2),figNo,[0.03,0.01],[0.01,0.03],[0.01,0.01]);
+        subtightplot(nSubFigs(1),nSubFigs(2),figNo,gap,margin_tb,margin_rl);
 
-        %rectangle('Position', [0, 0, (nSlots * 2), (nBlades * 2)]);
         for r = 1:hmSize(1)
           for c = 1:hmSize(2)
             nodeType = dataCenterMap.completeResourceMap(startNode + ((r - 1) * hmSize(2)) + c);
             if (strcmp(nodeType, 'CPU') == 1)
                 colorRGB = [0,0,0];
-                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB, 'EdgeColor', [1,1,1]);
+                rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB, 'EdgeColor', [1,1,1]);
             elseif (strcmp(nodeType, 'MEM') == 1)
                 colorRGB = [1,1,1];
-                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+                rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB);
             elseif (strcmp(nodeType, 'STO') == 1)
                 colorRGB = [0.5,0.5,0.5];
-                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+                rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB);
             end
           end
         end
@@ -178,14 +182,14 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
           end
         end
 
-        subtightplot(nSubFigs(1),nSubFigs(2),figNo,[0.03,0.01],[0.01,0.03],[0.01,0.01]);
+        subtightplot(nSubFigs(1),nSubFigs(2),figNo,gap,margin_tb,margin_rl);
 
         for r = 1:hmSize(1)
           for c = 1:hmSize(2)
             nodeVal = dataCenterMap.completeUnitAvailableMap(startNode + ((r - 1) * hmSize(2)) + c);
             avalibilityRatio = nodeVal/nUnits;
             colorRGB = [(1 - avalibilityRatio), avalibilityRatio, 0];
-            rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+            rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB);
           end
         end
         axis off;
@@ -234,19 +238,19 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
       for i = 1:nRacks
         % Plot rack setup
         startNode_s = (nTORs + nTOBs) + ((i - 1) * (nSlots * nBlades));
-        subtightplot(nSubFigs(1),nSubFigs(2),figNo_s,[0.03,0.01],[0.01,0.03],[0.01,0.01]);
+        subtightplot(nSubFigs(1),nSubFigs(2),figNo_s,gap,margin_tb,margin_rl);
         for r = 1:hmSize(1)
           for c = 1:hmSize(2)
             nodeType = dataCenterMap.completeResourceMap(startNode_s + ((r - 1) * hmSize(2)) + c);
             if (strcmp(nodeType, 'CPU') == 1)
                 colorRGB = [0,0,0];
-                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB, 'EdgeColor', [1,1,1]);
+                rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB, 'EdgeColor', [1,1,1]);
             elseif (strcmp(nodeType, 'MEM') == 1)
                 colorRGB = [1,1,1];
-                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+                rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB);
             elseif (strcmp(nodeType, 'STO') == 1)
                 colorRGB = [0.5,0.5,0.5];
-                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+                rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB);
             end
           end
         end
@@ -261,13 +265,13 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
         
         % Plot rack utilization
         startNode_h = (nTORs + nTOBs) + ((i - 1) * (nSlots * nBlades));
-        subtightplot(nSubFigs(1),nSubFigs(2),figNo_h,[0.03,0.01],[0.01,0.03],[0.01,0.01]);
+        subtightplot(nSubFigs(1),nSubFigs(2),figNo_h,gap,margin_tb,margin_rl);
         for r = 1:hmSize(1)
           for c = 1:hmSize(2)
             nodeVal = dataCenterMap.completeUnitAvailableMap(startNode_h + ((r - 1) * hmSize(2)) + c);
             avalibilityRatio = nodeVal/nUnits;
             colorRGB = [(1 - avalibilityRatio), avalibilityRatio, 0];
-            rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+            rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB);
           end
         end
         axis off;
@@ -288,19 +292,19 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
       for i = 1:nRacks
         % Plot rack setup
         startNode_s = (nTORs + nTOBs) + ((i - 1) * (nSlots * nBlades));
-        subtightplot(nSubFigs(1),nSubFigs(2),figNo_s,[0.03,0.01],[0.01,0.03],[0.01,0.01]);
+        subtightplot(nSubFigs(1),nSubFigs(2),figNo_s,gap,margin_tb,margin_rl);
         for r = 1:hmSize(1)
           for c = 1:hmSize(2)
             nodeType = dataCenterMap.completeResourceMap(startNode_s + ((r - 1) * hmSize(2)) + c);
             if (strcmp(nodeType, 'CPU') == 1)
                 colorRGB = [0,0,0];
-                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB, 'EdgeColor', [1,1,1]);
+                rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB, 'EdgeColor', [1,1,1]);
             elseif (strcmp(nodeType, 'MEM') == 1)
                 colorRGB = [1,1,1];
-                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+                rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB);
             elseif (strcmp(nodeType, 'STO') == 1)
                 colorRGB = [0.5,0.5,0.5];
-                rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+                rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB);
             end
           end
         end
@@ -315,13 +319,13 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
         
         % Plot rack utilization
         startNode_h = (nTORs + nTOBs) + ((i - 1) * (nSlots * nBlades));
-        subtightplot(nSubFigs(1),nSubFigs(2),figNo_h,[0.03,0.01],[0.01,0.03],[0.01,0.01]);
+        subtightplot(nSubFigs(1),nSubFigs(2),figNo_h,gap,margin_tb,margin_rl);
         for r = 1:hmSize(1)
           for c = 1:hmSize(2)
             nodeVal = dataCenterMap.completeUnitAvailableMap(startNode_h + ((r - 1) * hmSize(2)) + c);
             avalibilityRatio = nodeVal/nUnits;
             colorRGB = [(1 - avalibilityRatio), avalibilityRatio, 0];
-            rectangle('Position', [(c * 2), (r * 2), 2, 2], 'FaceColor', colorRGB);
+            rectangle('Position', [((c - 1) * 2), ((hmSize(1) * 2) - (r * 2)), 2, 2], 'FaceColor', colorRGB);
           end
         end
         axis off;
@@ -341,6 +345,6 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
   %plot(nBlocked,t);
   %title('Blocking probability');
 
-  pause(0.01);      % Pause to update the plot/figure (Pausing for 100 ms)
+  pause(0.001);      % Pause to update the plot/figure (Pausing for 100 ms)
 
 end
