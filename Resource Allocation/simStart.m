@@ -2,17 +2,12 @@
 %%% Function that starts the simulation %%%
 %%+++++++++++++++++++++++++++++++++++++%%
 
-function requestDB = simStart (yaml_configFile, numRequests)
+function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests)
   % Function that sets up and starts the requried simulation
   
   % Import global macros
   global SUCCESS;
   global FAILURE;
-
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % Import configuration file (YAML config files)
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  dataCenterConfig = ReadYaml(yaml_configFile);   % Read file and store it into a struct called dataCenterConfig
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Evaluate IT & Network constants
