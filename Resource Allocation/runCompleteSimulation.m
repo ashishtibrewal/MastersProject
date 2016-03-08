@@ -26,11 +26,10 @@ global FAILURE;       % Declare macro as global
 SUCCESS = 1;          % Assign a value to global macro
 FAILURE = 0;          % Assign a value to global macro
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Evaluate constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-numRequests = 10;     % Total number of requests to generate
+numRequests = 1000;     % Total number of requests to generate
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input generation
@@ -111,11 +110,11 @@ ylabel('Blocking probability');
 legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
 title('Blocking probability');
 
-% BLOCKING PROBABILITY (CPU,MEM,STO Utilisation vs BP)
+% BLOCKING PROBABILITY (CPU,MEM,STO utilization vs BP)
 nBlocked_T1 = zeros(1,size(time,2));
 nBlocked_T2 = zeros(1,size(time,2));
 nBlocked_T3 = zeros(1,size(time,2));
-nUnits = 8;
+nUnits = dataCenterConfig.nUnits;
 totalCPUunits_T1 = size(dataCenterMap_T1.locationMap.CPUs,2) * nUnits;
 totalMEMunits_T1 = size(dataCenterMap_T1.locationMap.MEMs,2) * nUnits;
 totalSTOunits_T1 = size(dataCenterMap_T1.locationMap.STOs,2) * nUnits;
@@ -146,9 +145,9 @@ STOutilization_T3 = zeros(1,size(time,2));
 % Main time loop
 for t = 1:tTime
   % Type 1
-  CPUunitsUtilized_T1 = [];
-  MEMunitsUtilized_T1 = [];
-  STOunitsUtilized_T1 = [];
+  CPUunitsUtilized_T1 = 0;
+  MEMunitsUtilized_T1 = 0;
+  STOunitsUtilized_T1 = 0;
   allocatedResources_T1 = requestDB_1{t,12};
   for i = 1:size(allocatedResources_T1,1)
     for j = 1:size(allocatedResources_T1,2)
@@ -170,25 +169,24 @@ for t = 1:tTime
     end
   end
 
-  
-  totalCPUunitsUtilized_T1(t) = sum(CPUunitsUtilized_T1,2);
-  totalMEMunitsUtilized_T1(t) = sum(MEMunitsUtilized_T1,2);
-  totalSTOunitsUtilized_T1(t) = sum(STOunitsUtilized_T1,2);
-  
-  if (t > 1)
-    CPUutilization_T1(t) = ((totalCPUunitsUtilized_T1(t)/totalCPUunits_T1) * 100) + CPUutilization_T1((t - 1));
-    MEMutilization_T1(t) = ((totalMEMunitsUtilized_T1(t)/totalMEMunits_T1) * 100) + MEMutilization_T1((t - 1));
-    STOutilization_T1(t) = ((totalSTOunitsUtilized_T1(t)/totalSTOunits_T1) * 100) + STOutilization_T1((t - 1));
+  if (t == 1)
+    totalCPUunitsUtilized_T1(t) = sum(CPUunitsUtilized_T1,2);
+    totalMEMunitsUtilized_T1(t) = sum(MEMunitsUtilized_T1,2);
+    totalSTOunitsUtilized_T1(t) = sum(STOunitsUtilized_T1,2);
   else
-    CPUutilization_T1(t) = totalCPUunitsUtilized_T1(t)/totalCPUunits_T1;
-    MEMutilization_T1(t) = totalMEMunitsUtilized_T1(t)/totalMEMunits_T1;
-    STOutilization_T1(t) = totalSTOunitsUtilized_T1(t)/totalSTOunits_T1;
+    totalCPUunitsUtilized_T1(t) = sum(CPUunitsUtilized_T1,2) + totalCPUunitsUtilized_T1((t - 1));
+    totalMEMunitsUtilized_T1(t) = sum(MEMunitsUtilized_T1,2) + totalMEMunitsUtilized_T1((t - 1));
+    totalSTOunitsUtilized_T1(t) = sum(STOunitsUtilized_T1,2) + totalSTOunitsUtilized_T1((t - 1));
   end
   
+  CPUutilization_T1(t) = (totalCPUunitsUtilized_T1(t)/totalCPUunits_T1) * 100;
+  MEMutilization_T1(t) = (totalMEMunitsUtilized_T1(t)/totalMEMunits_T1) * 100;
+  STOutilization_T1(t) = (totalSTOunitsUtilized_T1(t)/totalSTOunits_T1) * 100;
+  
   % Type 2
-  CPUunitsUtilized_T2 = [];
-  MEMunitsUtilized_T2 = [];
-  STOunitsUtilized_T2 = [];
+  CPUunitsUtilized_T2 = 0;
+  MEMunitsUtilized_T2 = 0;
+  STOunitsUtilized_T2 = 0;
   allocatedResources_DB2 = requestDB_2{t,12};
   for i = 1:size(allocatedResources_DB2,1)
     for j = 1:size(allocatedResources_DB2,2)
@@ -210,24 +208,24 @@ for t = 1:tTime
     end
   end
   
-  totalCPUunitsUtilized_T2(t) = sum(CPUunitsUtilized_T2,2);
-  totalMEMunitsUtilized_T2(t) = sum(MEMunitsUtilized_T2,2);
-  totalSTOunitsUtilized_T2(t) = sum(STOunitsUtilized_T2,2);
-  
-  if (t > 1)
-    CPUutilization_T2(t) = ((totalCPUunitsUtilized_T2(t)/totalCPUunits_T2) * 100) + CPUutilization_T2((t - 1));
-    MEMutilization_T2(t) = ((totalMEMunitsUtilized_T2(t)/totalMEMunits_T2) * 100) + MEMutilization_T2((t - 1));
-    STOutilization_T2(t) = ((totalSTOunitsUtilized_T2(t)/totalSTOunits_T2) * 100) + STOutilization_T2((t - 1));
+  if (t == 1)
+    totalCPUunitsUtilized_T2(t) = sum(CPUunitsUtilized_T2,2);
+    totalMEMunitsUtilized_T2(t) = sum(MEMunitsUtilized_T2,2);
+    totalSTOunitsUtilized_T2(t) = sum(STOunitsUtilized_T2,2);
   else
-    CPUutilization_T2(t) = totalCPUunitsUtilized_T2(t)/totalCPUunits_T2;
-    MEMutilization_T2(t) = totalMEMunitsUtilized_T2(t)/totalMEMunits_T2;
-    STOutilization_T2(t) = totalSTOunitsUtilized_T2(t)/totalSTOunits_T2;
+    totalCPUunitsUtilized_T2(t) = sum(CPUunitsUtilized_T2,2) + totalCPUunitsUtilized_T2((t - 1));
+    totalMEMunitsUtilized_T2(t) = sum(MEMunitsUtilized_T2,2) + totalMEMunitsUtilized_T2((t - 1));
+    totalSTOunitsUtilized_T2(t) = sum(STOunitsUtilized_T2,2) + totalSTOunitsUtilized_T2((t - 1));
   end
   
+  CPUutilization_T2(t) = (totalCPUunitsUtilized_T2(t)/totalCPUunits_T2) * 100;
+  MEMutilization_T2(t) = (totalMEMunitsUtilized_T2(t)/totalMEMunits_T2) * 100;
+  STOutilization_T2(t) = (totalSTOunitsUtilized_T2(t)/totalSTOunits_T2) * 100;
+  
   % Type 3
-  CPUunitsUtilized_T3 = [];
-  MEMunitsUtilized_T3 = [];
-  STOunitsUtilized_T3 = [];
+  CPUunitsUtilized_T3 = 0;
+  MEMunitsUtilized_T3 = 0;
+  STOunitsUtilized_T3 = 0;
   allocatedResources_DB3 = requestDB_3{t,12};
   for i = 1:size(allocatedResources_DB3,1)
     for j = 1:size(allocatedResources_DB3,2)
@@ -249,19 +247,19 @@ for t = 1:tTime
     end
   end
   
-  totalCPUunitsUtilized_T3(t) = sum(CPUunitsUtilized_T3,2);
-  totalMEMunitsUtilized_T3(t) = sum(MEMunitsUtilized_T3,2);
-  totalSTOunitsUtilized_T3(t) = sum(STOunitsUtilized_T3,2);
-  
-  if (t > 1)
-    CPUutilization_T3(t) = ((totalCPUunitsUtilized_T3(t)/totalCPUunits_T3) * 100) + CPUutilization_T3((t - 1));
-    MEMutilization_T3(t) = ((totalMEMunitsUtilized_T3(t)/totalMEMunits_T3) * 100) + MEMutilization_T3((t - 1));
-    STOutilization_T3(t) = ((totalSTOunitsUtilized_T3(t)/totalSTOunits_T3) * 100) + STOutilization_T3((t - 1));
+  if (t == 1)
+    totalCPUunitsUtilized_T3(t) = sum(CPUunitsUtilized_T3,2);
+    totalMEMunitsUtilized_T3(t) = sum(MEMunitsUtilized_T3,2);
+    totalSTOunitsUtilized_T3(t) = sum(STOunitsUtilized_T3,2);
   else
-    CPUutilization_T3(t) = totalCPUunitsUtilized_T3(t)/totalCPUunits_T3;
-    MEMutilization_T3(t) = totalMEMunitsUtilized_T3(t)/totalMEMunits_T3;
-    STOutilization_T3(t) = totalSTOunitsUtilized_T3(t)/totalSTOunits_T3;
+    totalCPUunitsUtilized_T3(t) = sum(CPUunitsUtilized_T3,2) + totalCPUunitsUtilized_T3((t - 1));
+    totalMEMunitsUtilized_T3(t) = sum(MEMunitsUtilized_T3,2) + totalMEMunitsUtilized_T3((t - 1));
+    totalSTOunitsUtilized_T3(t) = sum(STOunitsUtilized_T3,2) + totalSTOunitsUtilized_T3((t - 1));
   end
+
+  CPUutilization_T3(t) = (totalCPUunitsUtilized_T3(t)/totalCPUunits_T3) * 100;
+  MEMutilization_T3(t) = (totalMEMunitsUtilized_T3(t)/totalMEMunits_T3) * 100;
+  STOutilization_T3(t) = (totalSTOunitsUtilized_T3(t)/totalSTOunits_T3) * 100;
   
   blocked_T1 = find(cell2mat(requestDB_1(1:t,11)) == 0);    % Find requests that have been blocked upto time t
   blocked_T2 = find(cell2mat(requestDB_2(1:t,11)) == 0);    % Find requests that have been blocked upto time t
@@ -276,34 +274,64 @@ semilogy(CPUutilization_T1,(nBlocked_T1/nRequests),'x-');
 hold on;
 semilogy(CPUutilization_T2,(nBlocked_T2/nRequests),'x-');
 semilogy(CPUutilization_T3,(nBlocked_T3/nRequests),'x-');
-xlabel('CPU utilization');
+xlabel('CPU utilization (%)');
 ylabel('Blocking probability');
 legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
-title('Blocking probability');
+title('CPU utilization vs Blocking probability');
 
 figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
 semilogy(MEMutilization_T1,(nBlocked_T1/nRequests),'x-');
 hold on;
 semilogy(MEMutilization_T2,(nBlocked_T2/nRequests),'x-');
 semilogy(MEMutilization_T3,(nBlocked_T3/nRequests),'x-');
-xlabel('CPU utilization');
+xlabel('Memory utilization (%)');
 ylabel('Blocking probability');
 legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
-title('Blocking probability');
+title('Memory utilization vs Blocking probability');
 
 figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
 semilogy(STOutilization_T1,(nBlocked_T1/nRequests),'x-');
 hold on;
 semilogy(STOutilization_T2,(nBlocked_T2/nRequests),'x-');
 semilogy(STOutilization_T3,(nBlocked_T3/nRequests),'x-');
-xlabel('CPU utilization');
+xlabel('Storage utilization (%)');
 ylabel('Blocking probability');
 legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
-title('Blocking probability');
+title('Storage utilization vs Blocking probability');
+
+figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+semilogy(CPUutilization_T1,(nBlocked_T1/nRequests),'x-');
+hold on;
+semilogy(MEMutilization_T1,(nBlocked_T1/nRequests),'x-');
+semilogy(STOutilization_T1,(nBlocked_T1/nRequests),'x-');
+xlabel('IT Resource utilization (%)');
+ylabel('Blocking probability');
+legend('CPU utilization','Memory utilization','Storage utilization','location','northwest');
+title('IT Resource utilization vs Blocking probability - Homogenous racks (Homogeneous blades)');
+
+figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+semilogy(CPUutilization_T2,(nBlocked_T2/nRequests),'x-');
+hold on;
+semilogy(MEMutilization_T2,(nBlocked_T2/nRequests),'x-');
+semilogy(STOutilization_T2,(nBlocked_T2/nRequests),'x-');
+xlabel('IT Resource utilization (%)');
+ylabel('Blocking probability');
+legend('CPU utilization','Memory utilization','Storage utilization','location','northwest');
+title('IT Resource utilization vs Blocking probability - Heterogeneous racks (Homogeneous blades)');
+
+figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+semilogy(CPUutilization_T3,(nBlocked_T3/nRequests),'x-');
+hold on;
+semilogy(MEMutilization_T3,(nBlocked_T3/nRequests),'x-');
+semilogy(STOutilization_T3,(nBlocked_T3/nRequests),'x-');
+xlabel('IT Resource utilization (%)');
+ylabel('Blocking probability');
+legend('CPU utilization','Memory utilization','Storage utilization','location','northwest');
+title('IT Resource utilization vs Blocking probability - Heterogeneous racks (Heterogeneous blades)');
 
 % LATENCY ALLOCATION (REQUEST group vs LATENCY ALLOCATED - min, average, max graph)
 
-% UTILIZATION (REQUEST group vs NET,CPU,MEM,STO utilisation)
+% UTILIZATION (REQUEST group vs NET,CPU,MEM,STO utilization)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Clean up & display log
