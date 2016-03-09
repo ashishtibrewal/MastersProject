@@ -211,11 +211,11 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     % Switch on the i-th contention ratio
     switch (CRs{iCR})
       case 'CPU'
-        nCPU_SlotsToScan = size(availableCPUslots,2);  % Number of slots to scan
+        nCPU_SlotsToScan = size(CPUlocations,2);  % Number of slots to scan
         % TODO Check all available slots to scan (including MEM and STO) - Dont need to do this since it's taken care of by the contention ratios
         % TODO Check required slots is less than slots available
         % TODO Change elseif slotNo section to else 
-        if ((nCPU_SlotsToScan == 0) || (nCPU_SlotsToScan < minReqCPUslots))    % Break out of while loop since no (or not enough) CPU slots are available
+        if ((nCPU_SlotsToScan == 0) || (availableCPUunits < minReqCPUslots))    % Break out of while loop since no (or not enough) CPU slots are available
           ITresourceUnavailable = 1;
           heldITresources = {};
           ITfailureCause = 'CPU';   % Allocation failed due to unavailibility of CPUs
@@ -223,7 +223,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           for slotNo = 1:nSlots:nCPU_SlotsToScan
             %str = sprintf('Starting CPU node: %d, %d, %d \n', CPUlocations(availableCPUslots(slotNo)), CPUlocations(availableCPUslots(1,slotNo)),CPUunitsInSlots(1,availableCPUslots(slotNo)));
             %disp(str);
-            startCPUslot = CPUunitsInSlots(1,availableCPUslots(slotNo)); % CPU start slot/node
+            startCPUslot = CPUlocations(slotNo); % CPU start slot/node
             [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startCPUslot, reqResourceUnits, updatedUnitAvailableMap);
             % Check if all resources have been successfully found
             if (ITsuccessful == SUCCESS)
@@ -308,14 +308,14 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         end
 
         case 'MEM'
-        nMEM_SlotsToScan = size(availableMEMslots,2);  % Number of slots to scan
-        if ((nMEM_SlotsToScan == 0) || (nMEM_SlotsToScan < minReqMEMslots))    % Break out of while loop since no (or not enough) MEM slots are available
+        nMEM_SlotsToScan = size(MEMlocations,2);  % Number of slots to scan
+        if ((nMEM_SlotsToScan == 0) || (availableMEMunits < minReqMEMslots))    % Break out of while loop since no (or not enough) MEM slots are available
           ITresourceUnavailable = 1;
           heldITresources = {};
           ITfailureCause = 'MEM';   % Allocation failed due to unavailibility of MEMs
         else
           for slotNo = 1:nSlots:nMEM_SlotsToScan
-            startMEMslot = MEMunitsInSlots(1,availableMEMslots(slotNo)); % MEM start slot/node
+            startMEMslot = MEMlocations(slotNo); % MEM start slot/node
             [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startMEMslot, reqResourceUnits, updatedUnitAvailableMap);
             % Check if all resources have been successfully found
             if (ITsuccessful == SUCCESS)
@@ -400,14 +400,14 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         end
 
         case 'STO'
-        nSTO_SlotsToScan = size(availableSTOslots,2);  % Number of slots to scan
-        if ((nSTO_SlotsToScan == 0) || (nSTO_SlotsToScan < minReqSTOslots))    % Break out of while loop since no (or not enough) STO slots are available
+        nSTO_SlotsToScan = size(STOlocations,2);  % Number of slots to scan
+        if ((nSTO_SlotsToScan == 0) || (availableSTOunits < minReqSTOslots))    % Break out of while loop since no (or not enough) STO slots are available
           ITresourceUnavailable = 1;
           heldITresources = {};
           ITfailureCause = 'STO';   % Allocation failed due to unavailibility of STOs
         else
           for slotNo = 1:nSlots:nSTO_SlotsToScan
-            startSTOslot = STOunitsInSlots(1,availableSTOslots(slotNo)); % STO start slot/node
+            startSTOslot = STOlocations(slotNo); % STO start slot/node
             [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startSTOslot, reqResourceUnits, updatedUnitAvailableMap);
             % Check if all resources have been successfully found
             if (ITsuccessful == SUCCESS)
