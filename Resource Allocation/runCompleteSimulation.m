@@ -142,9 +142,43 @@ STOutilization_T2 = zeros(1,size(time,2));
 CPUutilization_T3 = zeros(1,size(time,2));
 MEMutilization_T3 = zeros(1,size(time,2));
 STOutilization_T3 = zeros(1,size(time,2));
+totalNETutilized_T1 = zeros(1,size(time,2));
+totalNETutilized_T2 = zeros(1,size(time,2));
+totalNETutilized_T3 = zeros(1,size(time,2));
+NETutilization_T1 = zeros(1,size(time,2));
+NETutilization_T2 = zeros(1,size(time,2));
+NETutilization_T3 = zeros(1,size(time,2));
+
+% Evaluate total bandwidth - Type 1
+bandwidthMap_T1 = dataCenterMap_T1.bandwidthMap.completeBandwidth;
+totalNET_TI = 0;
+for i = 1:size(bandwidthMap_T1,1)
+  for j = (i + 1):size(bandwidthMap_T1,2)
+    totalNET_TI = totalNET_TI + bandwidthMap_T1(i,j);
+  end
+end
+
+% Evaluate total bandwidth - Type 2
+bandwidthMap_T2 = dataCenterMap_T2.bandwidthMap.completeBandwidth;
+totalNET_T2 = 0;
+for i = 1:size(bandwidthMap_T2,1)
+  for j = (i + 1):size(bandwidthMap_T2,2)
+    totalNET_T2 = totalNET_T2 + bandwidthMap_T2(i,j);
+  end
+end
+
+% Evaluate total bandwidth - Type 3
+bandwidthMap_T3 = dataCenterMap_T3.bandwidthMap.completeBandwidth;
+totalNET_T3 = 0;
+for i = 1:size(bandwidthMap_T3,1)
+  for j = (i + 1):size(bandwidthMap_T3,2)
+    totalNET_T3 = totalNET_T3 + bandwidthMap_T3(i,j);
+  end
+end
+
 % Main time loop
 for t = 1:tTime
-  % Type 1
+  % Type 1 IT resource utilization
   CPUunitsUtilized_T1 = 0;
   MEMunitsUtilized_T1 = 0;
   STOunitsUtilized_T1 = 0;
@@ -183,7 +217,7 @@ for t = 1:tTime
   MEMutilization_T1(t) = (totalMEMunitsUtilized_T1(t)/totalMEMunits_T1) * 100;
   STOutilization_T1(t) = (totalSTOunitsUtilized_T1(t)/totalSTOunits_T1) * 100;
   
-  % Type 2
+  % Type 2 IT resource utilization
   CPUunitsUtilized_T2 = 0;
   MEMunitsUtilized_T2 = 0;
   STOunitsUtilized_T2 = 0;
@@ -222,7 +256,7 @@ for t = 1:tTime
   MEMutilization_T2(t) = (totalMEMunitsUtilized_T2(t)/totalMEMunits_T2) * 100;
   STOutilization_T2(t) = (totalSTOunitsUtilized_T2(t)/totalSTOunits_T2) * 100;
   
-  % Type 3
+  % Type 3 IT resource utilization
   CPUunitsUtilized_T3 = 0;
   MEMunitsUtilized_T3 = 0;
   STOunitsUtilized_T3 = 0;
@@ -256,10 +290,76 @@ for t = 1:tTime
     totalMEMunitsUtilized_T3(t) = sum(MEMunitsUtilized_T3,2) + totalMEMunitsUtilized_T3((t - 1));
     totalSTOunitsUtilized_T3(t) = sum(STOunitsUtilized_T3,2) + totalSTOunitsUtilized_T3((t - 1));
   end
-
+  
   CPUutilization_T3(t) = (totalCPUunitsUtilized_T3(t)/totalCPUunits_T3) * 100;
   MEMutilization_T3(t) = (totalMEMunitsUtilized_T3(t)/totalMEMunits_T3) * 100;
   STOutilization_T3(t) = (totalSTOunitsUtilized_T3(t)/totalSTOunits_T3) * 100;
+  
+  % Type 1 network utilization
+  NETutilized_T1 = 0;
+  requestBAN = requestDB_1{t,4};
+  allocatedNETresources_DB1 = requestDB_1{t,13};
+  for i = 1:size(allocatedNETresources_DB1,1)
+    for j = 1:size(allocatedNETresources_DB1,2)
+      % Extract current cell from the heldITresources cell array
+      currentCell = allocatedNETresources_DB1{i,j};
+      if (~isempty(currentCell))
+        NETutilized_T1 = NETutilized_T1 + ((size(currentCell,2) * requestBAN));
+      end
+    end
+  end
+  
+  if (t == 1)
+    totalNETutilized_T1(t) = NETutilized_T1;
+  else
+    totalNETutilized_T1(t) = NETutilized_T1 + totalNETutilized_T1((t - 1));
+  end
+  
+  NETutilization_T1(t) = (totalNETutilized_T1(t)/totalNET_TI) * 100;
+  
+  % Type 2 network utilization
+  NETutilized_T2 = 0;
+  requestBAN = requestDB_2{t,4};
+  allocatedNETresources_DB2 = requestDB_2{t,13};
+  for i = 1:size(allocatedNETresources_DB2,1)
+    for j = 1:size(allocatedNETresources_DB2,2)
+      % Extract current cell from the heldITresources cell array
+      currentCell = allocatedNETresources_DB2{i,j};
+      if (~isempty(currentCell))
+        NETutilized_T2 = NETutilized_T2 + ((size(currentCell,2) * requestBAN));
+      end
+    end
+  end
+  
+  if (t == 1)
+    totalNETutilized_T2(t) = NETutilized_T2;
+  else
+    totalNETutilized_T2(t) = NETutilized_T2 + totalNETutilized_T2((t - 1));
+  end
+  
+  NETutilization_T2(t) = (totalNETutilized_T2(t)/totalNET_T2) * 100;
+  
+  % Type 3 network utilization
+  NETutilized_T3 = 0;
+  requestBAN = requestDB_3{t,4};
+  allocatedNETresources_DB3 = requestDB_3{t,13};
+  for i = 1:size(allocatedNETresources_DB3,1)
+    for j = 1:size(allocatedNETresources_DB3,2)
+      % Extract current cell from the heldITresources cell array
+      currentCell = allocatedNETresources_DB3{i,j};
+      if (~isempty(currentCell))
+        NETutilized_T3 = NETutilized_T3 + ((size(currentCell,2) * requestBAN));
+      end
+    end
+  end
+  
+  if (t == 1)
+    totalNETutilized_T3(t) = NETutilized_T3;
+  else
+    totalNETutilized_T3(t) = NETutilized_T3 + totalNETutilized_T3((t - 1));
+  end
+  
+  NETutilization_T3(t) = (totalNETutilized_T3(t)/totalNET_T3) * 100;
   
   blocked_T1 = find(cell2mat(requestDB_1(1:t,11)) == 0);    % Find requests that have been blocked upto time t
   blocked_T2 = find(cell2mat(requestDB_2(1:t,11)) == 0);    % Find requests that have been blocked upto time t
@@ -329,7 +429,15 @@ ylabel('Blocking probability');
 legend('CPU utilization','Memory utilization','Storage utilization','location','northwest');
 title('IT Resource utilization vs Blocking probability - Heterogeneous racks (Heterogeneous blades)');
 
-% LATENCY ALLOCATION (REQUEST group vs LATENCY ALLOCATED - min, average, max graph)
+figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+semilogy(NETutilization_T1,(nBlocked_T1/nRequests),'x-');
+hold on;
+semilogy(NETutilization_T2,(nBlocked_T2/nRequests),'x-');
+semilogy(NETutilization_T3,(nBlocked_T3/nRequests),'x-');
+xlabel('Network utilization (%)');
+ylabel('Blocking probability');
+legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
+title('Network utilization vs Blocking probability');
 
 % UTILIZATION (REQUEST group vs NET,CPU,MEM,STO utilization) - Log (Semi-log) scale
 figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
@@ -362,6 +470,16 @@ ylabel('IT resource utilization');
 legend('CPU','Memory','Storage','location','northwest');
 title('Resource no. vs IT Resource utilization - Heterogeneous racks (Heterogeneous blades)');
 
+figure ('Name', 'Network Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+semilogy(time,NETutilization_T1,'-');
+hold on;
+semilogy(time,NETutilization_T2,'-');
+semilogy(time,NETutilization_T3,'-');
+xlabel('Request no.');
+ylabel('Network utilization');
+legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
+title('Resource no. vs Network utilization');
+
 % UTILIZATION (REQUEST group vs NET,CPU,MEM,STO utilization) - Linear scale
 figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
 plot(time,CPUutilization_T1,'-');
@@ -392,6 +510,18 @@ xlabel('Request no.');
 ylabel('IT resource utilization');
 legend('CPU','Memory','Storage','location','northwest');
 title('Resource no. vs IT Resource utilization - Heterogeneous racks (Heterogeneous blades)');
+
+figure ('Name', 'Network Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+plot(time,NETutilization_T1,'-');
+hold on;
+plot(time,NETutilization_T2,'-');
+plot(time,NETutilization_T3,'-');
+xlabel('Request no.');
+ylabel('Network utilization');
+legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
+title('Resource no. vs Network utilization');
+
+% LATENCY ALLOCATION (REQUEST group vs LATENCY ALLOCATED - min, average, max graph)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Clean up & display log
