@@ -108,7 +108,7 @@ semilogy(time,max(yFactor,(nBlocked_T3/nRequests)),'x-');
 xlabel('Request no.');
 ylabel('Blocking probability');
 legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
-title('Blocking probability');
+title('Request no. vs Blocking probability');
 
 % BLOCKING PROBABILITY (CPU,MEM,STO utilization vs BP)
 nBlocked_T1 = zeros(1,size(time,2));
@@ -304,7 +304,7 @@ semilogy(CPUutilization_T1,(nBlocked_T1/nRequests),'x-');
 hold on;
 semilogy(MEMutilization_T1,(nBlocked_T1/nRequests),'x-');
 semilogy(STOutilization_T1,(nBlocked_T1/nRequests),'x-');
-xlabel('IT Resource utilization (%)');
+xlabel('IT resource utilization (%)');
 ylabel('Blocking probability');
 legend('CPU utilization','Memory utilization','Storage utilization','location','northwest');
 title('IT Resource utilization vs Blocking probability - Homogenous racks (Homogeneous blades)');
@@ -314,7 +314,7 @@ semilogy(CPUutilization_T2,(nBlocked_T2/nRequests),'x-');
 hold on;
 semilogy(MEMutilization_T2,(nBlocked_T2/nRequests),'x-');
 semilogy(STOutilization_T2,(nBlocked_T2/nRequests),'x-');
-xlabel('IT Resource utilization (%)');
+xlabel('IT resource utilization (%)');
 ylabel('Blocking probability');
 legend('CPU utilization','Memory utilization','Storage utilization','location','northwest');
 title('IT Resource utilization vs Blocking probability - Heterogeneous racks (Homogeneous blades)');
@@ -324,14 +324,74 @@ semilogy(CPUutilization_T3,(nBlocked_T3/nRequests),'x-');
 hold on;
 semilogy(MEMutilization_T3,(nBlocked_T3/nRequests),'x-');
 semilogy(STOutilization_T3,(nBlocked_T3/nRequests),'x-');
-xlabel('IT Resource utilization (%)');
+xlabel('IT resource utilization (%)');
 ylabel('Blocking probability');
 legend('CPU utilization','Memory utilization','Storage utilization','location','northwest');
 title('IT Resource utilization vs Blocking probability - Heterogeneous racks (Heterogeneous blades)');
 
 % LATENCY ALLOCATION (REQUEST group vs LATENCY ALLOCATED - min, average, max graph)
 
-% UTILIZATION (REQUEST group vs NET,CPU,MEM,STO utilization)
+% UTILIZATION (REQUEST group vs NET,CPU,MEM,STO utilization) - Log (Semi-log) scale
+figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+semilogy(time,CPUutilization_T1,'-');
+hold on;
+semilogy(time,MEMutilization_T1,'-');
+semilogy(time,STOutilization_T1,'-');
+xlabel('Request no.');
+ylabel('IT resource utilization');
+legend('CPU','Memory','Storage','location','northwest');
+title('Resource no. vs IT Resource utilization - Homogenous racks (Homogeneous blades)');
+
+figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+semilogy(time,CPUutilization_T2,'-');
+hold on;
+semilogy(time,MEMutilization_T2,'-');
+semilogy(time,STOutilization_T2,'-');
+xlabel('Request no.');
+ylabel('IT resource utilization');
+legend('CPU','Memory','Storage','location','northwest');
+title('Resource no. vs IT Resource utilization - Heterogeneous racks (Homogeneous blades)');
+
+figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+semilogy(time,CPUutilization_T3,'-');
+hold on;
+semilogy(time,MEMutilization_T3,'-');
+semilogy(time,STOutilization_T3,'-');
+xlabel('Request no.');
+ylabel('IT resource utilization');
+legend('CPU','Memory','Storage','location','northwest');
+title('Resource no. vs IT Resource utilization - Heterogeneous racks (Heterogeneous blades)');
+
+% UTILIZATION (REQUEST group vs NET,CPU,MEM,STO utilization) - Linear scale
+figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+plot(time,CPUutilization_T1,'-');
+hold on;
+plot(time,MEMutilization_T1,'-');
+plot(time,STOutilization_T1,'-');
+xlabel('Request no.');
+ylabel('IT resource utilization');
+legend('CPU','Memory','Storage','location','northwest');
+title('Resource no. vs IT Resource utilization - Homogenous racks (Homogeneous blades)');
+
+figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+plot(time,CPUutilization_T2,'-');
+hold on;
+plot(time,MEMutilization_T2,'-');
+plot(time,STOutilization_T2,'-');
+xlabel('Request no.');
+ylabel('IT resource utilization');
+legend('CPU','Memory','Storage','location','northwest');
+title('Resource no. vs IT Resource utilization - Heterogeneous racks (Homogeneous blades)');
+
+figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+plot(time,CPUutilization_T3,'-');
+hold on;
+plot(time,MEMutilization_T3,'-');
+plot(time,STOutilization_T3,'-');
+xlabel('Request no.');
+ylabel('IT resource utilization');
+legend('CPU','Memory','Storage','location','northwest');
+title('Resource no. vs IT Resource utilization - Heterogeneous racks (Heterogeneous blades)');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Clean up & display log
