@@ -98,8 +98,9 @@ for t = 1:tTime
   nBlocked_T3(t) = size(blocked_T3,1);                      % Count the number of requests found
 end
 
-%yFactor = eps;
-yFactor = 1/(2 * nRequests);
+%yFactor = eps;               % Set to epsilon to avoid going to -inf
+%yFactor = 1/(2 * nRequests);  % Set to half the maximum blocking probability to avoid going to -inf
+yFactor = 0;
 figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
 semilogy(time,max(yFactor,(nBlocked_T1/nRequests)),'x-');
 hold on;
@@ -448,7 +449,7 @@ semilogy(time,STOutilization_T1,'-');
 xlabel('Request no.');
 ylabel('IT resource utilization');
 legend('CPU','Memory','Storage','location','northwest');
-title('Resource no. vs IT Resource utilization - Homogenous racks (Homogeneous blades)');
+title('Request no. vs IT Resource utilization - Homogenous racks (Homogeneous blades)');
 
 figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
 semilogy(time,CPUutilization_T2,'-');
@@ -458,7 +459,7 @@ semilogy(time,STOutilization_T2,'-');
 xlabel('Request no.');
 ylabel('IT resource utilization');
 legend('CPU','Memory','Storage','location','northwest');
-title('Resource no. vs IT Resource utilization - Heterogeneous racks (Homogeneous blades)');
+title('Request no. vs IT Resource utilization - Heterogeneous racks (Homogeneous blades)');
 
 figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
 semilogy(time,CPUutilization_T3,'-');
@@ -468,7 +469,7 @@ semilogy(time,STOutilization_T3,'-');
 xlabel('Request no.');
 ylabel('IT resource utilization');
 legend('CPU','Memory','Storage','location','northwest');
-title('Resource no. vs IT Resource utilization - Heterogeneous racks (Heterogeneous blades)');
+title('Request no. vs IT Resource utilization - Heterogeneous racks (Heterogeneous blades)');
 
 figure ('Name', 'Network Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
 semilogy(time,NETutilization_T1,'-');
@@ -478,7 +479,7 @@ semilogy(time,NETutilization_T3,'-');
 xlabel('Request no.');
 ylabel('Network utilization');
 legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
-title('Resource no. vs Network utilization');
+title('Request no. vs Network utilization');
 
 % UTILIZATION (REQUEST group vs NET,CPU,MEM,STO utilization) - Linear scale
 figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
@@ -489,7 +490,7 @@ plot(time,STOutilization_T1,'-');
 xlabel('Request no.');
 ylabel('IT resource utilization');
 legend('CPU','Memory','Storage','location','northwest');
-title('Resource no. vs IT Resource utilization - Homogenous racks (Homogeneous blades)');
+title('Request no. vs IT Resource utilization - Homogenous racks (Homogeneous blades)');
 
 figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
 plot(time,CPUutilization_T2,'-');
@@ -499,7 +500,7 @@ plot(time,STOutilization_T2,'-');
 xlabel('Request no.');
 ylabel('IT resource utilization');
 legend('CPU','Memory','Storage','location','northwest');
-title('Resource no. vs IT Resource utilization - Heterogeneous racks (Homogeneous blades)');
+title('Request no. vs IT Resource utilization - Heterogeneous racks (Homogeneous blades)');
 
 figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
 plot(time,CPUutilization_T3,'-');
@@ -509,7 +510,7 @@ plot(time,STOutilization_T3,'-');
 xlabel('Request no.');
 ylabel('IT resource utilization');
 legend('CPU','Memory','Storage','location','northwest');
-title('Resource no. vs IT Resource utilization - Heterogeneous racks (Heterogeneous blades)');
+title('Request no. vs IT Resource utilization - Heterogeneous racks (Heterogeneous blades)');
 
 figure ('Name', 'Network Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
 plot(time,NETutilization_T1,'-');
@@ -519,7 +520,7 @@ plot(time,NETutilization_T3,'-');
 xlabel('Request no.');
 ylabel('Network utilization');
 legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
-title('Resource no. vs Network utilization');
+title('Request no. vs Network utilization');
 
 % LATENCY ALLOCATION (REQUEST group vs LATENCY ALLOCATED - min, average, max graph)
 
