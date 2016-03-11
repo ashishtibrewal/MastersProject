@@ -240,35 +240,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
                 NETresourceUnavailable = 1;
                 %disp(NETfailureCause);
                 % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
-                % Initialize empty matrices to hold slot/node numbers
-                CPUnodes = [];
-                MEMnodes = [];
-                STOnodes = [];
-                % Extract slot/node numbers/locations to be able to update updatedUnitAvailableMap
-                for i = 1:size(heldITresources,1)
-                  for j = 1:size(heldITresources,2)
-                    % Extract current cell from the heldITresources cell array
-                    currentCell = heldITresources{i,j};
-                    if (~isempty(currentCell))
-                      switch (i)
-                        % CPU nodes
-                        case 1
-                          CPUnodes = [CPUnodes, currentCell{1}];
-                        % MEM nodes
-                        case 2
-                          MEMnodes = [MEMnodes, currentCell{1}];
-                        % STO nodes
-                        case 3
-                          STOnodes = [STOnodes, currentCell{1}];
-                      end
-                    end
-                  end
-                end
-                % Concatenate all nodes into a single matrix (Horizontal concatenation)
-                ALLnodes = horzcat(CPUnodes,MEMnodes,STOnodes); 
-                %updatedUnitAvailableMap(ALLnodes) = 0;
-                %updatedUnitAvailableMap(CPUnodes) = 0;
-                updatedUnitAvailableMap(failureNodes) = 0;
+                updatedUnitAvailableMap(failureNodes) = 0;    % Set units available in failure nodes to be zero
 
                 % Find number of units in slots of specific resource types
                 CPUunitsInSlots_updated = [CPUlocations; updatedUnitAvailableMap(CPUlocations)];
@@ -332,35 +304,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
                 NETresourceUnavailable = 1;
                 %disp(NETfailureCause);
                 % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
-                % Initialize empty matrices to hold slot/node numbers
-                CPUnodes = [];
-                MEMnodes = [];
-                STOnodes = [];
-                % Extract slot/node numbers/locations to be able to update updatedUnitAvailableMap
-                for i = 1:size(heldITresources,1)
-                  for j = 1:size(heldITresources,2)
-                    % Extract current cell from the heldITresources cell array
-                    currentCell = heldITresources{i,j};
-                    if (~isempty(currentCell))
-                      switch (i)
-                        % CPU nodes
-                        case 1
-                          CPUnodes = [CPUnodes, currentCell{1}];
-                        % MEM nodes
-                        case 2
-                          MEMnodes = [MEMnodes, currentCell{1}];
-                        % STO nodes
-                        case 3
-                          STOnodes = [STOnodes, currentCell{1}];
-                      end
-                    end
-                  end
-                end
-                % Concatenate all nodes into a single matrix (Horizontal concatenation)
-                ALLnodes = horzcat(CPUnodes,MEMnodes,STOnodes); 
-                %updatedUnitAvailableMap(ALLnodes) = 0;
-                %updatedUnitAvailableMap(MEMnodes) = 0;
-                updatedUnitAvailableMap(failureNodes) = 0;
+                updatedUnitAvailableMap(failureNodes) = 0;    % Set units available in failure nodes to be zero
 
                 % Find number of units in slots of specific resource types
                 CPUunitsInSlots_updated = [CPUlocations; updatedUnitAvailableMap(CPUlocations)];
@@ -424,35 +368,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
                 NETresourceUnavailable = 1;
                 %disp(NETfailureCause);
                 % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
-                % Initialize empty matrices to hold slot/node numbers
-                CPUnodes = [];
-                MEMnodes = [];
-                STOnodes = [];
-                % Extract slot/node numbers/locations to be able to find bandwidth available and latency between them
-                for i = 1:size(heldITresources,1)
-                  for j = 1:size(heldITresources,2)
-                    % Extract slot/node numbers/locations to be able to update updatedUnitAvailableMap
-                    currentCell = heldITresources{i,j};
-                    if (~isempty(currentCell))
-                      switch (i)
-                        % CPU nodes
-                        case 1
-                          CPUnodes = [CPUnodes, currentCell{1}];
-                        % MEM nodes
-                        case 2
-                          MEMnodes = [MEMnodes, currentCell{1}];
-                        % STO nodes
-                        case 3
-                          STOnodes = [STOnodes, currentCell{1}];
-                      end
-                    end
-                  end
-                end
-                % Concatenate all nodes into a single matrix (Horizontal concatenation)
-                ALLnodes = horzcat(CPUnodes,MEMnodes,STOnodes); 
-                %updatedUnitAvailableMap(ALLnodes) = 0;
-                %updatedUnitAvailableMap(STOnodes) = 0;
-                updatedUnitAvailableMap(failureNodes) = 0;
+                updatedUnitAvailableMap(failureNodes) = 0;    % Set units available in failure nodes to be zero
 
                 % Find number of units in slots of specific resource types
                 CPUunitsInSlots_updated = [CPUlocations; updatedUnitAvailableMap(CPUlocations)];
