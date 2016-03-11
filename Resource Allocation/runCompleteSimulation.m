@@ -29,7 +29,8 @@ FAILURE = 0;          % Assign a value to global macro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Evaluate constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-numRequests = 1000;     % Total number of requests to generate
+numRequests = 5;     % Total number of requests to generate
+numTypes = 3;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input generation
@@ -37,44 +38,106 @@ numRequests = 1000;     % Total number of requests to generate
 % TODO move input generation code here to keep the requests generated
 % consistent across all simulations
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Type 1
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-str = sprintf('Running simulation for Type 1 ....\n');
-disp(str);
-
 % Import configuration file (YAML config files)
 yaml_configFile = 'config/configType1.yaml';    % File to import (File path)
 dataCenterConfig = ReadYaml(yaml_configFile);   % Read file and store it into a struct called dataCenterConfig
-[requestDB_1, dataCenterMap_T1] = simStart(dataCenterConfig, numRequests);
 
-str = sprintf('\nx-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x\n');
-disp(str);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Type 2
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-str = sprintf('Running simulation for Type 2 ....\n');
-disp(str);
+requestDB_T1 = [];
+dataCenterMap_T1 = [];
+requestDB_T2 = [];
+dataCenterMap_T2 = [];
+requestDB_T3 = [];
+dataCenterMap_T3 = [];
 
 % Import configuration file (YAML config files)
-yaml_configFile = 'config/configType2.yaml';    % File to import (File path)
-dataCenterConfig = ReadYaml(yaml_configFile);   % Read file and store it into a struct called dataCenterConfig
-[requestDB_2, dataCenterMap_T2] = simStart(dataCenterConfig, numRequests);
-
-str = sprintf('\nx-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x\n');
-disp(str);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Type 3
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-str = sprintf('Running simulation for Type 3 ....\n');
-disp(str);
+yaml_configFile_T1 = 'config/configType1.yaml';    % File to import (File path)
+dataCenterConfig_T1 = ReadYaml(yaml_configFile_T1);   % Read file and store it into a struct called dataCenterConfig
 
 % Import configuration file (YAML config files)
-yaml_configFile = 'config/configType3.yaml';    % File to import (File path)
-dataCenterConfig = ReadYaml(yaml_configFile);   % Read file and store it into a struct called dataCenterConfig
-[requestDB_3, dataCenterMap_T3] = simStart(dataCenterConfig, numRequests);
+yaml_configFile_T2 = 'config/configType2.yaml';    % File to import (File path)
+dataCenterConfig_T2 = ReadYaml(yaml_configFile_T2);   % Read file and store it into a struct called dataCenterConfig
+
+% Import configuration file (YAML config files)
+yaml_configFile_T3 = 'config/configType3.yaml';    % File to import (File path)
+dataCenterConfig_T3 = ReadYaml(yaml_configFile_T3);   % Read file and store it into a struct called dataCenterConfig
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Input generation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+str = sprintf('Input generation started ...');
+disp(str);
+
+requestDB = inputGeneration(numRequests);    % Pre-generating randomised requests - Note that the resource allocation is only allowed to look at the request for the current iteration
+
+str = sprintf('Input generation complete.\n');
+disp(str);
+
+% Start timer
+tic;
+
+% Start parallel for loop to run multiple threads
+parfor i = 1:numTypes
+  switch (i)
+    case 1
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      % Type 1
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      str = sprintf('Running simulation for Type 1 ....\n');
+      disp(str);
+
+      [requestDB_T1_L, dataCenterMap_T1_L] = simStart(dataCenterConfig_T1, numRequests, requestDB);
+      requestDB_T1 = [requestDB_T1, requestDB_T1_L];
+      dataCenterMap_T1 = [dataCenterMap_T1, dataCenterMap_T1_L];
+
+    case 2
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      % Type 2
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      str = sprintf('Running simulation for Type 2 ....\n');
+      disp(str);
+
+      [requestDB_T2_L, dataCenterMap_T2_L] = simStart(dataCenterConfig_T2, numRequests, requestDB);
+      requestDB_T2 = [requestDB_T2, requestDB_T2_L];
+      dataCenterMap_T2 = [dataCenterMap_T2, dataCenterMap_T2_L];
+
+    case 3
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      % Type 3
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      str = sprintf('Running simulation for Type 3 ....\n');
+      disp(str);
+
+      [requestDB_T3_L, dataCenterMap_T3_L] = simStart(dataCenterConfig_T3, numRequests, requestDB);
+      requestDB_T3 = [requestDB_T3, requestDB_T3_L];
+      dataCenterMap_T3 = [dataCenterMap_T3, dataCenterMap_T3_L];
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Generate and plot results (Analysis)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+str = sprintf('Displaying results (Type 1) ...');
+disp(str);
+
+displayResults(dataCenterMap_T1, requestDB_T1, numRequests, dataCenterConfig_T1);
+
+str = sprintf('\nDisplaying results (Type 2) ...');
+disp(str);
+
+displayResults(dataCenterMap_T2, requestDB_T2, numRequests, dataCenterConfig_T2);
+
+str = sprintf('\nDisplaying results (Type 3) ...');
+disp(str);
+
+displayResults(dataCenterMap_T3, requestDB_T3, numRequests, dataCenterConfig_T3);
+
+% Stop timer and print its value
+toc
+
+% Plot heat maps
+plotHeatMap(dataCenterConfig_T1, dataCenterMap_T1, 'allMapsSetup');
+plotHeatMap(dataCenterConfig_T2, dataCenterMap_T2, 'allMapsSetup');
+plotHeatMap(dataCenterConfig_T3, dataCenterMap_T3, 'allMapsSetup');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plot results/graphs
@@ -90,9 +153,9 @@ nBlocked_T2 = zeros(1,size(time,2));
 nBlocked_T3 = zeros(1,size(time,2));
 % Main time loop
 for t = 1:tTime
-  blocked_T1 = find(cell2mat(requestDB_1(1:t,11)) == 0);    % Find requests that have been blocked upto time t
-  blocked_T2 = find(cell2mat(requestDB_2(1:t,11)) == 0);    % Find requests that have been blocked upto time t
-  blocked_T3 = find(cell2mat(requestDB_3(1:t,11)) == 0);    % Find requests that have been blocked upto time t
+  blocked_T1 = find(cell2mat(requestDB_T1(1:t,11)) == 0);    % Find requests that have been blocked upto time t
+  blocked_T2 = find(cell2mat(requestDB_T2(1:t,11)) == 0);    % Find requests that have been blocked upto time t
+  blocked_T3 = find(cell2mat(requestDB_T3(1:t,11)) == 0);    % Find requests that have been blocked upto time t
   nBlocked_T1(t) = size(blocked_T1,1);                      % Count the number of requests found
   nBlocked_T2(t) = size(blocked_T2,1);                      % Count the number of requests found
   nBlocked_T3(t) = size(blocked_T3,1);                      % Count the number of requests found
@@ -183,7 +246,7 @@ for t = 1:tTime
   CPUunitsUtilized_T1 = 0;
   MEMunitsUtilized_T1 = 0;
   STOunitsUtilized_T1 = 0;
-  allocatedResources_T1 = requestDB_1{t,12};
+  allocatedResources_T1 = requestDB_T1{t,12};
   for i = 1:size(allocatedResources_T1,1)
     for j = 1:size(allocatedResources_T1,2)
       % Extract current cell from the heldITresources cell array
@@ -222,7 +285,7 @@ for t = 1:tTime
   CPUunitsUtilized_T2 = 0;
   MEMunitsUtilized_T2 = 0;
   STOunitsUtilized_T2 = 0;
-  allocatedResources_DB2 = requestDB_2{t,12};
+  allocatedResources_DB2 = requestDB_T2{t,12};
   for i = 1:size(allocatedResources_DB2,1)
     for j = 1:size(allocatedResources_DB2,2)
       % Extract current cell from the heldITresources cell array
@@ -261,7 +324,7 @@ for t = 1:tTime
   CPUunitsUtilized_T3 = 0;
   MEMunitsUtilized_T3 = 0;
   STOunitsUtilized_T3 = 0;
-  allocatedResources_DB3 = requestDB_3{t,12};
+  allocatedResources_DB3 = requestDB_T3{t,12};
   for i = 1:size(allocatedResources_DB3,1)
     for j = 1:size(allocatedResources_DB3,2)
       % Extract current cell from the heldITresources cell array
@@ -298,8 +361,8 @@ for t = 1:tTime
   
   % Type 1 network utilization
   NETutilized_T1 = 0;
-  requestBAN = requestDB_1{t,4};
-  allocatedNETresources_DB1 = requestDB_1{t,13};
+  requestBAN = requestDB_T1{t,4};
+  allocatedNETresources_DB1 = requestDB_T1{t,13};
   for i = 1:size(allocatedNETresources_DB1,1)
     for j = 1:size(allocatedNETresources_DB1,2)
       % Extract current cell from the heldITresources cell array
@@ -320,8 +383,8 @@ for t = 1:tTime
   
   % Type 2 network utilization
   NETutilized_T2 = 0;
-  requestBAN = requestDB_2{t,4};
-  allocatedNETresources_DB2 = requestDB_2{t,13};
+  requestBAN = requestDB_T2{t,4};
+  allocatedNETresources_DB2 = requestDB_T2{t,13};
   for i = 1:size(allocatedNETresources_DB2,1)
     for j = 1:size(allocatedNETresources_DB2,2)
       % Extract current cell from the heldITresources cell array
@@ -342,8 +405,8 @@ for t = 1:tTime
   
   % Type 3 network utilization
   NETutilized_T3 = 0;
-  requestBAN = requestDB_3{t,4};
-  allocatedNETresources_DB3 = requestDB_3{t,13};
+  requestBAN = requestDB_T3{t,4};
+  allocatedNETresources_DB3 = requestDB_T3{t,13};
   for i = 1:size(allocatedNETresources_DB3,1)
     for j = 1:size(allocatedNETresources_DB3,2)
       % Extract current cell from the heldITresources cell array
@@ -362,9 +425,9 @@ for t = 1:tTime
   
   NETutilization_T3(t) = (totalNETutilized_T3(t)/totalNET_T3) * 100;
   
-  blocked_T1 = find(cell2mat(requestDB_1(1:t,11)) == 0);    % Find requests that have been blocked upto time t
-  blocked_T2 = find(cell2mat(requestDB_2(1:t,11)) == 0);    % Find requests that have been blocked upto time t
-  blocked_T3 = find(cell2mat(requestDB_3(1:t,11)) == 0);    % Find requests that have been blocked upto time t
+  blocked_T1 = find(cell2mat(requestDB_T1(1:t,11)) == 0);    % Find requests that have been blocked upto time t
+  blocked_T2 = find(cell2mat(requestDB_T2(1:t,11)) == 0);    % Find requests that have been blocked upto time t
+  blocked_T3 = find(cell2mat(requestDB_T3(1:t,11)) == 0);    % Find requests that have been blocked upto time t
   nBlocked_T1(t) = size(blocked_T1,1);                      % Count the number of requests found
   nBlocked_T2(t) = size(blocked_T2,1);                      % Count the number of requests found
   nBlocked_T3(t) = size(blocked_T3,1);                      % Count the number of requests found
@@ -531,6 +594,6 @@ str = sprintf('\n+------- SIMULATION COMPLETE --------+\n');
 disp(str);
 diary off;                       % Turn diary (i.e. logging functionality) off
 %clear;
-str = sprintf('Opening simulation log ...');
-disp(str);
-open('log/log.txt');
+%str = sprintf('Opening simulation log ...');
+%disp(str);
+%open('log/log.txt');

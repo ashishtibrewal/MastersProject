@@ -194,7 +194,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           end
         end
         str = sprintf('Switching CR: %s', CRs{iCR});
-        disp(str);
+        %disp(str);
       
       case 3
         if ((strcmp(CRs{iCR - 2},'CPU') == 1 && strcmp(CRs{iCR - 1},'MEM') == 1) || (strcmp(CRs{iCR - 1},'CPU') == 1 && strcmp(CRs{iCR - 2},'MEM') == 1))
@@ -205,7 +205,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           CRs{iCR} = 'CPU';
         end
         str = sprintf('Switching CR: %s', CRs{iCR});
-        disp(str);
+        %disp(str);
     end
         
     % Switch on the i-th contention ratio
@@ -238,7 +238,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               else
                 heldNETresources = [];
                 NETresourceUnavailable = 1;
-                disp(NETfailureCause);
+                %disp(NETfailureCause);
                 % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
                 % Initialize empty matrices to hold slot/node numbers
                 CPUnodes = [];
@@ -330,7 +330,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               else
                 heldNETresources = [];
                 NETresourceUnavailable = 1;
-                disp(NETfailureCause);
+                %disp(NETfailureCause);
                 % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
                 % Initialize empty matrices to hold slot/node numbers
                 CPUnodes = [];
@@ -422,7 +422,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               else
                 heldNETresources = [];
                 NETresourceUnavailable = 1;
-                disp(NETfailureCause);
+                %disp(NETfailureCause);
                 % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
                 % Initialize empty matrices to hold slot/node numbers
                 CPUnodes = [];
