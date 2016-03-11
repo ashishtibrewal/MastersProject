@@ -39,8 +39,8 @@ function requestDB = inputGeneration(nRequests)
   bandwidthMinMS = bandwidthMinCM/5;      % In Gb/s -> 5x LOWER acceptable (min) bandwidth between MEM & STO
   bandwidthMaxMS = bandwidthMaxCM/5;      % In Gb/s -> 5x LOWER acceptable (max) bandwidth between MEM & STO
   
-  latencyMinCM = 4000;         % In ns (i.e. nanoseconds)
-  latencyMaxCM = 16000;       % In ns (i.e. nanoseconds)
+  latencyMinCM = 1000;         % In ns (i.e. nanoseconds)
+  latencyMaxCM = 8000;       % In ns (i.e. nanoseconds)
   
   latencyMinMS = latencyMinCM * 10;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (min) latency between MEM & STO
   latencyMaxMS = latencyMaxCM * 10;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (max) latency between MEM & STO
