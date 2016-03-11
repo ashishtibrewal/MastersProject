@@ -2,12 +2,14 @@
 %%% Function that starts the simulation %%%
 %%+++++++++++++++++++++++++++++++++++++%%
 
-function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests)
+function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, requestDB)
   % Function that sets up and starts the requried simulation
   
   % Import global macros
   global SUCCESS;
   global FAILURE;
+  SUCCESS = 1;          % Assign a value to global macro (Reassigning to avoid error from parfor)
+  FAILURE = 0;          % Assign a value to global macro (Reassigning to avoid error from parfor)
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Evaluate IT & Network constants
@@ -65,17 +67,6 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests)
   dataCenterMap = networkCreation(dataCenterConfig);
 
   str = sprintf('Network creation complete.\n');
-  disp(str);
-
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % Input generation
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  str = sprintf('Input generation started ...');
-  disp(str);
-
-  requestDB = inputGeneration(nRequests);    % Pre-generating randomised requests - Note that the resource allocation is only allowed to look at the request for the current iteration
-
-  str = sprintf('Input generation complete.\n');
   disp(str);
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -178,13 +169,5 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests)
 
   str = sprintf('Resource allocation complete.\n');
   disp(str);
-
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % Generate and plot results (Analysis)
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  str = sprintf('Displaying results ...');
-  disp(str);
-
-  displayResults(dataCenterMap, requestDB, nRequests, dataCenterConfig);
 
 end
