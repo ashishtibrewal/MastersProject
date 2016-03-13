@@ -134,11 +134,21 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
     LATsuccess = SUCCESS;
     for i = 1:nNodes
       for j = (i + 1):nNodes
-        % Check latency between the nodes and if any of them go over, break
-        if (ksPath_Latency(i,j,k) > requiredLAT_CM)
-          LATsuccess = FAILURE;
-          failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
-          break;
+        % Check latency between CPUs and MEMs only
+        if ((i <= size(CPUnodes,2)) && (j > size(CPUnodes,2)) && (j <= (size(CPUnodes,2) + size(MEMnodes,2))))
+          % Check latency between the nodes and if any of them go over, break
+          if (ksPath_Latency(i,j,k) > requiredLAT_CM)
+            LATsuccess = FAILURE;
+            failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
+            break;
+          end
+        % Check latency between MEMs and STOs only
+        elseif ((i > size(CPUnodes,2)) && (i <= (size(CPUnodes,2) + size(MEMnodes,2))) && (j > (size(CPUnodes,2) + size(MEMnodes,2))))
+          if (ksPath_Latency(i,j,k) > requiredLAT_MS)
+            LATsuccess = FAILURE;
+            failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
+            break;
+          end
         end
         pathLatenciesAllocated = [pathLatenciesAllocated, ksPath_Latency(i,j,k)];
       end
@@ -164,13 +174,26 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
         for node = 1:(size(path,2) - 1)
           %str = sprintf('%d  %d  %d', path(node), path(node + 1), updatedBandwidtMap(path(node),path(node + 1)));
           %disp(str);
-          if (updatedBandwidtMap(path(node),path(node + 1)) < requiredBAN_CM)
-            BANsuccess = FAILURE;
-            failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
-          else
-          % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
-          updatedBandwidtMap(path(node),path(node + 1)) = updatedBandwidtMap(path(node),path(node + 1)) - requiredBAN_CM;
-          updatedBandwidtMap(path(node + 1),path(node)) = updatedBandwidtMap(path(node + 1),path(node)) - requiredBAN_CM;
+          % Check bandwidth between CPUs and MEMs only
+          if ((i <= size(CPUnodes,2)) && (j > size(CPUnodes,2)) && (j <= (size(CPUnodes,2) + size(MEMnodes,2))))
+            if (updatedBandwidtMap(path(node),path(node + 1)) < requiredBAN_CM)
+              BANsuccess = FAILURE;
+              failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
+            else
+              % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
+              updatedBandwidtMap(path(node),path(node + 1)) = updatedBandwidtMap(path(node),path(node + 1)) - requiredBAN_CM;
+              updatedBandwidtMap(path(node + 1),path(node)) = updatedBandwidtMap(path(node + 1),path(node)) - requiredBAN_CM;
+            end
+          % Check bandwidth between MEMs and STOs only
+          elseif ((i > size(CPUnodes,2)) && (i <= (size(CPUnodes,2) + size(MEMnodes,2))) && (j > (size(CPUnodes,2) + size(MEMnodes,2))))
+            if (updatedBandwidtMap(path(node),path(node + 1)) < requiredBAN_MS)
+              BANsuccess = FAILURE;
+              failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
+            else
+              % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
+              updatedBandwidtMap(path(node),path(node + 1)) = updatedBandwidtMap(path(node),path(node + 1)) - requiredBAN_CM;
+              updatedBandwidtMap(path(node + 1),path(node)) = updatedBandwidtMap(path(node + 1),path(node)) - requiredBAN_CM;
+            end
           end
         end
 %         if (BANsuccess == FAILURE)

@@ -29,7 +29,7 @@ FAILURE = 0;          % Assign a value to global macro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Evaluate constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-numRequests = 5;     % Total number of requests to generate
+numRequests = 1000;     % Total number of requests to generate
 numTypes = 3;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
