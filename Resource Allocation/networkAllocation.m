@@ -227,7 +227,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   if (LATsuccess == SUCCESS && BANsuccess == SUCCESS)
     NETsuccessful = SUCCESS;
     NETfailureCause = 'NONE';
-    NETresourceLinks = ksPath_Paths(:,:);
+    NETresourceLinks = ksPath_Paths(:,:);     % TODO Need to return which path (i.e. path number) for every node to every other node taken since this returns the entire cell
     failureNodes = [];
   else
     NETsuccessful = FAILURE;
@@ -236,7 +236,8 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
     elseif (BANsuccess == FAILURE)
       NETfailureCause = 'BAN';
     end
-    NETresourceLinks = [];
+    NETresourceLinks = {};
+    pathLatenciesAllocated = {};
     failureNodes = unique(failureNodesInternal,'first');
   end
 end

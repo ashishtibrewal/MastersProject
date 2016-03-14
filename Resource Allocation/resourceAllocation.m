@@ -236,9 +236,10 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
                 heldNETresources = NETresourceLinks;
                 break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
               else
-                heldNETresources = [];
+                heldNETresources = {};
                 NETresourceUnavailable = 1;
                 %disp(NETfailureCause);
+                heldITresources = {};   % Free/empty held held resources cell network allocation failed for this set of IT resources
                 % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
                 updatedUnitAvailableMap(failureNodes) = 0;    % Set units available in failure nodes to be zero
 
@@ -300,9 +301,10 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
                 heldNETresources = NETresourceLinks;
                 break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
               else
-                heldNETresources = [];
+                heldNETresources = {};
                 NETresourceUnavailable = 1;
                 %disp(NETfailureCause);
+                heldITresources = {};   % Free/empty held held resources cell network allocation failed for this set of IT resources
                 % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
                 updatedUnitAvailableMap(failureNodes) = 0;    % Set units available in failure nodes to be zero
 
@@ -364,9 +366,10 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
                 heldNETresources = NETresourceLinks;
                 break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
               else
-                heldNETresources = [];
+                heldNETresources = {};
                 NETresourceUnavailable = 1;
                 %disp(NETfailureCause);
+                heldITresources = {};   % Free/empty held held resources cell network allocation failed for this set of IT resources
                 % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
                 updatedUnitAvailableMap(failureNodes) = 0;    % Set units available in failure nodes to be zero
 
