@@ -214,7 +214,7 @@ NETutilization_T2 = zeros(1,size(time,2));
 NETutilization_T3 = zeros(1,size(time,2));
 
 % Evaluate total bandwidth - Type 1
-bandwidthMap_T1 = dataCenterMap_T1.bandwidthMap.completeBandwidth;
+bandwidthMap_T1 = dataCenterMap_T1.bandwidthMap.completeBandwidthOriginal;
 totalNET_T1 = 0;
 for i = 1:size(bandwidthMap_T1,1)
   for j = (i + 1):size(bandwidthMap_T1,2)
@@ -223,7 +223,7 @@ for i = 1:size(bandwidthMap_T1,1)
 end
 
 % Evaluate total bandwidth - Type 2
-bandwidthMap_T2 = dataCenterMap_T2.bandwidthMap.completeBandwidth;
+bandwidthMap_T2 = dataCenterMap_T2.bandwidthMap.completeBandwidthOriginal;
 totalNET_T2 = 0;
 for i = 1:size(bandwidthMap_T2,1)
   for j = (i + 1):size(bandwidthMap_T2,2)
@@ -232,7 +232,7 @@ for i = 1:size(bandwidthMap_T2,1)
 end
 
 % Evaluate total bandwidth - Type 3
-bandwidthMap_T3 = dataCenterMap_T3.bandwidthMap.completeBandwidth;
+bandwidthMap_T3 = dataCenterMap_T3.bandwidthMap.completeBandwidthOriginal;
 totalNET_T3 = 0;
 for i = 1:size(bandwidthMap_T3,1)
   for j = (i + 1):size(bandwidthMap_T3,2)
