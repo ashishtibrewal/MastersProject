@@ -994,6 +994,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   bandwidthMap.bladeBandwidth = bladeBandwidth;
   bandwidthMap.slotBandwidth = slotBandwidth;
   bandwidthMap.completeBandwidth = completeBandwidth;
+  bandwidthMap.completeBandwidthOriginal = completeBandwidth;
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % RESOURCE (i.e. BLADE) UTILIZED MAP
