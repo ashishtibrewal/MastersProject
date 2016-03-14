@@ -149,6 +149,13 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
             failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
             break;
           end
+        % Check latency between CPUs and STOs
+        else
+          if (ksPath_Latency(i,j,k) > max(requiredLAT_CM,requiredLAT_MS))
+            LATsuccess = FAILURE;
+            failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
+            break;
+          end
         end
         pathLatenciesAllocated = [pathLatenciesAllocated, ksPath_Latency(i,j,k)];
       end
