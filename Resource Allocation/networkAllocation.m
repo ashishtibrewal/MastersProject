@@ -191,8 +191,18 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
               failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
             else
               % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
-              updatedBandwidtMap(path(node),path(node + 1)) = updatedBandwidtMap(path(node),path(node + 1)) - requiredBAN_CM;
-              updatedBandwidtMap(path(node + 1),path(node)) = updatedBandwidtMap(path(node + 1),path(node)) - requiredBAN_CM;
+              updatedBandwidtMap(path(node),path(node + 1)) = updatedBandwidtMap(path(node),path(node + 1)) - requiredBAN_MS;
+              updatedBandwidtMap(path(node + 1),path(node)) = updatedBandwidtMap(path(node + 1),path(node)) - requiredBAN_MS;
+            end
+          % Check bandwidth between CPUs and STOs only
+          else
+            if (updatedBandwidtMap(path(node),path(node + 1)) < requiredBAN_MS)
+              BANsuccess = FAILURE;
+              failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
+            else
+              % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
+              updatedBandwidtMap(path(node),path(node + 1)) = updatedBandwidtMap(path(node),path(node + 1)) - min(requiredBAN_CM,requiredBAN_MS);
+              updatedBandwidtMap(path(node + 1),path(node)) = updatedBandwidtMap(path(node + 1),path(node)) - min(requiredBAN_CM,requiredBAN_MS);
             end
           end
         end
