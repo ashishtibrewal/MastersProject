@@ -203,7 +203,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
             end
           % Check bandwidth between CPUs and STOs only
           else
-            if (updatedBandwidtMap(path(node),path(node + 1)) < requiredBAN_MS)
+            if (updatedBandwidtMap(path(node),path(node + 1)) < min(requiredBAN_CM,requiredBAN_MS))
               BANsuccess = FAILURE;
               failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
             else
