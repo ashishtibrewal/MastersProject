@@ -262,11 +262,20 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     % switch)
     case 'Fully-connected'
       slotConnectivity = ones(nSlots, nSlots, nBlades, nRacks);
-      % TODO Change complete connectivity map to connect all slots in a
-      % blade to every other slot on the blade. Loop with a counter that
-      % counts upto nSlots. This counter is decremented on every itertation
-      % of the inner loop (i.e. the slot loop) and is reset on every
-      % iteration of the outer loop (i.e. rack/blade loop)
+      
+      slotsLimit = nSlots - 1;
+      slotCounter = 0;
+      for slotNoDim1 = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))
+        for slotNoDim2 = (slotNoDim1 + 1):(slotNoDim1 + slotsLimit)
+          completeConnectivity(slotNoDim1,slotNoDim2) = 1;
+        end
+        slotsLimit = slotsLimit - 1;    % Decrement slots limit
+        slotCounter = slotCounter + 1;  % Increment slot counter
+        if (slotCounter == nSlots)
+          slotCounter = 0;            % Reset slot counter
+          slotsLimit = nSlots - 1;    % Reset slots limit
+        end
+      end
       
     case 'Line'    % Adjacent nodes (i.e.SLOTs) are connected to each other
     
