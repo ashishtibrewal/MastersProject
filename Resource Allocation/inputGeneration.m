@@ -144,7 +144,7 @@ function requestDB = inputGeneration(nRequests)
     end
     
     % Collect/store data generated over i iterations
-    testRequest = {10,10,10,50,50,50000,50000,4000,0,0,0,{},{},'NONE','NONE',{}};    % Test request used for debugging
+    %testRequest = {64,128,256,100,50,10000,20000,4000,0,0,0,{},{},'NONE','NONE',{}};    % Test request used for debugging
     %requestDB(i,:) = testRequest;
     requestDB(i,:) = {nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0, {}, {},'NONE','NONE',{}};
 

@@ -215,10 +215,10 @@ NETutilization_T3 = zeros(1,size(time,2));
 
 % Evaluate total bandwidth - Type 1
 bandwidthMap_T1 = dataCenterMap_T1.bandwidthMap.completeBandwidth;
-totalNET_TI = 0;
+totalNET_T1 = 0;
 for i = 1:size(bandwidthMap_T1,1)
   for j = (i + 1):size(bandwidthMap_T1,2)
-    totalNET_TI = totalNET_TI + bandwidthMap_T1(i,j);
+    totalNET_T1 = totalNET_T1 + bandwidthMap_T1(i,j);
   end
 end
 
@@ -368,7 +368,7 @@ for t = 1:tTime
       % Extract current cell from the heldITresources cell array
       currentCell = allocatedNETresources_DB1{i,j};
       if (~isempty(currentCell))
-        NETutilized_T1 = NETutilized_T1 + ((size(currentCell,2) * requestBAN));
+        NETutilized_T1 = NETutilized_T1 + (((size(cell2mat(currentCell),2) - 1) * requestBAN));
       end
     end
   end
@@ -379,7 +379,7 @@ for t = 1:tTime
     totalNETutilized_T1(t) = NETutilized_T1 + totalNETutilized_T1((t - 1));
   end
   
-  NETutilization_T1(t) = (totalNETutilized_T1(t)/totalNET_TI) * 100;
+  NETutilization_T1(t) = (totalNETutilized_T1(t)/totalNET_T1) * 100;
   
   % Type 2 network utilization
   NETutilized_T2 = 0;
@@ -390,7 +390,7 @@ for t = 1:tTime
       % Extract current cell from the heldITresources cell array
       currentCell = allocatedNETresources_DB2{i,j};
       if (~isempty(currentCell))
-        NETutilized_T2 = NETutilized_T2 + ((size(currentCell,2) * requestBAN));
+        NETutilized_T2 = NETutilized_T2 + (((size(cell2mat(currentCell),2) - 1) * requestBAN));
       end
     end
   end
@@ -412,7 +412,7 @@ for t = 1:tTime
       % Extract current cell from the heldITresources cell array
       currentCell = allocatedNETresources_DB3{i,j};
       if (~isempty(currentCell))
-        NETutilized_T3 = NETutilized_T3 + ((size(currentCell,2) * requestBAN));
+        NETutilized_T3 = NETutilized_T3 + (((size(cell2mat(currentCell),2) - 1) * requestBAN));
       end
     end
   end
