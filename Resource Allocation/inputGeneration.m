@@ -85,14 +85,38 @@ function requestDB = inputGeneration(nRequests)
   
   % Iterate to generate the required number of requests
   for i = 1:nRequests
-    nCPU = round(cpuMax * rand(1));
+    % CPU
+    nCPU = randi([cpuMin,cpuMax]);
+    if (mod(nCPU,2) ~= 0)   % Check to prevent odd number of CPUs
+      nCPU = nCPU + 1;
+    end
+    
+    % Memory
     nMEM = round(logb(nCPU,logBaseCPU_MEM));   %nMEM = round(logb(nCPU,2));
-    nSTO = round(storageMax * rand(1));
-    nBAN_CM = round(rand(1) * (bandwidthMaxCM/bandwidthMinCM)) * bandwidthMinCM;
-    nBAN_MS = round(bandwidthMaxMS * rand(1));
-    nLAT_CM = round(latencyMaxCM * rand(1));
-    nLAT_MS = round(latencyMaxMS * rand(1));
-    nHDT = round(holdTimeMax * rand(1));
+    if (mod(nMEM,2) ~= 0)   % Check to prevent odd number of MEMs
+      nMEM = nMEM + 1;
+    end
+    
+    % Storage
+    nSTO = randi([storageMin,storageMax]);
+    if (mod(nSTO,2) ~= 0)   % Check to prevent odd number of STOs
+      nSTO = nSTO + 1;
+    end
+    
+    % CPU - Memory bandwidth
+    nBAN_CM = randi((bandwidthMaxCM/bandwidthMinCM)) * bandwidthMinCM;
+    
+    % Memory - Storage bandwidth
+    nBAN_MS = randi((bandwidthMaxMS/bandwidthMinMS)) * bandwidthMinMS;
+    
+    % CPU - Memory latency
+    nLAT_CM = randi((latencyMaxCM/latencyMinCM)) * latencyMinCM;
+    
+    % Memory - Storage latency
+    nLAT_MS = randi((latencyMaxMS/latencyMinMS)) * latencyMinMS;
+    
+    % Request holdtime
+    nHDT = randi((holdTimeMax/holdTimeMin)) * holdTimeMin;
     
     % Boundary checks
     if (nCPU < cpuMin)
