@@ -24,31 +24,35 @@ function requestDB = inputGeneration(nRequests)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
   % NOTE : CM = CPU-MEM & MS = MEM-STO
 
-  cpuMin = 1;               % In cores
-  cpuMax = 32;              % In cores
+  cpuMin = 1;                             % In cores
+  cpuMax = 32;                            % In cores
 
-  memoryMin = 1;            % In GBs
-  memoryMax = 32;           % In GBs
+  memoryMin = 1;                          % In GBs
+  memoryMax = 32;                         % In GBs
 
-  storageMin = 64;           % In GBs
-  storageMax = 256;         % In GBs
+  storageMin = 64;                        % In GBs
+  storageMax = 256;                       % In GBs
 
-  bandwidthMinCM = 25;      % In Gb/s
-  bandwidthMaxCM = 100;     % In Gb/s
+  bandwidthCM_MSfactor = 5;               % "Scalibility" factor between CM and MS bandwidth
+  bandwidthMinCM = 25;                    % In Gb/s
+  bandwidthMaxCM = 100;                   % In Gb/s
   
-  bandwidthMinMS = bandwidthMinCM/5;      % In Gb/s -> 5x LOWER acceptable (min) bandwidth between MEM & STO
-  bandwidthMaxMS = bandwidthMaxCM/5;      % In Gb/s -> 5x LOWER acceptable (max) bandwidth between MEM & STO
+  bandwidthMinMS = bandwidthMinCM/bandwidthCM_MSfactor;      % In Gb/s -> 5x LOWER acceptable (min) bandwidth between MEM & STO
+  bandwidthMaxMS = bandwidthMaxCM/bandwidthCM_MSfactor;      % In Gb/s -> 5x LOWER acceptable (max) bandwidth between MEM & STO
   
-  latencyMinCM = 1000;         % In ns (i.e. nanoseconds)
-  latencyMaxCM = 8000;       % In ns (i.e. nanoseconds)
+  latencyCM_MSfactor = 10;                % "Scalibility" factor between CM and MS latency
+  latencyRangeCM = 1000;                  % Range of acceptable latency values (Must be a multiple of 1000)
+  latencyMinCM = 4000;                    % In ns (i.e. nanoseconds)
+  latencyMaxCM = 12000;                   % In ns (i.e. nanoseconds)
   
-  latencyMinMS = latencyMinCM * 10;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (min) latency between MEM & STO
-  latencyMaxMS = latencyMaxCM * 10;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (max) latency between MEM & STO
+  latencyMinMS = latencyMinCM * latencyCM_MSfactor;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (min) latency between MEM & STO
+  latencyMaxMS = latencyMaxCM * latencyCM_MSfactor;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (max) latency between MEM & STO
+  latencyRangeMS = latencyRangeCM * latencyCM_MSfactor;   % Range of acceptable latency values (Must be a multiple of 1000)
   
-  holdTimeMin = 1;          % In s (i.e. seconds)
-  holdTimeMax = 1000;      % In s (i.e. seconds)
+  holdTimeMin = 1;                        % In s (i.e. seconds)
+  holdTimeMax = 1000;                     % In s (i.e. seconds)
   
-  requestDB = cell(nRequests, 16);  % Matrix to store all generated requests (Each row contains a different request)
+  requestDB = cell(nRequests, 16);        % Matrix to store all generated requests (Each row contains a different request)
   % Column  1 -> CPU
   % Column  2 -> Memory
   % Column  3 -> Storage
@@ -110,10 +114,10 @@ function requestDB = inputGeneration(nRequests)
     nBAN_MS = randi((bandwidthMaxMS/bandwidthMinMS)) * bandwidthMinMS;
     
     % CPU - Memory latency
-    nLAT_CM = randi((latencyMaxCM/latencyMinCM)) * latencyMinCM;
+    nLAT_CM = randi([(latencyMinCM/latencyRangeCM),(latencyMaxCM/latencyRangeCM)]) * latencyRangeCM;
     
     % Memory - Storage latency
-    nLAT_MS = randi((latencyMaxMS/latencyMinMS)) * latencyMinMS;
+    nLAT_MS = randi([(latencyMinMS/latencyRangeMS),(latencyMaxMS/latencyRangeMS)]) * latencyRangeMS;
     
     % Request holdtime
     nHDT = randi((holdTimeMax/holdTimeMin)) * holdTimeMin;
