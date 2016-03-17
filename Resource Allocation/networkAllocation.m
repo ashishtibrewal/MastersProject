@@ -213,6 +213,9 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   
   % Initialize paths cell array to store paths taken from every node to every other node
   paths = cell(nNodes);
+  maxPaths = nNodes * ((nNodes - 1)/2);
+  pathsSuccessful = zeros(1,maxPaths);
+  pathsSuccessfulIndex = 1;
 
   % Check the bandwidth (on each link) from each (required) node to every other (required) node
   if (LATsuccess == SUCCESS)   % Only check for bandwidth if the latency constraint has been satisfied
@@ -327,6 +330,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
               paths{i,j} = {path};
               pathLatenciesAllocated = [pathLatenciesAllocated, ksPath_Latency(i,j,k)];
               kthPathTaken(i,j) = k;
+              pathsSuccessful(pathsSuccessfulIndex) = 1;
               break;    % Break out of the k-th loop for current i-th source node and j-th destination node since a path with acceptable bandwidth has been found
             else
               updatedBandwidtMapI = updatedBandwidtMapI_RevertVersion;     % Reset updated bandwithmap to its original form since the k-th path failed the bandwidth constraint/requirement
@@ -336,12 +340,15 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
         if (BANsuccess == FAILURE)
           failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
         end
+        if (pathsSuccessfulIndex < maxPaths)    % Check to prevent index going out of range
+          pathsSuccessfulIndex = pathsSuccessfulIndex + 1;    % Increment paths successful index every iteration of the j-th loop
+        end
       end
     end
   end
 
   % Update outputs
-  if (LATsuccess == SUCCESS && BANsuccess == SUCCESS)
+  if (LATsuccess == SUCCESS && BANsuccess == SUCCESS && sum(pathsSuccessful,2) == maxPaths)
     NETsuccessful = SUCCESS;
     NETfailureCause = 'NONE';
     NETresourceLinks = paths;
@@ -351,7 +358,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
     NETsuccessful = FAILURE;
     if (LATsuccess == FAILURE)
       NETfailureCause = 'LAT';
-    elseif (BANsuccess == FAILURE)
+    elseif (BANsuccess == FAILURE || sum(pathsSuccessful,2) ~= maxPaths)
       NETfailureCause = 'BAN';
     end
     NETresourceLinks = {};

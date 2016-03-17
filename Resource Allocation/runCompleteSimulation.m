@@ -440,6 +440,7 @@ for t = 1:tTime
   requestBAN_CM = requestDB_T2{t,4};
   requestBAN_MS = requestDB_T2{t,5};
   allocatedNETresources_DB2 = requestDB_T2{t,13};
+  allocatedITresources_DB2 = requestDB_T2{t,12};
   for i = 1:size(allocatedNETresources_DB2,1)
     for j = 1:size(allocatedNETresources_DB2,2)
       % Extract current cell from the heldITresources cell array
@@ -453,9 +454,9 @@ for t = 1:tTime
         % Find number of units used in source and destination nodes
         unitsSource = 0;
         unitsDest = 0;
-        for p = 1:size(allocatedITresources_DB1,1)
-          for q = 1:size(allocatedITresources_DB1,2)
-            ITcell = allocatedITresources_DB1{p,q};
+        for p = 1:size(allocatedITresources_DB2,1)
+          for q = 1:size(allocatedITresources_DB2,2)
+            ITcell = allocatedITresources_DB2{p,q};
             if (~isempty(ITcell))
               ITmatrix = cell2mat(ITcell);
               % Source units
@@ -513,6 +514,7 @@ for t = 1:tTime
   requestBAN_CM = requestDB_T3{t,4};
   requestBAN_MS = requestDB_T3{t,5};
   allocatedNETresources_DB3 = requestDB_T3{t,13};
+  allocatedITresources_DB3 = requestDB_T3{t,12};
   for i = 1:size(allocatedNETresources_DB3,1)
     for j = 1:size(allocatedNETresources_DB3,2)
       % Extract current cell from the heldITresources cell array
@@ -526,9 +528,9 @@ for t = 1:tTime
         % Find number of units used in source and destination nodes
         unitsSource = 0;
         unitsDest = 0;
-        for p = 1:size(allocatedITresources_DB1,1)
-          for q = 1:size(allocatedITresources_DB1,2)
-            ITcell = allocatedITresources_DB1{p,q};
+        for p = 1:size(allocatedITresources_DB3,1)
+          for q = 1:size(allocatedITresources_DB3,2)
+            ITcell = allocatedITresources_DB3{p,q};
             if (~isempty(ITcell))
               ITmatrix = cell2mat(ITcell);
               % Source units
