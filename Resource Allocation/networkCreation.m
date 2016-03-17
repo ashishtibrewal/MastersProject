@@ -746,16 +746,16 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
             switch (dataCenterConfig.heterogenSplit.heterogenCPU_MEM)
               % 50-50 CPU-MEM
               case 50
-                % Even slots are CPUs
-                if (mod(slotNo,2) == 0)
+                % Odd slots are CPUs
+                if (mod(slotNo,2) ~= 0)
                   availableMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeCPU; % Updated occupied map
                   resourceMap{slotNo,bladeNo,rackNo} = 'CPU';                % Store the type of resource
-                % Odd slots are MEMs
+                % Even slots are CPUs
                 else
                   availableMap(slotNo,bladeNo,rackNo) = nUnits * unitSizeMEM; % Updated occupied map
                   resourceMap{slotNo,bladeNo,rackNo} = 'MEM';                % Store the type of resource
                 end
-              % Add cases to handle other percentages
+              % TODO Add cases to handle other percentages
               otherwise
                 error('Check configuration file for CPU-MEM distribution percentage. Cases other than 50-50 haven''t been handled yet.');
             end
@@ -826,11 +826,11 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
             switch (dataCenterConfig.heterogenSplit.heterogenCPU_MEM)
               % 50-50 CPU-MEM
               case 50
-                % Even slots are CPUs
-                if (mod(slotCounter,2) == 0)
+                % Odd slots are CPUs
+                if (mod(slotCounter,2) ~= 0)
                   completeResourceAvailableMap(slotNo) = nUnits * unitSizeCPU; % Updated occupied map
                   completeResourceMap{slotNo} = 'CPU';                % Store the type of resource
-                % Odd slots are MEMs
+                % Even slots are MEMs
                 else
                   completeResourceAvailableMap(slotNo) = nUnits * unitSizeMEM; % Updated occupied map
                   completeResourceMap{slotNo} = 'MEM';                % Store the type of resource

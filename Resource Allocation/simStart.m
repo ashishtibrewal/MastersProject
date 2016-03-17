@@ -2,7 +2,7 @@
 %%% Function that starts the simulation %%%
 %%+++++++++++++++++++++++++++++++++++++%%
 
-function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, requestDB)
+function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, requestDB, type)
   % Function that sets up and starts the requried simulation
   
   % Import global macros
@@ -82,7 +82,7 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Generate plot for resource location
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  plotHeatMap(dataCenterConfig, dataCenterMap, 'allMapsSetup');
+  %plotHeatMap(dataCenterConfig, dataCenterMap, 'allMapsSetup');
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Resource allocation main time loop
@@ -111,7 +111,7 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
 
     % Display required resources for request on the prompt
     requestString = sprintf(' %d', request{1:7});
-    str = sprintf('Requried resouces (Request no. %d): %s', requestDBindex, requestString);
+    str = sprintf('Requried resouces (Type %d - Request no. %d): %s', type, requestDBindex, requestString);
     disp(str);
 
     %profile on;         % Turn on profiler
@@ -129,9 +129,9 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
     %plotUsage(dataCenterMap, dataCenterConfig);
 
     % Plot heat map (Updated everytime a new request is being allocated/handled)
-    if (mod(t,10) == 0)   % Plot (after) every 10 requests to avoid slowing down the simulation
-      plotHeatMap(dataCenterConfig, dataCenterMap, 'allMaps');
-    end
+    %if (mod(t,10) == 0)   % Plot (after) every 10 requests to avoid slowing down the simulation
+    %  plotHeatMap(dataCenterConfig, dataCenterMap, 'allMaps');
+    %end
 
     %blocked = find(cell2mat(requestDB(1:t,9)) == 0);    % Find requests that have been blocked upto time t
     %nBlocked(t) = size(blocked,1);                      % Count the number of requests found
