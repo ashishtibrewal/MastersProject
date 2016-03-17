@@ -39,16 +39,15 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   % Column 14 -> IT failure cause
   % Column 15 -> NET failure cause
   % Column 16 -> Allocated path latencies
-  requiredBAN_CM = request{4};    % MAXIMUM ACCEPTABLE BANDWIDTH (CPU-MEM)
-  requiredBAN_MS = request{5};    % MAXIMUM ACCEPTABLE BANDWIDTH (MEM-STO)
+  requiredBAN_CM = request{4};    % MINIMUM ACCEPTABLE BANDWIDTH (CPU-MEM)
+  requiredBAN_MS = request{5};    % MINIMUM ACCEPTABLE BANDWIDTH (MEM-STO)
   requiredLAT_CM = request{6};    % MAXIMUM ACCEPTABLE LATENCY (CPU-MEM)
   requiredLAT_MS = request{7};    % MAXIMUM ACCEPTABLE LATENCY (MEM-STO)
   
   % Initialize result variables
   LATsuccess = SUCCESS;
   BANsuccess = SUCCESS;
-  pathTaken = 0;
-  updatedBandwidtMap = completeBandwidthMap;    % Initialize updated bandwidth map with complete bandwitdh map
+  updatedBandwidtMapI = completeBandwidthMap;    % Initialize updated bandwidth map with complete bandwitdh map
   failureNodesInternal = [];    % Nodes that caused latency/bandwidth checks to fail (Initialize as empty matrix)
   pathLatenciesAllocated = {};
   
@@ -86,7 +85,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   %%%%%% K-shortest path %%%%%%
   weightedEdgeSparseGraph = sparse(completeDistance);       % Use the complete distance map to create a weighted sparse matrix
  	nNodes = size(ALLnodes, 2);                               % Obtain size of the nodes matrix (i.e. the total number of nodes)
-  kPaths = 1;     % Specify number of shortest paths to find
+  kPaths = 3;     % Specify number of shortest paths to find
   
   ksPath_Dist = zeros(nNodes,nNodes,kPaths);   % Initialize k-shortest path distance matrix with it's 3rd dimension being of size kPaths
   ksPath_Paths = cell(nNodes,nNodes);    % Initialize k-shortest path paths cell
@@ -127,99 +126,217 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
     end
   end
   
-  % Check the latency from each (required) node to every other (required) node
-  % TODO change later to add different latency checks for CPU-MEM & MEM-STO
-  for k = 1:kPaths
-    % Reset success variable for every/k-th path
-    LATsuccess = SUCCESS;
-    for i = 1:nNodes
-      for j = (i + 1):nNodes
-        % Check latency between CPUs and MEMs only
-        if ((i <= size(CPUnodes,2)) && (j > size(CPUnodes,2)) && (j <= (size(CPUnodes,2) + size(MEMnodes,2))))
-          % Check latency between the nodes and if any of them go over, break
-          if (ksPath_Latency(i,j,k) > requiredLAT_CM)
-            LATsuccess = FAILURE;
-            failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
-            break;
+  % Evaluate start and end indexes for each type to resource
+  CPUnodesStart = 1;
+  CPUnodesEnd = size(CPUnodes,2);
+  MEMnodesStart = CPUnodesEnd + 1;
+  MEMnodesEnd = CPUnodesEnd + size(MEMnodes,2);
+  STOnodesStart = MEMnodesEnd + 1;
+  STOnodesEnd = MEMnodesEnd + size(STOnodes,2);
+  
+  % Initialize k-th path to 0 for every node to every other node
+  kthPathTaken = zeros(nNodes,nNodes);
+  
+  % Initialize boolean matrix that keeps track of every path that satisfies the latency constraint
+  kthPathLatency = zeros(nNodes,nNodes,kPaths);
+  
+  % Check the latency from each (required) node to every other (required)node for every kth path
+  for i = 1:nNodes
+    for j = (i + 1):nNodes
+      for k = 1:kPaths
+        % Check latency CPU nodes to all other nodes
+        if ((i >= CPUnodesStart) && (i <= CPUnodesEnd))
+          % CPU, MEM nodes
+          if (((j >= CPUnodesStart) && (j <= CPUnodesEnd)) || ((j >= MEMnodesStart) && (j <= MEMnodesEnd)))
+            if (ksPath_Latency(i,j,k) <= requiredLAT_CM)
+              kthPathLatency(i,j,k) = 1;
+              %kthPathLatency(j,i,k) = 1;
+            end
+          % STO nodes
+          elseif ((j >= STOnodesStart) && (j <= STOnodesEnd))
+            if (ksPath_Latency(i,j,k) <= requiredLAT_MS)
+              kthPathLatency(i,j,k) = 1;
+              %kthPathLatency(j,i,k) = 1;
+            end
           end
-        % Check latency between MEMs and STOs only
-        elseif ((i > size(CPUnodes,2)) && (i <= (size(CPUnodes,2) + size(MEMnodes,2))) && (j > (size(CPUnodes,2) + size(MEMnodes,2))))
-          if (ksPath_Latency(i,j,k) > requiredLAT_MS)
-            LATsuccess = FAILURE;
-            failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
-            break;
+
+        % Check latency between MEM nodes to all other nodes
+        elseif ((i >= MEMnodesStart) && (i <= MEMnodesEnd))
+          % CPU nodes
+          if (((j >= CPUnodesStart) && (j <= CPUnodesEnd)))
+            if (ksPath_Latency(i,j,k) <= requiredLAT_CM)
+              kthPathLatency(i,j,k) = 1;
+              %kthPathLatency(j,i,k) = 1;
+            end
+          % MEM, STO nodes
+          elseif (((j >= MEMnodesStart) && (j <= MEMnodesEnd)) || ((j >= STOnodesStart) && (j <= STOnodesEnd)))
+            if (ksPath_Latency(i,j,k) <= requiredLAT_MS)
+              kthPathLatency(i,j,k) = 1;
+              %kthPathLatency(j,i,k) = 1;
+            end
           end
-        % Check latency between CPUs and STOs
-        else
-          if (ksPath_Latency(i,j,k) > max(requiredLAT_CM,requiredLAT_MS))
-            LATsuccess = FAILURE;
-            failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
-            break;
+
+        % Check latency between STO nodes to all other nodes
+        elseif ((i >= STOnodesStart) && (i <= STOnodesEnd))
+          % CPU, MEM, STO nodes
+          if (((j >= CPUnodesStart) && (j <= CPUnodesEnd)) || ...
+              ((j >= MEMnodesStart) && (j <= MEMnodesEnd)) || ...
+              ((j >= STOnodesStart) && (j <= STOnodesEnd)))
+            if (ksPath_Latency(i,j,k) <= requiredLAT_MS)
+              kthPathLatency(i,j,k) = 1;
+              %kthPathLatency(j,i,k) = 1;
+            end
           end
         end
-        pathLatenciesAllocated = [pathLatenciesAllocated, ksPath_Latency(i,j,k)];
       end
-%       if (LATsuccess == FAILURE)
-%         break;
-%       end
-    end
-    if (LATsuccess == SUCCESS)
-      pathTaken = k;
-      break;
     end
   end
   
+  % Check k-th path latency matrix for failure nodes (i.e. check if there's
+  % atleast a single path from every node to every other node that
+  % satisfies the latency constraint)
+  for i = 1:nNodes
+    for j = (i + 1):nNodes
+      acceptableLatencyPath = 0;      % Reset it for every destination node
+      for k = 1:kPaths
+        if (kthPathLatency(i,j,k) == 1)
+          acceptableLatencyPath = 1;
+          break;
+        end
+      end
+      if (acceptableLatencyPath == 0)   % If no acceptable latency path exists for a set of nodes
+        LATsuccess = FAILURE;
+        failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
+      end
+    end
+  end
+  
+  % Initialize paths cell array to store paths taken from every node to every other node
+  paths = cell(nNodes);
+
   % Check the bandwidth (on each link) from each (required) node to every other (required) node
-  % TODO change later to add different bandwidth checks for CPU-MEM & MEM-STO
-  if (LATsuccess == SUCCESS && pathTaken ~= 0)   % Only check for bandwidth if the latency constraint has been satisfied
+  if (LATsuccess == SUCCESS)   % Only check for bandwidth if the latency constraint has been satisfied
     for i = 1:nNodes
       for j = (i + 1):nNodes
-        % Extract the kth path for the current pair of nodes
-        path = ksPath_Paths{i,j}{pathTaken};
-        %disp(path);
-        % Check for the required bandwidth
-        for node = 1:(size(path,2) - 1)
-          %str = sprintf('%d  %d  %d', path(node), path(node + 1), updatedBandwidtMap(path(node),path(node + 1)));
-          %disp(str);
-          % Check bandwidth between CPUs and MEMs only
-          if ((i <= size(CPUnodes,2)) && (j > size(CPUnodes,2)) && (j <= (size(CPUnodes,2) + size(MEMnodes,2))))
-            if (updatedBandwidtMap(path(node),path(node + 1)) < requiredBAN_CM)
-              BANsuccess = FAILURE;
-              failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
-            else
-              % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
-              updatedBandwidtMap(path(node),path(node + 1)) = updatedBandwidtMap(path(node),path(node + 1)) - requiredBAN_CM;
-              updatedBandwidtMap(path(node + 1),path(node)) = updatedBandwidtMap(path(node + 1),path(node)) - requiredBAN_CM;
+        updatedBandwidtMapI_RevertVersion = updatedBandwidtMapI;   % Keep a copy of the updated version to revert back if the k-th path fails
+        for k = 1:kPaths
+          BANsuccess = SUCCESS;      % Reset for every k-th path
+          if (kthPathLatency(i,j,k) == 1)     % If the k-th path satisfies the latency constraint
+            % Extract the kth path for the current pair of nodes
+            path = ksPath_Paths{i,j}{k};
+            pathLength = size(path,2);
+            %disp(path);
+
+            % Find number of units used in source and destination nodes
+            unitsSource = 0;
+            unitsDest = 0;
+            for p = 1:size(heldITresources,1)
+              for q = 1:size(heldITresources,2)
+                ITcell = heldITresources{p,q};
+                if (~isempty(ITcell))
+                  ITmatrix = cell2mat(ITcell);
+                  % Source units
+                  if (ITmatrix(1) == path(1))
+                    unitsSource = ITmatrix(2);
+                  % Destination units
+                  elseif (ITmatrix(1) == path(pathLength))
+                    unitsDest = ITmatrix(2);
+                  end
+                end
+              end
             end
-          % Check bandwidth between MEMs and STOs only
-          elseif ((i > size(CPUnodes,2)) && (i <= (size(CPUnodes,2) + size(MEMnodes,2))) && (j > (size(CPUnodes,2) + size(MEMnodes,2))))
-            if (updatedBandwidtMap(path(node),path(node + 1)) < requiredBAN_MS)
-              BANsuccess = FAILURE;
-              failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
-            else
-              % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
-              updatedBandwidtMap(path(node),path(node + 1)) = updatedBandwidtMap(path(node),path(node + 1)) - requiredBAN_MS;
-              updatedBandwidtMap(path(node + 1),path(node)) = updatedBandwidtMap(path(node + 1),path(node)) - requiredBAN_MS;
+
+            % Find the maximum units allocated out of source and destination nodes
+            unitsMax = max(unitsSource,unitsDest);
+
+            % Check for the required bandwidth
+            for node = 1:(pathLength - 1)
+              %str = sprintf('%d  %d  %d', path(node), path(node + 1), updatedBandwidtMap(path(node),path(node + 1)));
+              %disp(str);          
+              % Check bandwidth between CPU nodes to all other nodes
+              if ((i >= CPUnodesStart) && (i <= CPUnodesEnd))
+                % CPU, MEM nodes
+                if (((j >= CPUnodesStart) && (j <= CPUnodesEnd)) || ((j >= MEMnodesStart) && (j <= MEMnodesEnd)))
+                  % Check bandwidth between the nodes and if any of them don't satisfy the constraint, break
+                  if (updatedBandwidtMapI(path(node),path(node + 1)) < requiredBAN_CM)
+                    BANsuccess = FAILURE;
+                    break;    % Break out of the path loop for current k-th path since the current link on this path failed the bandwitdh constraint
+                  else
+                    % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
+                    updatedBandwidtMapI(path(node),path(node + 1)) = updatedBandwidtMapI(path(node),path(node + 1)) - (requiredBAN_CM * unitsMax);
+                    updatedBandwidtMapI(path(node + 1),path(node)) = updatedBandwidtMapI(path(node + 1),path(node)) - (requiredBAN_CM * unitsMax);
+                  end
+                % STO nodes
+                elseif ((j >= STOnodesStart) && (j <= STOnodesEnd))
+                  % Check bandwidth between the nodes and if any of them don't satisfy the constraint, break
+                  if (updatedBandwidtMapI(path(node),path(node + 1)) < requiredBAN_MS)
+                    BANsuccess = FAILURE;
+                    break;    % Break out of the path loop for current k-th path since the current link on this path failed the bandwitdh constraint
+                  else
+                    % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
+                    updatedBandwidtMapI(path(node),path(node + 1)) = updatedBandwidtMapI(path(node),path(node + 1)) - (requiredBAN_MS * unitsMax);
+                    updatedBandwidtMapI(path(node + 1),path(node)) = updatedBandwidtMapI(path(node + 1),path(node)) - (requiredBAN_MS * unitsMax);
+                  end
+                end
+
+              % Check bandwidth between MEM nodes to all other nodes
+              elseif ((i >= MEMnodesStart) && (i <= MEMnodesEnd))
+                % CPU nodes
+                if (((j >= CPUnodesStart) && (j <= CPUnodesEnd)))
+                  % Check bandwidth between the nodes and if any of them don't satisfy the constraint, break
+                  if (updatedBandwidtMapI(path(node),path(node + 1)) < requiredBAN_CM)
+                    BANsuccess = FAILURE;
+                    break;    % Break out of the path loop for current k-th path since the current link on this path failed the bandwitdh constraint
+                  else
+                    % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
+                    updatedBandwidtMapI(path(node),path(node + 1)) = updatedBandwidtMapI(path(node),path(node + 1)) - (requiredBAN_CM * unitsMax);
+                    updatedBandwidtMapI(path(node + 1),path(node)) = updatedBandwidtMapI(path(node + 1),path(node)) - (requiredBAN_CM * unitsMax);
+                  end
+                % MEM, STO nodes
+                elseif (((j >= MEMnodesStart) && (j <= MEMnodesEnd)) || ((j >= STOnodesStart) && (j <= STOnodesEnd)))
+                  % Check bandwidth between the nodes and if any of them don't satisfy the constraint, break
+                  if (updatedBandwidtMapI(path(node),path(node + 1)) < requiredBAN_MS)
+                    BANsuccess = FAILURE;
+                    break;    % Break out of the path loop for current k-th path since the current link on this path failed the bandwitdh constraint
+                  else
+                    % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
+                    updatedBandwidtMapI(path(node),path(node + 1)) = updatedBandwidtMapI(path(node),path(node + 1)) - (requiredBAN_MS * unitsMax);
+                    updatedBandwidtMapI(path(node + 1),path(node)) = updatedBandwidtMapI(path(node + 1),path(node)) - (requiredBAN_MS * unitsMax);
+                  end
+                end
+
+              % Check bandwidth between STO nodes to all other nodes
+              elseif ((i >= STOnodesStart) && (i <= STOnodesEnd))
+                % CPU, MEM, STO nodes
+                if (((j >= CPUnodesStart) && (j <= CPUnodesEnd)) || ...
+                    ((j >= MEMnodesStart) && (j <= MEMnodesEnd)) || ...
+                    ((j >= STOnodesStart) && (j <= STOnodesEnd)))
+                  % Check bandwidth between the nodes and if any of them don't satisfy the constraint, break
+                  if (updatedBandwidtMapI(path(node),path(node + 1)) < requiredBAN_MS)
+                    BANsuccess = FAILURE;
+                    break;    % Break out of the path loop for current k-th path since the current link on this path failed the bandwitdh constraint
+                  else
+                    % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
+                    updatedBandwidtMapI(path(node),path(node + 1)) = updatedBandwidtMapI(path(node),path(node + 1)) - (requiredBAN_MS * unitsMax);
+                    updatedBandwidtMapI(path(node + 1),path(node)) = updatedBandwidtMapI(path(node + 1),path(node)) - (requiredBAN_MS * unitsMax);
+                  end
+                end
+              end
             end
-          % Check bandwidth between CPUs and STOs only
-          else
-            if (updatedBandwidtMap(path(node),path(node + 1)) < min(requiredBAN_CM,requiredBAN_MS))
-              BANsuccess = FAILURE;
-              failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
+            if (BANsuccess == SUCCESS)
+              paths{i,j} = {path};
+              pathLatenciesAllocated = [pathLatenciesAllocated, ksPath_Latency(i,j,k)];
+              kthPathTaken(i,j) = k;
+              break;    % Break out of the k-th loop for current i-th source node and j-th destination node since a path with acceptable bandwidth has been found
             else
-              % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
-              updatedBandwidtMap(path(node),path(node + 1)) = updatedBandwidtMap(path(node),path(node + 1)) - min(requiredBAN_CM,requiredBAN_MS);
-              updatedBandwidtMap(path(node + 1),path(node)) = updatedBandwidtMap(path(node + 1),path(node)) - min(requiredBAN_CM,requiredBAN_MS);
+              updatedBandwidtMapI = updatedBandwidtMapI_RevertVersion;     % Reset updated bandwithmap to its original form since the k-th path failed the bandwidth constraint/requirement
             end
           end
         end
-%         if (BANsuccess == FAILURE)
-%           break;
-%         end
+        if (BANsuccess == FAILURE)
+          failureNodesInternal = [failureNodesInternal, ALLnodes(j)];
+        end
       end
-%       if (BANsuccess == FAILURE)
-%         break;
-%       end
     end
   end
 
@@ -227,7 +344,8 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   if (LATsuccess == SUCCESS && BANsuccess == SUCCESS)
     NETsuccessful = SUCCESS;
     NETfailureCause = 'NONE';
-    NETresourceLinks = ksPath_Paths(:,:);     % TODO Need to return which path (i.e. path number) for every node to every other node taken since this returns the entire cell
+    NETresourceLinks = paths;
+    updatedBandwidtMap = updatedBandwidtMapI;
     failureNodes = [];
   else
     NETsuccessful = FAILURE;
@@ -238,6 +356,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
     end
     NETresourceLinks = {};
     pathLatenciesAllocated = {};
+    updatedBandwidtMap = completeBandwidthMap;
     failureNodes = unique(failureNodesInternal,'first');
   end
 end

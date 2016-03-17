@@ -33,37 +33,27 @@ numRequests = 1000;     % Total number of requests to generate
 numTypes = 3;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Input generation
+% Import configuration files (YAML config files)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TODO move input generation code here to keep the requests generated
-% consistent across all simulations
-
-% Import configuration file (YAML config files)
-yaml_configFile = 'config/configType1.yaml';    % File to import (File path)
-dataCenterConfig = ReadYaml(yaml_configFile);   % Read file and store it into a struct called dataCenterConfig
-
-requestDB_T1 = [];
-dataCenterMap_T1 = [];
-requestDB_T2 = [];
-dataCenterMap_T2 = [];
-requestDB_T3 = [];
-dataCenterMap_T3 = [];
-
-% Import configuration file (YAML config files)
+% Import Type 1 configuration file
 yaml_configFile_T1 = 'config/configType1.yaml';    % File to import (File path)
 dataCenterConfig_T1 = ReadYaml(yaml_configFile_T1);   % Read file and store it into a struct called dataCenterConfig
 
-% Import configuration file (YAML config files)
+% Import Type 2 configuration file
 yaml_configFile_T2 = 'config/configType2.yaml';    % File to import (File path)
 dataCenterConfig_T2 = ReadYaml(yaml_configFile_T2);   % Read file and store it into a struct called dataCenterConfig
 
-% Import configuration file (YAML config files)
+% Import Type 3 configuration file
 yaml_configFile_T3 = 'config/configType3.yaml';    % File to import (File path)
 dataCenterConfig_T3 = ReadYaml(yaml_configFile_T3);   % Read file and store it into a struct called dataCenterConfig
+
+% Type independent configuration file
+dataCenterConfig = dataCenterConfig_T1;         % Store it as a separate variable to be able to extract common elements for all configuration types
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input generation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Inputs generated here to keep it consistent across all simulations
 str = sprintf('Input generation started ...');
 disp(str);
 
@@ -75,8 +65,17 @@ disp(str);
 % Start timer
 tic;
 
+% Initialize variables to be able to use in the main paralllel loop (parfor)
+requestDB_T1 = [];
+dataCenterMap_T1 = [];
+requestDB_T2 = [];
+dataCenterMap_T2 = [];
+requestDB_T3 = [];
+dataCenterMap_T3 = [];
+
 % Start parallel for loop to run multiple threads
 parfor i = 1:numTypes
+  type = i;     % Type of configuration/setup
   switch (i)
     case 1
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -85,7 +84,7 @@ parfor i = 1:numTypes
       str = sprintf('Running simulation for Type 1 ....\n');
       disp(str);
 
-      [requestDB_T1_L, dataCenterMap_T1_L] = simStart(dataCenterConfig_T1, numRequests, requestDB);
+      [requestDB_T1_L, dataCenterMap_T1_L] = simStart(dataCenterConfig_T1, numRequests, requestDB, type);
       requestDB_T1 = [requestDB_T1, requestDB_T1_L];
       dataCenterMap_T1 = [dataCenterMap_T1, dataCenterMap_T1_L];
 
@@ -96,7 +95,7 @@ parfor i = 1:numTypes
       str = sprintf('Running simulation for Type 2 ....\n');
       disp(str);
 
-      [requestDB_T2_L, dataCenterMap_T2_L] = simStart(dataCenterConfig_T2, numRequests, requestDB);
+      [requestDB_T2_L, dataCenterMap_T2_L] = simStart(dataCenterConfig_T2, numRequests, requestDB, type);
       requestDB_T2 = [requestDB_T2, requestDB_T2_L];
       dataCenterMap_T2 = [dataCenterMap_T2, dataCenterMap_T2_L];
 
@@ -107,7 +106,7 @@ parfor i = 1:numTypes
       str = sprintf('Running simulation for Type 3 ....\n');
       disp(str);
 
-      [requestDB_T3_L, dataCenterMap_T3_L] = simStart(dataCenterConfig_T3, numRequests, requestDB);
+      [requestDB_T3_L, dataCenterMap_T3_L] = simStart(dataCenterConfig_T3, numRequests, requestDB, type);
       requestDB_T3 = [requestDB_T3, requestDB_T3_L];
       dataCenterMap_T3 = [dataCenterMap_T3, dataCenterMap_T3_L];
   end
@@ -212,6 +211,9 @@ totalNETutilized_T3 = zeros(1,size(time,2));
 NETutilization_T1 = zeros(1,size(time,2));
 NETutilization_T2 = zeros(1,size(time,2));
 NETutilization_T3 = zeros(1,size(time,2));
+completeResourceMap_T1 = dataCenterMap_T1.completeResourceMap;
+completeResourceMap_T2 = dataCenterMap_T2.completeResourceMap;
+completeResourceMap_T3 = dataCenterMap_T3.completeResourceMap;
 
 % Evaluate total bandwidth - Type 1
 bandwidthMap_T1 = dataCenterMap_T1.bandwidthMap.completeBandwidthOriginal;
@@ -250,18 +252,18 @@ for t = 1:tTime
   for i = 1:size(allocatedResources_T1,1)
     for j = 1:size(allocatedResources_T1,2)
       % Extract current cell from the heldITresources cell array
-      currentCell = allocatedResources_T1{i,j};
-      if (~isempty(currentCell))
+      NETcell = allocatedResources_T1{i,j};
+      if (~isempty(NETcell))
         switch (i)
           % CPU nodes
           case 1
-            CPUunitsUtilized_T1 = [CPUunitsUtilized_T1, currentCell{2}];
+            CPUunitsUtilized_T1 = [CPUunitsUtilized_T1, NETcell{2}];
           % MEM nodes
           case 2
-            MEMunitsUtilized_T1 = [MEMunitsUtilized_T1, currentCell{2}];
+            MEMunitsUtilized_T1 = [MEMunitsUtilized_T1, NETcell{2}];
           % STO nodes
           case 3
-            STOunitsUtilized_T1 = [STOunitsUtilized_T1, currentCell{2}];
+            STOunitsUtilized_T1 = [STOunitsUtilized_T1, NETcell{2}];
         end
       end
     end
@@ -289,18 +291,18 @@ for t = 1:tTime
   for i = 1:size(allocatedResources_DB2,1)
     for j = 1:size(allocatedResources_DB2,2)
       % Extract current cell from the heldITresources cell array
-      currentCell = allocatedResources_DB2{i,j};
-      if (~isempty(currentCell))
+      NETcell = allocatedResources_DB2{i,j};
+      if (~isempty(NETcell))
         switch (i)
           % CPU nodes
           case 1
-            CPUunitsUtilized_T2 = [CPUunitsUtilized_T2, currentCell{2}];
+            CPUunitsUtilized_T2 = [CPUunitsUtilized_T2, NETcell{2}];
           % MEM nodes
           case 2
-            MEMunitsUtilized_T2 = [MEMunitsUtilized_T2, currentCell{2}];
+            MEMunitsUtilized_T2 = [MEMunitsUtilized_T2, NETcell{2}];
           % STO nodes
           case 3
-            STOunitsUtilized_T2 = [STOunitsUtilized_T2, currentCell{2}];
+            STOunitsUtilized_T2 = [STOunitsUtilized_T2, NETcell{2}];
         end
       end
     end
@@ -328,18 +330,18 @@ for t = 1:tTime
   for i = 1:size(allocatedResources_DB3,1)
     for j = 1:size(allocatedResources_DB3,2)
       % Extract current cell from the heldITresources cell array
-      currentCell = allocatedResources_DB3{i,j};
-      if (~isempty(currentCell))
+      NETcell = allocatedResources_DB3{i,j};
+      if (~isempty(NETcell))
         switch (i)
           % CPU nodes
           case 1
-            CPUunitsUtilized_T3 = [CPUunitsUtilized_T3, currentCell{2}];
+            CPUunitsUtilized_T3 = [CPUunitsUtilized_T3, NETcell{2}];
           % MEM nodes
           case 2
-            MEMunitsUtilized_T3 = [MEMunitsUtilized_T3, currentCell{2}];
+            MEMunitsUtilized_T3 = [MEMunitsUtilized_T3, NETcell{2}];
           % STO nodes
           case 3
-            STOunitsUtilized_T3 = [STOunitsUtilized_T3, currentCell{2}];
+            STOunitsUtilized_T3 = [STOunitsUtilized_T3, NETcell{2}];
         end
       end
     end
@@ -361,14 +363,66 @@ for t = 1:tTime
   
   % Type 1 network utilization
   NETutilized_T1 = 0;
-  requestBAN = requestDB_T1{t,4};
+  requestBAN_CM = requestDB_T1{t,4};
+  requestBAN_MS = requestDB_T1{t,5};
   allocatedNETresources_DB1 = requestDB_T1{t,13};
+  allocatedITresources_DB1 = requestDB_T1{t,12};
   for i = 1:size(allocatedNETresources_DB1,1)
     for j = 1:size(allocatedNETresources_DB1,2)
       % Extract current cell from the heldITresources cell array
-      currentCell = allocatedNETresources_DB1{i,j};
-      if (~isempty(currentCell))
-        NETutilized_T1 = NETutilized_T1 + (((size(cell2mat(currentCell),2) - 1) * requestBAN));
+      NETcell = allocatedNETresources_DB1{i,j};
+      if (~isempty(NETcell))
+        NETmatrix = cell2mat(NETcell);
+        NETmatrixSize = size(NETmatrix,2);
+        startNode = char(completeResourceMap_T1(NETmatrix(1)));
+        endNode = char(completeResourceMap_T1(NETmatrix(NETmatrixSize)));
+        
+        % Find number of units used in source and destination nodes
+        unitsSource = 0;
+        unitsDest = 0;
+        for p = 1:size(allocatedITresources_DB1,1)
+          for q = 1:size(allocatedITresources_DB1,2)
+            ITcell = allocatedITresources_DB1{p,q};
+            if (~isempty(ITcell))
+              ITmatrix = cell2mat(ITcell);
+              % Source units
+              if (ITmatrix(1) == NETmatrix(1))
+                unitsSource = ITmatrix(2);
+              % Destination units
+              elseif (ITmatrix(1) == NETmatrix(NETmatrixSize))
+                unitsDest = ITmatrix(2);
+              end
+            end
+          end
+        end
+        
+        % Find the maximum units allocated out of source and destination nodes
+        unitsMax = max(unitsSource,unitsDest);
+        
+        % Switch on the start node in the path
+        switch (startNode)
+          % CPU start node
+          case 'CPU'
+            if (strcmp(endNode,'CPU') || strcmp(endNode,'MEM'))
+              NETutilized_T1 = NETutilized_T1 + ((NETmatrixSize - 1) * requestBAN_CM) * unitsMax;
+            elseif (strcmp(endNode,'STO'))
+              NETutilized_T1 = NETutilized_T1 + ((NETmatrixSize - 1) * requestBAN_MS) * unitsMax;
+            end
+            
+          % MEM start node
+          case 'MEM'
+            if (strcmp(endNode,'CPU'))
+              NETutilized_T1 = NETutilized_T1 + ((NETmatrixSize - 1) * requestBAN_CM) * unitsMax;
+            elseif (strcmp(endNode,'MEM') || strcmp(endNode,'STO'))
+              NETutilized_T1 = NETutilized_T1 + ((NETmatrixSize - 1) * requestBAN_MS) * unitsMax;
+            end
+            
+          % STO start node
+          case 'STO'
+            if (strcmp(endNode,'CPU') || strcmp(endNode,'MEM') || strcmp(endNode,'STO'))
+              NETutilized_T1 = NETutilized_T1 + ((NETmatrixSize - 1) * requestBAN_MS) * unitsMax;
+            end
+        end
       end
     end
   end
@@ -383,14 +437,65 @@ for t = 1:tTime
   
   % Type 2 network utilization
   NETutilized_T2 = 0;
-  requestBAN = requestDB_T2{t,4};
+  requestBAN_CM = requestDB_T2{t,4};
+  requestBAN_MS = requestDB_T2{t,5};
   allocatedNETresources_DB2 = requestDB_T2{t,13};
   for i = 1:size(allocatedNETresources_DB2,1)
     for j = 1:size(allocatedNETresources_DB2,2)
       % Extract current cell from the heldITresources cell array
-      currentCell = allocatedNETresources_DB2{i,j};
-      if (~isempty(currentCell))
-        NETutilized_T2 = NETutilized_T2 + (((size(cell2mat(currentCell),2) - 1) * requestBAN));
+      NETcell = allocatedNETresources_DB2{i,j};
+      if (~isempty(NETcell))
+        NETmatrix = cell2mat(NETcell);
+        NETmatrixSize = size(NETmatrix,2);
+        startNode = char(completeResourceMap_T2(NETmatrix(1)));
+        endNode = char(completeResourceMap_T2(NETmatrix(NETmatrixSize)));
+        
+        % Find number of units used in source and destination nodes
+        unitsSource = 0;
+        unitsDest = 0;
+        for p = 1:size(allocatedITresources_DB1,1)
+          for q = 1:size(allocatedITresources_DB1,2)
+            ITcell = allocatedITresources_DB1{p,q};
+            if (~isempty(ITcell))
+              ITmatrix = cell2mat(ITcell);
+              % Source units
+              if (ITmatrix(1) == NETmatrix(1))
+                unitsSource = ITmatrix(2);
+              % Destination units
+              elseif (ITmatrix(1) == NETmatrix(NETmatrixSize))
+                unitsDest = ITmatrix(2);
+              end
+            end
+          end
+        end
+        
+        % Find the maximum units allocated out of source and destination nodes
+        unitsMax = max(unitsSource,unitsDest);
+        
+        % Switch on the start node in the path
+        switch (startNode)
+          % CPU start node
+          case 'CPU'
+            if (strcmp(endNode,'CPU') || strcmp(endNode,'MEM'))
+              NETutilized_T2 = NETutilized_T2 + ((NETmatrixSize - 1) * requestBAN_CM) * unitsMax;
+            elseif (strcmp(endNode,'STO'))
+              NETutilized_T2 = NETutilized_T2 + ((NETmatrixSize - 1) * requestBAN_MS) * unitsMax;
+            end
+            
+          % MEM start node
+          case 'MEM'
+            if (strcmp(endNode,'CPU'))
+              NETutilized_T2 = NETutilized_T2 + ((NETmatrixSize - 1) * requestBAN_CM) * unitsMax;
+            elseif (strcmp(endNode,'MEM') || strcmp(endNode,'STO'))
+              NETutilized_T2 = NETutilized_T2 + ((NETmatrixSize - 1) * requestBAN_MS) * unitsMax;
+            end
+            
+          % STO start node
+          case 'STO'
+            if (strcmp(endNode,'CPU') || strcmp(endNode,'MEM') || strcmp(endNode,'STO'))
+              NETutilized_T2 = NETutilized_T2 + ((NETmatrixSize - 1) * requestBAN_MS) * unitsMax;
+            end
+        end
       end
     end
   end
@@ -405,14 +510,65 @@ for t = 1:tTime
   
   % Type 3 network utilization
   NETutilized_T3 = 0;
-  requestBAN = requestDB_T3{t,4};
+  requestBAN_CM = requestDB_T3{t,4};
+  requestBAN_MS = requestDB_T3{t,5};
   allocatedNETresources_DB3 = requestDB_T3{t,13};
   for i = 1:size(allocatedNETresources_DB3,1)
     for j = 1:size(allocatedNETresources_DB3,2)
       % Extract current cell from the heldITresources cell array
-      currentCell = allocatedNETresources_DB3{i,j};
-      if (~isempty(currentCell))
-        NETutilized_T3 = NETutilized_T3 + (((size(cell2mat(currentCell),2) - 1) * requestBAN));
+      NETcell = allocatedNETresources_DB3{i,j};
+      if (~isempty(NETcell))
+        NETmatrix = cell2mat(NETcell);
+        NETmatrixSize = size(NETmatrix,2);
+        startNode = char(completeResourceMap_T3(NETmatrix(1)));
+        endNode = char(completeResourceMap_T3(NETmatrix(NETmatrixSize)));
+        
+        % Find number of units used in source and destination nodes
+        unitsSource = 0;
+        unitsDest = 0;
+        for p = 1:size(allocatedITresources_DB1,1)
+          for q = 1:size(allocatedITresources_DB1,2)
+            ITcell = allocatedITresources_DB1{p,q};
+            if (~isempty(ITcell))
+              ITmatrix = cell2mat(ITcell);
+              % Source units
+              if (ITmatrix(1) == NETmatrix(1))
+                unitsSource = ITmatrix(2);
+              % Destination units
+              elseif (ITmatrix(1) == NETmatrix(NETmatrixSize))
+                unitsDest = ITmatrix(2);
+              end
+            end
+          end
+        end
+        
+        % Find the maximum units allocated out of source and destination nodes
+        unitsMax = max(unitsSource,unitsDest);
+        
+        % Switch on the start node in the path
+        switch (startNode)
+          % CPU start node
+          case 'CPU'
+            if (strcmp(endNode,'CPU') || strcmp(endNode,'MEM'))
+              NETutilized_T3 = NETutilized_T3 + ((NETmatrixSize - 1) * requestBAN_CM) * unitsMax;
+            elseif (strcmp(endNode,'STO'))
+              NETutilized_T3 = NETutilized_T3 + ((NETmatrixSize - 1) * requestBAN_MS) * unitsMax;
+            end
+            
+          % MEM start node
+          case 'MEM'
+            if (strcmp(endNode,'CPU'))
+              NETutilized_T3 = NETutilized_T3 + ((NETmatrixSize - 1) * requestBAN_CM) * unitsMax;
+            elseif (strcmp(endNode,'MEM') || strcmp(endNode,'STO'))
+              NETutilized_T3 = NETutilized_T3 + ((NETmatrixSize - 1) * requestBAN_MS) * unitsMax;
+            end
+            
+          % STO start node
+          case 'STO'
+            if (strcmp(endNode,'CPU') || strcmp(endNode,'MEM') || strcmp(endNode,'STO'))
+              NETutilized_T3 = NETutilized_T3 + ((NETmatrixSize - 1) * requestBAN_MS) * unitsMax;
+            end
+        end
       end
     end
   end
