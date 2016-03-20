@@ -133,15 +133,16 @@ displayResults(dataCenterMap_T3, requestDB_T3, numRequests, dataCenterConfig_T3)
 % Stop timer and print its value
 toc
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Plot results/graphs
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% NEED TO THINK OF GRAPHS THAT CAN BE PLOTTED TO DEPICT SIMULATION RESULTS
+
 % Plot heat maps
 plotHeatMap(dataCenterConfig_T1, dataCenterMap_T1, 'allMapsSetup');
 plotHeatMap(dataCenterConfig_T2, dataCenterMap_T2, 'allMapsSetup');
 plotHeatMap(dataCenterConfig_T3, dataCenterMap_T3, 'allMapsSetup');
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Plot results/graphs
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% NEED TO THINK OF GRAPHS THAT CAN BE PLOTTED TO DEPICT SIMULATION RESULTS
 nRequests = numRequests; % Number of requests generated
 tTime = nRequests;       % Total time simulated
 time = 1:tTime;

@@ -261,7 +261,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
                 % CPU, MEM nodes
                 if (((j >= CPUnodesStart) && (j <= CPUnodesEnd)) || ((j >= MEMnodesStart) && (j <= MEMnodesEnd)))
                   % Check bandwidth between the nodes and if any of them don't satisfy the constraint, break
-                  if (updatedBandwidtMapI(path(node),path(node + 1)) < requiredBAN_CM)
+                  if (updatedBandwidtMapI(path(node),path(node + 1)) < (requiredBAN_CM * unitsMax))
                     BANsuccess = FAILURE;
                     break;    % Break out of the path loop for current k-th path since the current link on this path failed the bandwitdh constraint
                   else
@@ -272,7 +272,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
                 % STO nodes
                 elseif ((j >= STOnodesStart) && (j <= STOnodesEnd))
                   % Check bandwidth between the nodes and if any of them don't satisfy the constraint, break
-                  if (updatedBandwidtMapI(path(node),path(node + 1)) < requiredBAN_MS)
+                  if (updatedBandwidtMapI(path(node),path(node + 1)) < (requiredBAN_MS * unitsMax))
                     BANsuccess = FAILURE;
                     break;    % Break out of the path loop for current k-th path since the current link on this path failed the bandwitdh constraint
                   else
@@ -287,7 +287,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
                 % CPU nodes
                 if (((j >= CPUnodesStart) && (j <= CPUnodesEnd)))
                   % Check bandwidth between the nodes and if any of them don't satisfy the constraint, break
-                  if (updatedBandwidtMapI(path(node),path(node + 1)) < requiredBAN_CM)
+                  if (updatedBandwidtMapI(path(node),path(node + 1)) < (requiredBAN_CM * unitsMax))
                     BANsuccess = FAILURE;
                     break;    % Break out of the path loop for current k-th path since the current link on this path failed the bandwitdh constraint
                   else
@@ -298,7 +298,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
                 % MEM, STO nodes
                 elseif (((j >= MEMnodesStart) && (j <= MEMnodesEnd)) || ((j >= STOnodesStart) && (j <= STOnodesEnd)))
                   % Check bandwidth between the nodes and if any of them don't satisfy the constraint, break
-                  if (updatedBandwidtMapI(path(node),path(node + 1)) < requiredBAN_MS)
+                  if (updatedBandwidtMapI(path(node),path(node + 1)) < (requiredBAN_MS * unitsMax))
                     BANsuccess = FAILURE;
                     break;    % Break out of the path loop for current k-th path since the current link on this path failed the bandwitdh constraint
                   else
@@ -315,7 +315,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
                     ((j >= MEMnodesStart) && (j <= MEMnodesEnd)) || ...
                     ((j >= STOnodesStart) && (j <= STOnodesEnd)))
                   % Check bandwidth between the nodes and if any of them don't satisfy the constraint, break
-                  if (updatedBandwidtMapI(path(node),path(node + 1)) < requiredBAN_MS)
+                  if (updatedBandwidtMapI(path(node),path(node + 1)) < (requiredBAN_MS * unitsMax))
                     BANsuccess = FAILURE;
                     break;    % Break out of the path loop for current k-th path since the current link on this path failed the bandwitdh constraint
                   else
