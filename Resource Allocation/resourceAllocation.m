@@ -161,6 +161,9 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   % IMPORTANT DUE TO LATENCY CONSTRAINTS) SINCE BFS IS RUN STARTING ON A
   % NODE THAT HAS AT LEAST A SINGLE UNIT FREE OF THE RESOURCE TYPE WITH
   % THE HIGHEST CONTENTION RATIO.
+  
+  % Primary scanning loop iterator (Jump to atleast the next rack)
+  loopIncrement = nSlots * nBlades;
 
   % Cell array to store all contention ratios (i.e. for each i-th iteration)
   CRs = cell(1,size(contentionRatios,2));
@@ -220,7 +223,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           heldITresources = {};
           ITfailureCause = 'CPU';   % Allocation failed due to unavailibility of CPUs
         else
-          for slotNo = 1:nSlots:nCPU_SlotsToScan
+          for slotNo = 1:loopIncrement:nCPU_SlotsToScan
             %str = sprintf('Starting CPU node: %d, %d, %d \n', CPUlocations(availableCPUslots(slotNo)), CPUlocations(availableCPUslots(1,slotNo)),CPUunitsInSlots(1,availableCPUslots(slotNo)));
             %disp(str);
             startCPUslot = CPUunitsInSlots(1,availableCPUslots(slotNo)); % CPU start slot/node
@@ -287,7 +290,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           heldITresources = {};
           ITfailureCause = 'MEM';   % Allocation failed due to unavailibility of MEMs
         else
-          for slotNo = 1:nSlots:nMEM_SlotsToScan
+          for slotNo = 1:loopIncrement:nMEM_SlotsToScan
             startMEMslot = MEMunitsInSlots(1,availableMEMslots(slotNo)); % MEM start slot/node
             [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startMEMslot, reqResourceUnits, updatedUnitAvailableMap);
             % Check if all resources have been successfully found
@@ -352,7 +355,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           heldITresources = {};
           ITfailureCause = 'STO';   % Allocation failed due to unavailibility of STOs
         else
-          for slotNo = 1:nSlots:nSTO_SlotsToScan
+          for slotNo = 1:loopIncrement:nSTO_SlotsToScan
             startSTOslot = STOunitsInSlots(1,availableSTOslots(slotNo)); % STO start slot/node
             [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startSTOslot, reqResourceUnits, updatedUnitAvailableMap);
             % Check if all resources have been successfully found
