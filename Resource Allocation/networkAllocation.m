@@ -140,7 +140,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   % Initialize boolean matrix that keeps track of every path that satisfies the latency constraint
   kthPathLatency = zeros(nNodes,nNodes,kPaths);
   
-  % Check the latency from each (required) node to every other (required)node for every kth path
+  % Check the latency from each (required) node to every other (required) node for every kth path
   for i = 1:nNodes
     for j = (i + 1):nNodes
       for k = 1:kPaths
@@ -150,13 +150,13 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
           if (((j >= CPUnodesStart) && (j <= CPUnodesEnd)) || ((j >= MEMnodesStart) && (j <= MEMnodesEnd)))
             if (ksPath_Latency(i,j,k) <= requiredLAT_CM)
               kthPathLatency(i,j,k) = 1;
-              %kthPathLatency(j,i,k) = 1;
+              %kthPathLatency(j,i,k) = 1;   % Since the matrix is always symmetric
             end
           % STO nodes
           elseif ((j >= STOnodesStart) && (j <= STOnodesEnd))
             if (ksPath_Latency(i,j,k) <= requiredLAT_MS)
               kthPathLatency(i,j,k) = 1;
-              %kthPathLatency(j,i,k) = 1;
+              %kthPathLatency(j,i,k) = 1;   % Since the matrix is always symmetric
             end
           end
 
@@ -166,13 +166,13 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
           if (((j >= CPUnodesStart) && (j <= CPUnodesEnd)))
             if (ksPath_Latency(i,j,k) <= requiredLAT_CM)
               kthPathLatency(i,j,k) = 1;
-              %kthPathLatency(j,i,k) = 1;
+              %kthPathLatency(j,i,k) = 1;   % Since the matrix is always symmetric
             end
           % MEM, STO nodes
           elseif (((j >= MEMnodesStart) && (j <= MEMnodesEnd)) || ((j >= STOnodesStart) && (j <= STOnodesEnd)))
             if (ksPath_Latency(i,j,k) <= requiredLAT_MS)
               kthPathLatency(i,j,k) = 1;
-              %kthPathLatency(j,i,k) = 1;
+              %kthPathLatency(j,i,k) = 1;   % Since the matrix is always symmetric
             end
           end
 
@@ -184,7 +184,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
               ((j >= STOnodesStart) && (j <= STOnodesEnd)))
             if (ksPath_Latency(i,j,k) <= requiredLAT_MS)
               kthPathLatency(i,j,k) = 1;
-              %kthPathLatency(j,i,k) = 1;
+              %kthPathLatency(j,i,k) = 1;   % Since the matrix is always symmetric
             end
           end
         end
