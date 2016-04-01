@@ -101,6 +101,14 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
       [ksPath_Dist(i,j,:),ksPath_Paths{i,j}] = graphkshortestpaths(weightedEdgeSparseGraph, sourceNode, destNode, kPaths);
       % Store distance found for a specific set of source and destination nodes to the latency matrix
       ksPath_Latency(i,j,:) = ksPath_Dist(i,j,:) * minChannelLatency;
+      % Check that at least k shortest paths have been found for the current set of source and destination nodes
+      if (size(ksPath_Paths{i,j},2) ~= kPaths)
+          copyPath = ksPath_Paths{i,j};
+        % Copy pahts until the k paths exist
+        while (size(ksPath_Paths{i,j},2) ~= 3)
+          ksPath_Paths{i,j} = [ksPath_Paths{i,j},copyPath];
+        end
+      end
       % Find if the path found contains any switches for every k-th path
       for k = 1:kPaths
         % Extract k-th path for current source and destination nodes exluding the destination node (hence, the -1)
