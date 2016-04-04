@@ -45,6 +45,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   % Column 14 -> IT failure cause
   % Column 15 -> NET failure cause
   % Column 16 -> Allocated path latencies
+  % Column 17 -> Arrival time
   requiredCPU = request{1};
   requiredMEM = request{2};
   requiredSTO = request{3};
