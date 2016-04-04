@@ -215,6 +215,21 @@ NETutilization_T3 = zeros(1,size(time,2));
 completeResourceMap_T1 = dataCenterMap_T1.completeResourceMap;
 completeResourceMap_T2 = dataCenterMap_T2.completeResourceMap;
 completeResourceMap_T3 = dataCenterMap_T3.completeResourceMap;
+maxLatency_T1 = zeros(1,size(time,2));
+minLatency_T1 = zeros(1,size(time,2));
+averageLatency_T1 = zeros(1,size(time,2));
+reqLatencyCM_T1 = zeros(1,size(time,2));
+reqLatencyMS_T1 = zeros(1,size(time,2));
+maxLatency_T2 = zeros(1,size(time,2));
+minLatency_T2 = zeros(1,size(time,2));
+averageLatency_T2 = zeros(1,size(time,2));
+reqLatencyCM_T2 = zeros(1,size(time,2));
+reqLatencyMS_T2 = zeros(1,size(time,2));
+maxLatency_T3 = zeros(1,size(time,2));
+minLatency_T3 = zeros(1,size(time,2));
+averageLatency_T3 = zeros(1,size(time,2));
+reqLatencyCM_T3 = zeros(1,size(time,2));
+reqLatencyMS_T3 = zeros(1,size(time,2));
 
 % Evaluate total bandwidth - Type 1
 bandwidthMap_T1 = dataCenterMap_T1.bandwidthMap.completeBandwidthOriginal;
@@ -590,6 +605,36 @@ for t = 1:tTime
   nBlocked_T1(t) = size(blocked_T1,1);                      % Count the number of requests found
   nBlocked_T2(t) = size(blocked_T2,1);                      % Count the number of requests found
   nBlocked_T3(t) = size(blocked_T3,1);                      % Count the number of requests found
+
+  % Type 1 latency allocated
+  if (requestDB_T1{t,11} == 1)    % Check if the request was successfully allocated
+    latencyAllocated_T1 = requestDB_T1{t,16};
+    maxLatency_T1(t) = max([latencyAllocated_T1{:}]);
+    minLatency_T1(t) = min([latencyAllocated_T1{:}]);
+    averageLatency_T1(t) = sum([latencyAllocated_T1{:}],2)/size([latencyAllocated_T1{:}],2);
+  end
+  reqLatencyCM_T1(t) = requestDB_T1{t,6};
+  reqLatencyMS_T1(t) = requestDB_T1{t,7};
+
+  % Type 2 latency allocated
+  if (requestDB_T2{t,11} == 1)    % Check if the request was successfully allocated
+    latencyAllocated_T2 = requestDB_T2{t,16};
+    maxLatency_T2(t) = max([latencyAllocated_T2{:}]);
+    minLatency_T2(t) = min([latencyAllocated_T2{:}]);
+    averageLatency_T2(t) = sum([latencyAllocated_T2{:}],2)/size([latencyAllocated_T2{:}],2);
+  end
+  reqLatencyCM_T2(t) = requestDB_T2{t,6};
+  reqLatencyMS_T2(t) = requestDB_T2{t,7};
+
+  % Type 3 latency allocated
+  if (requestDB_T3{t,11} == 1)    % Check if the request was successfully allocated
+    latencyAllocated_T3 = requestDB_T3{t,16};
+    maxLatency_T3(t) = max([latencyAllocated_T3{:}]);
+    minLatency_T3(t) = min([latencyAllocated_T3{:}]);
+    averageLatency_T3(t) = sum([latencyAllocated_T3{:}],2)/size([latencyAllocated_T3{:}],2);
+  end
+  reqLatencyCM_T3(t) = requestDB_T3{t,6};
+  reqLatencyMS_T3(t) = requestDB_T3{t,7};
 end
 
 figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
@@ -745,6 +790,41 @@ legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneou
 title('Request no. vs Network utilization');
 
 % LATENCY ALLOCATION (REQUEST group vs LATENCY ALLOCATED - min, average, max graph)
+figure ('Name', 'Latency Allocated', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+plot(time,averageLatency_T1,'s');
+hold on;
+plot(time,minLatency_T1,'o');
+plot(time,maxLatency_T1,'x');
+plot(time,reqLatencyCM_T1,'+');
+plot(time,reqLatencyMS_T1,'*');
+xlabel('Request no.');
+ylabel('Latency (ns)');
+legend('Average latency', 'Minimum latency', 'Maximum latency', 'Requested CPU-MEM latency', 'Requested MEM-STO latency','location','northwest');
+title('Request no. vs Latency - Homogenous racks (Homogeneous blades)');
+
+figure ('Name', 'Latency Allocated', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+plot(time,averageLatency_T2,'s');
+hold on;
+plot(time,minLatency_T2,'o');
+plot(time,maxLatency_T2,'x');
+plot(time,reqLatencyCM_T2,'+');
+plot(time,reqLatencyMS_T2,'*');
+xlabel('Request no.');
+ylabel('Latency (ns)');
+legend('Average latency', 'Minimum latency', 'Maximum latency', 'Requested CPU-MEM latency', 'Requested MEM-STO latency','location','northwest');
+title('Request no. vs Latency - Heterogeneous racks (Homogeneous blades)');
+
+figure ('Name', 'Latency Allocated', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+plot(time,averageLatency_T3,'s');
+hold on;
+plot(time,minLatency_T3,'o');
+plot(time,maxLatency_T3,'x');
+plot(time,reqLatencyCM_T3,'+');
+plot(time,reqLatencyMS_T3,'*');
+xlabel('Request no.');
+ylabel('Latency (ns)');
+legend('Average latency', 'Minimum latency', 'Maximum latency', 'Requested CPU-MEM latency', 'Requested MEM-STO latency','location','northwest');
+title('Request no. vs Latency - Heterogeneous racks (Heterogeneous blades)');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Clean up & display log
