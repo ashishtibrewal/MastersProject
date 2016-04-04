@@ -1030,7 +1030,21 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % 3rd dimension = Rack number
   
   % TODO THIS NEEDS TO BE CHANGED TO CONSIDER DIFFERENT UNITS INSIDE A SLOT
-  holdTimeMap = zeros(nSlots, nBlades, nRacks);
+  %holdTimeMap = zeros(nSlots, nBlades, nRacks);
+  
+  % IT resource hold time map
+  holdTimeMapIT = cell(nSlots, nBlades, nRacks);
+  for i = 1:size(holdTimeMapIT,3)
+    for j = 1:size(holdTimeMapIT,2)
+      for k = 1:size(holdTimeMapIT,1)
+        holdTimeMapIT{k,j,i} = cell(1,nUnits);   % Initialize each cell with nUnits elements
+      end
+    end
+  end
+  
+  % NET resource hold time map
+  holdTimeMapNETSize = completeMatrixSize;
+  holdTimeMapIT = cell(holdTimeMapNETSize);
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Pack all maps into a single struct
@@ -1049,7 +1063,8 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   dataCenterMap.latencyMap = latencyMap;
   dataCenterMap.latencyMapLinear = latencyMapLinear;
   dataCenterMap.bandwidthMap = bandwidthMap;
-  dataCenterMap.holdTimeMap = holdTimeMap;
+  dataCenterMap.holdTimeMapIT = holdTimeMapIT;
+  dataCenterMap.holdTimeMapNET = holdTimeMapNET;
   dataCenterMap.shortestPathMap = shortestPathMap; 
   
 end

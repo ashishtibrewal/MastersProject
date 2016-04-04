@@ -169,6 +169,12 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
       % Increment database index
       requestDBindex = requestDBindex + 1;
     end
+    
+    % TODO Update hold time maps (Decrement by timestep on each iteration)
+    % If element is non-zero reduce by timestep, if zero, reset/add value
+    % to resource available map (both IT and NET). Also need to change
+    % the resourceAllocation function to update hold time maps.
+    
   end
 
   % Plot blocking probability
