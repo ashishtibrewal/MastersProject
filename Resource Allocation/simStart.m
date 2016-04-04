@@ -113,10 +113,10 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
       request = requestDB(requestDBindex,:);
 
       % Display required resources for request on the prompt
-      str = sprintf('Type %d - Requests generated (Time: %ds): %d', type, t, currentRequests);
+      str = sprintf('Type %d - Requests generated (Time: %ds): %d. Serving request: %d', type, t, currentRequests, i);
       disp(str);
       requestString = sprintf(' %d', request{1:7});
-      str = sprintf('Requried resouces (Type %d - Request no. %d): %s', type, requestDBindex, requestString);
+      str = sprintf('Requried resouces (Request no. %d): %s', requestDBindex, requestString);
       disp(str);
 
       %profile on;         % Turn on profiler
