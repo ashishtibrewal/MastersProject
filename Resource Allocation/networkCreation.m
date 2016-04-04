@@ -1044,7 +1044,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   
   % NET resource hold time map
   holdTimeMapNETSize = completeMatrixSize;
-  holdTimeMapIT = cell(holdTimeMapNETSize);
+  holdTimeMapNET = cell(holdTimeMapNETSize);
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Pack all maps into a single struct
