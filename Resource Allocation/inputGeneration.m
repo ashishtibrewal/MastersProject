@@ -1,4 +1,4 @@
-function requestDB = inputGeneration(nRequests)
+function requestDB = inputGeneration(nRequests, timeStep)
 % Function to generate the input that feeds into the resource allocation 
 % algorithm
 %   Funtion return values:
@@ -52,7 +52,16 @@ function requestDB = inputGeneration(nRequests)
   holdTimeMin = 1;                        % In s (i.e. seconds)
   holdTimeMax = 1000;                     % In s (i.e. seconds)
   
-  requestDB = cell(nRequests, 16);        % Matrix to store all generated requests (Each row contains a different request)
+  arrivalRateMin = 0 * timeStep;          % Minimum number of requests generated for a timestep (i.e. requests per second)
+  arrivalRateMax = 5 * timeStep;          % Maximum number of requests generated for a timestep (i.e. requests per second)
+  arrivalRateAverage = 3 * timeStep;      % Average number of requests generated for a timestep (i.e. lambda in a Poisson pdf)
+  lambda = arrivalRateAverage;
+  
+  totalRequestsGenerated = 0;             % Initialize total requests generated
+  DBindex = 1;                            % Initialize database index
+  time = 0;                               % Stores value of time (in seconds)
+  
+  requestDB = cell(nRequests, 17);        % Matrix to store all generated requests (Each row contains a different request)
   % Column  1 -> CPU
   % Column  2 -> Memory
   % Column  3 -> Storage
@@ -69,6 +78,7 @@ function requestDB = inputGeneration(nRequests)
   % Column 14 -> IT failure cause
   % Column 15 -> NET failure cause
   % Column 16 -> Allocated path latencies
+  % Column 17 -> Arrival time
   
   distributionPlot = 0;   % Flag variable to check if anything needs to be plotted
   scatterPlot = 0;
@@ -87,104 +97,134 @@ function requestDB = inputGeneration(nRequests)
   % CPU-MEM logarithm (base) factor
   logBaseCPU_MEM = 1.4;
   
-  % Iterate to generate the required number of requests
-  for i = 1:nRequests
-    % CPU
-    nCPU = randi([cpuMin,cpuMax]);
-    if (mod(nCPU,2) ~= 0)   % Check to prevent odd number of CPUs
-      nCPU = nCPU + 1;
+  % Start infinite loop to simulate time (in seconds) - Break out once the 
+  % required number of requests have been generated
+  while(1) 
+    % Requests generated for current timestep
+    currentRequests = poissrnd(lambda,[1,1]);   % Generate a random number from a Poisson distribution
+    
+    % Check to prevent total requests going over the limit
+    if ((totalRequestsGenerated + currentRequests) > nRequests)
+      currentRequests = nRequests - totalRequestsGenerated;
     end
     
-    % Memory
-    nMEM = round(logb(nCPU,logBaseCPU_MEM));   %nMEM = round(logb(nCPU,2));
-    if (mod(nMEM,2) ~= 0)   % Check to prevent odd number of MEMs
-      nMEM = nMEM + 1;
+    % Increment total requests generated
+    totalRequestsGenerated = totalRequestsGenerated + currentRequests;
+    
+    % Iterate to generate the required number of requests for current timestep
+    for i = 1:currentRequests
+      % CPU
+      nCPU = randi([cpuMin,cpuMax]);
+      if (mod(nCPU,2) ~= 0)   % Check to prevent odd number of CPUs
+        nCPU = nCPU + 1;
+      end
+      
+      % Memory
+      nMEM = round(logb(nCPU,logBaseCPU_MEM));   %nMEM = round(logb(nCPU,2));
+      if (mod(nMEM,2) ~= 0)   % Check to prevent odd number of MEMs
+        nMEM = nMEM + 1;
+      end
+      
+      % Storage
+      nSTO = randi([storageMin,storageMax]);
+      if (mod(nSTO,2) ~= 0)   % Check to prevent odd number of STOs
+        nSTO = nSTO + 1;
+      end
+      
+      % CPU - Memory bandwidth
+      nBAN_CM = randi((bandwidthMaxCM/bandwidthMinCM)) * bandwidthMinCM;
+      
+      % Memory - Storage bandwidth
+      nBAN_MS = randi((bandwidthMaxMS/bandwidthMinMS)) * bandwidthMinMS;
+      
+      % CPU - Memory latency
+      nLAT_CM = randi([(latencyMinCM/latencyRangeCM),(latencyMaxCM/latencyRangeCM)]) * latencyRangeCM;
+      
+      % Memory - Storage latency
+      nLAT_MS = randi([(latencyMinMS/latencyRangeMS),(latencyMaxMS/latencyRangeMS)]) * latencyRangeMS;
+      
+      % Request holdtime
+      nHDT = randi((holdTimeMax/holdTimeMin)) * holdTimeMin;
+      
+      % Boundary checks
+      if (nCPU < cpuMin)
+        nCPU = cpuMin;
+      elseif (nCPU > cpuMax)
+        nCPU = cpuMax;
+      end
+      
+      if (nMEM < memoryMin)
+        nMEM = memoryMin;
+      elseif (nMEM > memoryMax)
+        nMEM = memoryMax;
+      end
+      
+      if (nSTO < storageMin)
+        nSTO = storageMin;
+      elseif (nSTO > storageMax)
+        nSTO = storageMax;
+      end
+      
+      if (nBAN_CM < bandwidthMinCM)
+        nBAN_CM = bandwidthMinCM;
+      elseif (nBAN_CM > bandwidthMaxCM)
+        nBAN_CM = bandwidthMaxCM;
+      end
+      
+      if (nBAN_MS < bandwidthMinMS)
+        nBAN_MS = bandwidthMinMS;
+      elseif (nBAN_MS > bandwidthMaxMS)
+        nBAN_MS = bandwidthMaxMS;
+      end
+      
+      if (nLAT_CM < latencyMinCM)
+        nLAT_CM = latencyMinCM;
+      elseif (nLAT_CM > latencyMaxCM)
+        nLAT_CM = latencyMaxCM;
+      end
+      
+      if (nLAT_MS < latencyMinMS)
+        nLAT_MS = latencyMinMS;
+      elseif (nLAT_MS > latencyMaxMS)
+        nLAT_MS = latencyMaxMS;
+      end
+      
+      if (nHDT < holdTimeMin)
+        nHDT = holdTimeMin;
+      elseif (nHDT > holdTimeMax)
+        nHDT = holdTimeMax;
+      end
+      
+      % Arrival-time
+      AT = time;
+      
+      % Collect/store data generated over i iterations
+      requestDB(DBindex,:) = {nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0, {}, {}, 'NONE', 'NONE', {}, AT};
+      %testRequest = {64,128,256,100,50,10000,20000,4000,0,0,0,{},{},'NONE','NONE',{}, AT};    % Test request used for debugging
+      %requestDB(i,:) = testRequest;
+  
+      if (scatterPlot == 1)
+        % Store all iteration numbers/values
+        is(:,DBindex) = i;
+        % Store all nCPU values
+        nCPUs(:,DBindex) = nCPU;
+        nMEMs(:,DBindex) = nMEM;
+        nSTOs(:,DBindex) = nSTO;
+        nBAN_CMs(:,DBindex) = nBAN_CM;
+        nLAT_CMs(:,DBindex) = nLAT_CM;
+      end
+      
+      % Increment database index
+      DBindex = DBindex + 1;
     end
     
-    % Storage
-    nSTO = randi([storageMin,storageMax]);
-    if (mod(nSTO,2) ~= 0)   % Check to prevent odd number of STOs
-      nSTO = nSTO + 1;
-    end
+    % Increment time (i.e. increment for each timestep)
+    time = time + timeStep;
     
-    % CPU - Memory bandwidth
-    nBAN_CM = randi((bandwidthMaxCM/bandwidthMinCM)) * bandwidthMinCM;
-    
-    % Memory - Storage bandwidth
-    nBAN_MS = randi((bandwidthMaxMS/bandwidthMinMS)) * bandwidthMinMS;
-    
-    % CPU - Memory latency
-    nLAT_CM = randi([(latencyMinCM/latencyRangeCM),(latencyMaxCM/latencyRangeCM)]) * latencyRangeCM;
-    
-    % Memory - Storage latency
-    nLAT_MS = randi([(latencyMinMS/latencyRangeMS),(latencyMaxMS/latencyRangeMS)]) * latencyRangeMS;
-    
-    % Request holdtime
-    nHDT = randi((holdTimeMax/holdTimeMin)) * holdTimeMin;
-    
-    % Boundary checks
-    if (nCPU < cpuMin)
-      nCPU = cpuMin;
-    elseif (nCPU > cpuMax)
-      nCPU = cpuMax;
-    end
-    
-    if (nMEM < memoryMin)
-      nMEM = memoryMin;
-    elseif (nMEM > memoryMax)
-      nMEM = memoryMax;
-    end
-    
-    if (nSTO < storageMin)
-      nSTO = storageMin;
-    elseif (nSTO > storageMax)
-      nSTO = storageMax;
-    end
-    
-    if (nBAN_CM < bandwidthMinCM)
-      nBAN_CM = bandwidthMinCM;
-    elseif (nBAN_CM > bandwidthMaxCM)
-      nBAN_CM = bandwidthMaxCM;
-    end
-    
-    if (nBAN_MS < bandwidthMinMS)
-      nBAN_MS = bandwidthMinMS;
-    elseif (nBAN_MS > bandwidthMaxMS)
-      nBAN_MS = bandwidthMaxMS;
-    end
-    
-    if (nLAT_CM < latencyMinCM)
-      nLAT_CM = latencyMinCM;
-    elseif (nLAT_CM > latencyMaxCM)
-      nLAT_CM = latencyMaxCM;
-    end
-    
-    if (nLAT_MS < latencyMinMS)
-      nLAT_MS = latencyMinMS;
-    elseif (nLAT_MS > latencyMaxMS)
-      nLAT_MS = latencyMaxMS;
-    end
-    
-    if (nHDT < holdTimeMin)
-      nHDT = holdTimeMin;
-    elseif (nHDT > holdTimeMax)
-      nHDT = holdTimeMax;
-    end
-    
-    % Collect/store data generated over i iterations
-    %testRequest = {64,128,256,100,50,10000,20000,4000,0,0,0,{},{},'NONE','NONE',{}};    % Test request used for debugging
-    %requestDB(i,:) = testRequest;
-    requestDB(i,:) = {nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0, {}, {},'NONE','NONE',{}};
-
-    if (scatterPlot == 1)
-      % Store all iteration numbers/values
-      is(:,i) = i;
-      % Store all nCPU values
-      nCPUs(:,i) = nCPU;
-      nMEMs(:,i) = nMEM;
-      nSTOs(:,i) = nSTO;
-      nBAN_CMs(:,i) = nBAN_CM;
-      nLAT_CMs(:,i) = nLAT_CM;
+    % If all required requests have been generated, break out of the outer
+    % (time) loop
+    if (totalRequestsGenerated == nRequests)
+      break;
     end
   end
 

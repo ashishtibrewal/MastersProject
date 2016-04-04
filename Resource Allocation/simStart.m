@@ -2,7 +2,7 @@
 %%% Function that starts the simulation %%%
 %%+++++++++++++++++++++++++++++++++++++%%
 
-function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, requestDB, type)
+function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, requestDB, timeStep, type)
   % Function that sets up and starts the requried simulation
   
   % Import global macros
@@ -14,8 +14,9 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Evaluate IT & Network constants
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  nRequests = numRequests;    % Number of requests to generate
-  tTime = nRequests;          % Total time to simulate for (1 second for each request)
+  nRequests = numRequests;           % Number of requests to generate
+  tTime = max([requestDB{:,17}]);    % Total time to simulate - in seconds (maximum arrival-time in the request database, could also use the last value in the database)
+  requestDBindex = 1;                % Initialize database index
 
   % Initialize counter variables
   nCPUs = 0;
@@ -101,64 +102,72 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
 
   %nBlocked = zeros(1,size(time,2));
 
-  % Main time loop
-  for t = 1:tTime
-    % Each timestep, look at it's corresponding request in the request database
-    % INTER-ARRIVAL RATE = 1 request/second
-    requestDBindex = t;
-    % Extract request from the database for current timestep
-    request = requestDB(requestDBindex,:);
+  % Main time loop (each iteration simulates a timestep)
+  for t = 0:timeStep:tTime
+    % Extract number of requests generated for current timestep
+    currentRequests = size(find([requestDB{:,17}] == t),2);
+    
+    % Iterate over all requests for current timestep
+    for i = 1:currentRequests
+      % Extract request from the database for current timestep
+      request = requestDB(requestDBindex,:);
 
-    % Display required resources for request on the prompt
-    requestString = sprintf(' %d', request{1:7});
-    str = sprintf('Requried resouces (Type %d - Request no. %d): %s', type, requestDBindex, requestString);
-    disp(str);
+      % Display required resources for request on the prompt
+      str = sprintf('Type %d - Requests generated (Time: %ds): %d', type, t, currentRequests);
+      disp(str);
+      requestString = sprintf(' %d', request{1:7});
+      str = sprintf('Requried resouces (Type %d - Request no. %d): %s', type, requestDBindex, requestString);
+      disp(str);
 
-    %profile on;         % Turn on profiler
+      %profile on;         % Turn on profiler
 
-    %%%%%%%%%% IT & NET resource allocation %%%%%%%%%%
-    [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
+      %%%%%%%%%% IT & NET resource allocation %%%%%%%%%%
+      [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
 
-    %profile off;         % Turn off profiler
-    %profile viewer;     % View profiler results
+      %profile off;         % Turn off profiler
+      %profile viewer;     % View profiler results
 
-    % Update request database
-    requestDB(requestDBindex,12:16) = {ITresourceNodesAllocated,NETresourcesAllocaed,ITfailureCause,NETfailureCause,pathLatenciesAllocated};
+      % Update request database
+      requestDB(requestDBindex,12:16) = {ITresourceNodesAllocated,NETresourcesAllocaed,ITfailureCause,NETfailureCause,pathLatenciesAllocated};
 
-    % Plot usage
-    %plotUsage(dataCenterMap, dataCenterConfig);
+      % Plot usage
+      %plotUsage(dataCenterMap, dataCenterConfig);
 
-    % Plot heat map (Updated everytime a new request is being allocated/handled)
-    %if (mod(t,10) == 0)   % Plot (after) every 10 requests to avoid slowing down the simulation
-    %  plotHeatMap(dataCenterConfig, dataCenterMap, 'allMaps');
-    %end
+      % Plot heat map (Updated everytime a new request is being allocated/handled)
+      %if (mod(t,10) == 0)   % Plot (after) every 10 requests to avoid slowing down the simulation
+      %  plotHeatMap(dataCenterConfig, dataCenterMap, 'allMaps');
+      %end
 
-    %blocked = find(cell2mat(requestDB(1:t,9)) == 0);    % Find requests that have been blocked upto time t
-    %nBlocked(t) = size(blocked,1);                      % Count the number of requests found
+      %blocked = find(cell2mat(requestDB(1:t,9)) == 0);    % Find requests that have been blocked upto time t
+      %nBlocked(t) = size(blocked,1);                      % Count the number of requests found
 
-    %%%%%%%%%% Network resource allocation %%%%%%%%%%
-    % Need to get a better understanding of network resource allocation code
-    %NETallocationResult = FAILURE;
+      %%%%%%%%%% Network resource allocation %%%%%%%%%%
+      % Need to get a better understanding of network resource allocation code
+      %NETallocationResult = FAILURE;
 
-    %%%%%%%%%% Update requests database %%%%%%%%%%
-    % Doing this to "simulate parallelism" with IT and network resource
-    % allocation. Updating the request database after the IT resource
-    % allocation makes the updated database available to the network resource
-    % allocation unit which is not what we want. We want them to work
-    % independently although we would still require information on which IT
-    % resources have been allocated to this request (if any, i.e. Rack
-    % number, blade number, slot number and unit numbers for each slot). This
-    % can be stored in the request database (i.e. requestDB).
+      %%%%%%%%%% Update requests database %%%%%%%%%%
+      % Doing this to "simulate parallelism" with IT and network resource
+      % allocation. Updating the request database after the IT resource
+      % allocation makes the updated database available to the network resource
+      % allocation unit which is not what we want. We want them to work
+      % independently although we would still require information on which IT
+      % resources have been allocated to this request (if any, i.e. Rack
+      % number, blade number, slot number and unit numbers for each slot). This
+      % can be stored in the request database (i.e. requestDB).
 
-    % Update IT resource allocation column
-    requestDB{requestDBindex, ITresourceAllocStatusColumn} =  ITallocationResult;
+      % Update IT resource allocation column
+      requestDB{requestDBindex, ITresourceAllocStatusColumn} =  ITallocationResult;
 
-    % Update network resource allocation column
-    requestDB{requestDBindex, networkResourceAllocStatusColumn} =  NETallocationResult;
+      % Update network resource allocation column
+      requestDB{requestDBindex, networkResourceAllocStatusColumn} =  NETallocationResult;
 
-    % Update request status column
-    if (ITallocationResult == SUCCESS && NETallocationResult == SUCCESS)
-      requestDB{requestDBindex, requestStatusColumn} = SUCCESS;
+      % Update request status column
+      if (ITallocationResult == SUCCESS && NETallocationResult == SUCCESS)
+        requestDB{requestDBindex, requestStatusColumn} = SUCCESS;
+      end
+      
+      % Increment database index
+      requestDBindex = requestDBindex + 1;
     end
   end
 
