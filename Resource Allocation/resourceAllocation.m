@@ -12,7 +12,8 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   distanceMap = dataCenterMap.distanceMap;
   latencyMap = dataCenterMap.latencyMap;
   bandwidthMap = dataCenterMap.bandwidthMap;
-  holdTimeMap = dataCenterMap.holdTimeMap;
+  holdTimeMapIT = dataCenterMap.holdTimeMapIT;
+  holdTimeMapNET = dataCenterMap.holdTimeMapNET;
 
   % Extract data center configuration parameters
   nRacks = dataCenterConfig.nRacks;
