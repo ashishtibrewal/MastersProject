@@ -82,7 +82,7 @@ parfor i = 1:numTypes
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % Type 1
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      str = sprintf('Running simulation for Type 1 ....\n');
+      str = sprintf('Running simulation for Type 1 ...\n');
       disp(str);
 
       [requestDB_T1_L, dataCenterMap_T1_L] = simStart(dataCenterConfig_T1, numRequests, requestDB, timeStep, type);
@@ -93,7 +93,7 @@ parfor i = 1:numTypes
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % Type 2
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      str = sprintf('Running simulation for Type 2 ....\n');
+      str = sprintf('Running simulation for Type 2 ...\n');
       disp(str);
 
       [requestDB_T2_L, dataCenterMap_T2_L] = simStart(dataCenterConfig_T2, numRequests, requestDB, timeStep, type);
@@ -104,7 +104,7 @@ parfor i = 1:numTypes
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % Type 3
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      str = sprintf('Running simulation for Type 3 ....\n');
+      str = sprintf('Running simulation for Type 3 ...\n');
       disp(str);
 
       [requestDB_T3_L, dataCenterMap_T3_L] = simStart(dataCenterConfig_T3, numRequests, requestDB, timeStep, type);

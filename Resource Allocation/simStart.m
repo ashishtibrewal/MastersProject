@@ -88,7 +88,7 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Resource allocation main time loop
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  str = sprintf('Resource allocation started ...\n');
+  str = sprintf('Resource allocation started (Type %d) ...\n', type);
   disp(str);
 
   ITresourceAllocStatusColumn = 9;
@@ -176,7 +176,7 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
   % semilogy(time,(nBlocked/tTime));
   % title('Blocking probability');
 
-  str = sprintf('Resource allocation complete.\n');
+  str = sprintf('Resource allocation complete (Type %d).\n', type);
   disp(str);
 
 end
