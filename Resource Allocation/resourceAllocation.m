@@ -20,6 +20,8 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   nBlades = dataCenterConfig.nBlades;
   nSlots = dataCenterConfig.nSlots;
   nUnits = dataCenterConfig.nUnits;
+  nTORs = dataCenterConfig.nTOR;
+  nTOBs = dataCenterConfig.nTOB;
 
   unitSizeCPU = dataCenterConfig.unitSize.CPU;
   unitSizeMEM = dataCenterConfig.unitSize.MEM;
@@ -99,6 +101,9 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   CPUlocations = dataCenterMap.locationMap.CPUs;
   MEMlocations = dataCenterMap.locationMap.MEMs;
   STOlocations = dataCenterMap.locationMap.STOs;
+
+  % Extract locations of resources
+  ITlocations = dataCenterMap.completeResourceMap;
   
   % Find number of units in slots of specific resource types
   CPUunitsInSlots = [CPUlocations; completeUnitAvailableMap(CPUlocations)];
@@ -120,36 +125,8 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   availableMEMunits =  sum(MEMunitsInSlots(2,availableMEMslots),2);
   availableSTOunits =  sum(STOunitsInSlots(2,availableSTOslots),2);
   
-  % Evaluate contention ratios (Do it in terms of units and not total
-  % values since the allocation is being done in units) - Required
-  % resources over total available resource for each type
-  crCPU = reqCPUunits/size(availableCPUslots,2);
-  crMEM = reqMEMunits/size(availableMEMslots,2);
-  crSTO = reqSTOunits/size(availableSTOslots,2);
-  
-  contentionRatios = [crCPU,crMEM,crSTO];
-  maxCR = max(contentionRatios);
-  maxCRindex = find(contentionRatios == maxCR);
-
-  % If all types have equal contention ratios, prioritise CPUs 
-  if (size(maxCRindex,2) > 1)
-    maxCRindex = 1;
-  end
-
-  switch(maxCRindex)
-    case 1
-      maxCRswitch = 'CPU';
-      str = sprintf('Highest CR: CPU. Slot availability (units) -> CPU: %d (%d)  MEM: %d (%d)  STO: %d (%d)', nCPUslotAvailable, availableCPUunits, nMEMslotAvailable, availableMEMunits, nSTOslotAvailable, availableSTOunits);
-      disp(str);
-    case 2
-      maxCRswitch = 'MEM';
-      str = sprintf('Highest CR: MEM. Slot availability (units) -> CPU: %d (%d)  MEM: %d (%d)  STO: %d (%d)', nCPUslotAvailable, availableCPUunits, nMEMslotAvailable, availableMEMunits, nSTOslotAvailable, availableSTOunits);
-      disp(str);
-    case 3
-      maxCRswitch = 'STO';
-      str = sprintf('Highest CR: STO. Slot availability (units) -> CPU: %d (%d)  MEM: %d (%d)  STO: %d (%d)', nCPUslotAvailable, availableCPUunits, nMEMslotAvailable, availableMEMunits, nSTOslotAvailable, availableSTOunits);
-      disp(str);
-  end
+  str = sprintf('Slot availability (units) -> CPU: %d (%d)  MEM: %d (%d)  STO: %d (%d)', nCPUslotAvailable, availableCPUunits, nMEMslotAvailable, availableMEMunits, nSTOslotAvailable, availableSTOunits);
+  disp(str);
   
   %%%%%% MAIN IT RESOURCE ALLOCATION ALGORITHM %%%%%%
 
@@ -167,253 +144,87 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   % Primary scanning loop iterator (Jump to atleast the next rack)
   loopIncrement = nSlots * nBlades;
 
-  % Cell array to store all contention ratios (i.e. for each i-th iteration)
-  CRs = cell(1,size(contentionRatios,2));
+  ITresourceUnavailable = 0;    % Initialize/reset IT resource unavailable for every iteration of the loop
+  NETresourceUnavailable = 0;   % Initialize/reset NET resource unavailable for every iteration of the loop
+  ITsuccessful = FAILURE;       % Initialize/reset IT successful for every iteration of the loop
+  NETsuccessful = FAILURE;      % Initialize/reset NET successful for every iteration of the loop
+  heldITresources = {};         % Initialize/reset held IT resources for every iteration of the loop
+  heldNETresources = {};        % Initialize/reset held NET resources for every iteration of the loop
+  ITfailureCause = 'NONE';      % Initialize/reset IT resource allocation failure cause for every iteration of the loop
+  NETfailureCause = 'NONE';     % Initialize/reset NET resource allocation failure cause for every iteration of the loop
+  pathLatenciesAllocated = {};  % Initialize/reset path latencies for every iteration of the loop
 
-  % Main loop to iterate over all possible contention ratio switches starting from the primary contention ratio switch
-  for iCR = 1:size(contentionRatios,2)
-    ITresourceUnavailable = 0;    % Initialize/reset IT resource unavailable for every iteration of the loop
-    NETresourceUnavailable = 0;   % Initialize/reset NET resource unavailable for every iteration of the loop
-    ITsuccessful = FAILURE;       % Initialize/reset IT successful for every iteration of the loop
-    NETsuccessful = FAILURE;      % Initialize/reset NET successful for every iteration of the loop
-    heldITresources = {};         % Initialize/reset held IT resources for every iteration of the loop
-    heldNETresources = {};        % Initialize/reset held NET resources for every iteration of the loop
-    ITfailureCause = 'NONE';      % Initialize/reset IT resource allocation failure cause for every iteration of the loop
-    NETfailureCause = 'NONE';     % Initialize/reset NET resource allocation failure cause for every iteration of the loop
-    pathLatenciesAllocated = {};  % Initialize/reset path latencies for every iteration of the loop
-
-    % Store contention ratios
-    CRs{iCR} = maxCRswitch;
-    % Reset updated unit available map for every iteration (i.e. when using different contention ratio switches)
-    updatedUnitAvailableMap = completeUnitAvailableMap;
-    % Update/change contention ratio switch on every iteration
-    switch (iCR)
-      case 2
-        if (strcmp(CRs{iCR - 1},'CPU') == 1 || strcmp(CRs{iCR - 1},'STO') == 1)
-          CRs{iCR} = 'MEM';
+  nCPU_SlotsToScan = size(CPUlocations,2);  % Number of slots to scan
+  nMEM_SlotsToScan = size(MEMlocations,2);  % Number of slots to scan
+  nSTO_SlotsToScan = size(STOlocations,2);  % Number of slots to scan
+  totalSlotsToScan = size(ITlocations, 2);    % Total number of slots to scan
+  scanStartNode = (nTORs * nRacks) + (nTOBs * nBlades * nRacks) + 1;
+  % TODO Check all available slots to scan (including MEM and STO) - Dont need to do this since it's taken care of by the contention ratios
+  % TODO Check required slots is less than slots available
+  % TODO Change elseif slotNo section to else 
+  if ((nCPU_SlotsToScan == 0) || (availableCPUunits < minReqCPUslots))    % Break out of while loop since no (or not enough) CPU slots are available
+    ITresourceUnavailable = 1;
+    heldITresources = {};
+    ITfailureCause = 'CPU';   % Allocation failed due to unavailibility of CPUs
+  elseif ((nMEM_SlotsToScan == 0) || (availableMEMunits < minReqMEMslots))    % Break out of while loop since no (or not enough) MEM slots are available
+    ITresourceUnavailable = 1;
+    heldITresources = {};
+    ITfailureCause = 'MEM';   % Allocation failed due to unavailibility of MEMs
+  elseif ((nSTO_SlotsToScan == 0) || (availableSTOunits < minReqSTOslots))    % Break out of while loop since no (or not enough) STO slots are available
+    ITresourceUnavailable = 1;
+    heldITresources = {};
+    ITfailureCause = 'STO';   % Allocation failed due to unavailibility of STOs
+  else
+    for slotNo = scanStartNode:loopIncrement:totalSlotsToScan
+      %str = sprintf('Starting node: %d \n', ITlocations(slotNo));
+      %disp(str);
+      startSlot = slotNo;     % Start slot/node
+      [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startSlot, reqResourceUnits, updatedUnitAvailableMap);
+      % Check if all resources have been successfully found
+      if (ITsuccessful == SUCCESS)
+        % Locations of resources that are "held" for the current request
+        heldITresources = ITresourceNodes;
+        % TODO Add network allocation code - if network is successful, break out else start search for new 
+        % IT slots from next available resource node
+        [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes, pathLatenciesAllocated] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
+        if (NETsuccessful == SUCCESS)
+          heldNETresources = NETresourceLinks;
+          break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
         else
-          if (round(rand()) == 0)
-            CRs{iCR} = 'STO';
-          else
-            CRs{iCR} = 'CPU';
+          heldNETresources = {};
+          NETresourceUnavailable = 1;
+          %disp(NETfailureCause);
+          heldITresources = {};   % Free/empty held held resources cell network allocation failed for this set of IT resources
+          % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
+          updatedUnitAvailableMap(failureNodes) = 0;    % Set units available in failure nodes to be zero
+
+          % Find number of units in slots of specific resource types
+          CPUunitsInSlots_updated = [CPUlocations; updatedUnitAvailableMap(CPUlocations)];
+          MEMunitsInSlots_updated = [MEMlocations; updatedUnitAvailableMap(MEMlocations)];
+          STOunitsInSlots_updated = [STOlocations; updatedUnitAvailableMap(STOlocations)];
+
+          % Find slots of specific resource that have at least a single unit free/available
+          availableCPUslots_updated = find(CPUunitsInSlots_updated(2,:) > 0);
+          availableMEMslots_updated = find(MEMunitsInSlots_updated(2,:) > 0);
+          availableSTOslots_updated = find(STOunitsInSlots_updated(2,:) > 0);
+
+          % Find total units available in the available slots
+          availableCPUunits_updated =  sum(CPUunitsInSlots_updated(2,availableCPUslots_updated),2);
+          availableMEMunits_updated =  sum(MEMunitsInSlots_updated(2,availableMEMslots_updated),2);
+          availableSTOunits_updated =  sum(STOunitsInSlots_updated(2,availableSTOslots_updated),2);
+
+          % Need to do this check since the actual failure cause is not unavailibility of IT resources but the 
+          % unavailibility of NET resources
+          if (availableCPUunits_updated < reqCPUunits || availableMEMunits_updated < reqMEMunits || availableSTOunits_updated < reqSTOunits)
+            break;
           end
         end
-        str = sprintf('Switching CR: %s', CRs{iCR});
-        %disp(str);
-      
-      case 3
-        if ((strcmp(CRs{iCR - 2},'CPU') == 1 && strcmp(CRs{iCR - 1},'MEM') == 1) || (strcmp(CRs{iCR - 1},'CPU') == 1 && strcmp(CRs{iCR - 2},'MEM') == 1))
-          CRs{iCR} = 'STO';
-        elseif ((strcmp(CRs{iCR - 2},'CPU') == 1 && strcmp(CRs{iCR - 1},'STO') == 1) || (strcmp(CRs{iCR - 1},'CPU') == 1 && strcmp(CRs{iCR - 2},'STO') == 1))
-          CRs{iCR} = 'MEM';
-        elseif ((strcmp(CRs{iCR - 2},'MEM') == 1 && strcmp(CRs{iCR - 1},'STO') == 1) || (strcmp(CRs{iCR - 1},'MEM') == 1 && strcmp(CRs{iCR - 2},'STO') == 1))
-          CRs{iCR} = 'CPU';
-        end
-        str = sprintf('Switching CR: %s', CRs{iCR});
-        %disp(str);
-    end
-        
-    % Switch on the i-th contention ratio
-    switch (CRs{iCR})
-      case 'CPU'
-        nCPU_SlotsToScan = size(CPUlocations,2);  % Number of slots to scan
-        % TODO Check all available slots to scan (including MEM and STO) - Dont need to do this since it's taken care of by the contention ratios
-        % TODO Check required slots is less than slots available
-        % TODO Change elseif slotNo section to else 
-        if ((nCPU_SlotsToScan == 0) || (availableCPUunits < minReqCPUslots))    % Break out of while loop since no (or not enough) CPU slots are available
-          ITresourceUnavailable = 1;
-          heldITresources = {};
-          ITfailureCause = 'CPU';   % Allocation failed due to unavailibility of CPUs
-        else
-          for slotNo = 1:loopIncrement:nCPU_SlotsToScan
-            %str = sprintf('Starting CPU node: %d, %d, %d \n', CPUlocations(availableCPUslots(slotNo)), CPUlocations(availableCPUslots(1,slotNo)),CPUunitsInSlots(1,availableCPUslots(slotNo)));
-            %disp(str);
-            startCPUslot = CPUlocations(slotNo); % CPU start slot/node
-            [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startCPUslot, reqResourceUnits, updatedUnitAvailableMap);
-            % Check if all resources have been successfully found
-            if (ITsuccessful == SUCCESS)
-              % Locations of resources that are "held" for the current request
-              heldITresources = ITresourceNodes;
-              % TODO Add network allocation code - if network is successful, break out else start search for new 
-              % IT slots from next available resource node
-              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes, pathLatenciesAllocated] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
-              if (NETsuccessful == SUCCESS)
-                heldNETresources = NETresourceLinks;
-                break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
-              else
-                heldNETresources = {};
-                NETresourceUnavailable = 1;
-                %disp(NETfailureCause);
-                heldITresources = {};   % Free/empty held held resources cell network allocation failed for this set of IT resources
-                % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
-                updatedUnitAvailableMap(failureNodes) = 0;    % Set units available in failure nodes to be zero
-
-                % Find number of units in slots of specific resource types
-                CPUunitsInSlots_updated = [CPUlocations; updatedUnitAvailableMap(CPUlocations)];
-                MEMunitsInSlots_updated = [MEMlocations; updatedUnitAvailableMap(MEMlocations)];
-                STOunitsInSlots_updated = [STOlocations; updatedUnitAvailableMap(STOlocations)];
-
-                % Find slots of specific resource that have at least a single unit free/available
-                availableCPUslots_updated = find(CPUunitsInSlots_updated(2,:) > 0);
-                availableMEMslots_updated = find(MEMunitsInSlots_updated(2,:) > 0);
-                availableSTOslots_updated = find(STOunitsInSlots_updated(2,:) > 0);
-
-                % Find total units available in the available slots
-                availableCPUunits_updated =  sum(CPUunitsInSlots_updated(2,availableCPUslots_updated),2);
-                availableMEMunits_updated =  sum(MEMunitsInSlots_updated(2,availableMEMslots_updated),2);
-                availableSTOunits_updated =  sum(STOunitsInSlots_updated(2,availableSTOslots_updated),2);
-
-                % Need to do this check since the actual failure cause is not unavailibility of IT resources but the 
-                % unavailibility of NET resources
-                if (availableCPUunits_updated < reqCPUunits || availableMEMunits_updated < reqMEMunits || availableSTOunits_updated < reqSTOunits)
-                  break;
-                end
-              end
-            else
-              ITresourceUnavailable = 1;
-              heldITresources = {};
-              pathLatenciesAllocated = {};
-              break;      % Break out of the inner loop since required number of IT resources couldn't be found
-            end
-          end
-          if (ITsuccessful == SUCCESS && NETsuccessful == SUCCESS)
-            break;    % Break out of outer loop
-          end
-        end
-        % Break out of the outer loop if required number of IT resources are unavailable
-        if (ITresourceUnavailable == 1)
-          break;    % Break out of outer loop
-        end
-
-        case 'MEM'
-        nMEM_SlotsToScan = size(MEMlocations,2);  % Number of slots to scan
-        if ((nMEM_SlotsToScan == 0) || (availableMEMunits < minReqMEMslots))    % Break out of while loop since no (or not enough) MEM slots are available
-          ITresourceUnavailable = 1;
-          heldITresources = {};
-          ITfailureCause = 'MEM';   % Allocation failed due to unavailibility of MEMs
-        else
-          for slotNo = 1:loopIncrement:nMEM_SlotsToScan
-            startMEMslot = MEMlocations(slotNo); % MEM start slot/node
-            [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startMEMslot, reqResourceUnits, updatedUnitAvailableMap);
-            % Check if all resources have been successfully found
-            if (ITsuccessful == SUCCESS)
-              % Locations of resources that are "held" for the current request
-              heldITresources = ITresourceNodes;
-              % TODO Add network allocation code - if network is successful, break out else start search for new 
-              % IT slots from next available resource node
-              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes, pathLatenciesAllocated] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
-              if (NETsuccessful == SUCCESS)
-                heldNETresources = NETresourceLinks;
-                break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
-              else
-                heldNETresources = {};
-                NETresourceUnavailable = 1;
-                %disp(NETfailureCause);
-                heldITresources = {};   % Free/empty held held resources cell network allocation failed for this set of IT resources
-                % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
-                updatedUnitAvailableMap(failureNodes) = 0;    % Set units available in failure nodes to be zero
-
-                % Find number of units in slots of specific resource types
-                CPUunitsInSlots_updated = [CPUlocations; updatedUnitAvailableMap(CPUlocations)];
-                MEMunitsInSlots_updated = [MEMlocations; updatedUnitAvailableMap(MEMlocations)];
-                STOunitsInSlots_updated = [STOlocations; updatedUnitAvailableMap(STOlocations)];
-
-                % Find slots of specific resource that have at least a single unit free/available
-                availableCPUslots_updated = find(CPUunitsInSlots_updated(2,:) > 0);
-                availableMEMslots_updated = find(MEMunitsInSlots_updated(2,:) > 0);
-                availableSTOslots_updated = find(STOunitsInSlots_updated(2,:) > 0);
-
-                % Find total units available in the available slots
-                availableCPUunits_updated =  sum(CPUunitsInSlots_updated(2,availableCPUslots_updated),2);
-                availableMEMunits_updated =  sum(MEMunitsInSlots_updated(2,availableMEMslots_updated),2);
-                availableSTOunits_updated =  sum(STOunitsInSlots_updated(2,availableSTOslots_updated),2);
-
-                % Need to do this check since the actual failure cause is not unavailibility of IT resources but the 
-                % unavailibility of NET resources
-                if (availableCPUunits_updated < reqCPUunits || availableMEMunits_updated < reqMEMunits || availableSTOunits_updated < reqSTOunits)
-                  break;
-                end
-              end
-            else
-              ITresourceUnavailable = 1;
-              heldITresources = {};
-              pathLatenciesAllocated = {};
-              break;      % Break out of the inner loop since required number of IT resources couldn't be found
-            end
-          end
-          if (ITsuccessful == SUCCESS && NETsuccessful == SUCCESS)
-            break;    % Break out of outer loop
-          end
-        end
-        % Break out of the outer loop if required number of IT resources are unavailable
-        if (ITresourceUnavailable == 1)
-          break;    % Break out of outer loop
-        end
-
-        case 'STO'
-        nSTO_SlotsToScan = size(STOlocations,2);  % Number of slots to scan
-        if ((nSTO_SlotsToScan == 0) || (availableSTOunits < minReqSTOslots))    % Break out of while loop since no (or not enough) STO slots are available
-          ITresourceUnavailable = 1;
-          heldITresources = {};
-          ITfailureCause = 'STO';   % Allocation failed due to unavailibility of STOs
-        else
-          for slotNo = 1:loopIncrement:nSTO_SlotsToScan
-            startSTOslot = STOlocations(slotNo); % STO start slot/node
-            [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startSTOslot, reqResourceUnits, updatedUnitAvailableMap);
-            % Check if all resources have been successfully found
-            if (ITsuccessful == SUCCESS)
-              % Locations of resources that are "held" for the current request
-              heldITresources = ITresourceNodes;
-              % TODO Add network allocation code - if network is successful, break out else start search for new 
-              % IT slots from next available resource node
-              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes, pathLatenciesAllocated] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
-              if (NETsuccessful == SUCCESS)
-                heldNETresources = NETresourceLinks;
-                break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
-              else
-                heldNETresources = {};
-                NETresourceUnavailable = 1;
-                %disp(NETfailureCause);
-                heldITresources = {};   % Free/empty held held resources cell network allocation failed for this set of IT resources
-                % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
-                updatedUnitAvailableMap(failureNodes) = 0;    % Set units available in failure nodes to be zero
-
-                % Find number of units in slots of specific resource types
-                CPUunitsInSlots_updated = [CPUlocations; updatedUnitAvailableMap(CPUlocations)];
-                MEMunitsInSlots_updated = [MEMlocations; updatedUnitAvailableMap(MEMlocations)];
-                STOunitsInSlots_updated = [STOlocations; updatedUnitAvailableMap(STOlocations)];
-
-                % Find slots of specific resource that have at least a single unit free/available
-                availableCPUslots_updated = find(CPUunitsInSlots_updated(2,:) > 0);
-                availableMEMslots_updated = find(MEMunitsInSlots_updated(2,:) > 0);
-                availableSTOslots_updated = find(STOunitsInSlots_updated(2,:) > 0);
-
-                % Find total units available in the available slots
-                availableCPUunits_updated =  sum(CPUunitsInSlots_updated(2,availableCPUslots_updated),2);
-                availableMEMunits_updated =  sum(MEMunitsInSlots_updated(2,availableMEMslots_updated),2);
-                availableSTOunits_updated =  sum(STOunitsInSlots_updated(2,availableSTOslots_updated),2);
-
-                % Need to do this check since the actual failure cause is not unavailibility of IT resources but the 
-                % unavailibility of NET resources
-                if (availableCPUunits_updated < reqCPUunits || availableMEMunits_updated < reqMEMunits || availableSTOunits_updated < reqSTOunits)
-                  break;
-                end
-              end
-            else
-              ITresourceUnavailable = 1;
-              heldITresources = {};
-              pathLatenciesAllocated = {};
-              break;      % Break out of the inner loop since required number of IT resources couldn't be found
-            end
-          end
-          if (ITsuccessful == SUCCESS && NETsuccessful == SUCCESS)
-            break;    % Break out of outer loop
-          end
-        end
-        % Break out of the outer loop if required number of IT resources are unavailable
-        if (ITresourceUnavailable == 1)
-          break;    % Break out of outer loop
-        end
+      else
+        ITresourceUnavailable = 1;
+        heldITresources = {};
+        pathLatenciesAllocated = {};
+        break;      % Break out of the inner loop since required number of IT resources couldn't be found
+      end
     end
   end
 
