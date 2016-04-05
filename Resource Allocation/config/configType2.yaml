@@ -23,7 +23,7 @@ distances:
   TOB_InterBlade: 5   # Distance between TOBs between different blades (within the same rack)
   TOB_slot: 10        # Distance between TOBs and and slots within the same blade (within the same rack)
   slot: 2             # Distance between slots within the same blad (within the same rack)
-  
+
 ########################################
 # Specify the network topology and switch delays for each 
 # hierarchial level (i.e. for rack-level, blade-level and slot-level
@@ -44,6 +44,9 @@ switchDelay:
   TOD: 300          # Main (Top of data center) switch delay - Currently not used
   TOR: 200          # Top of rack switch delay
   TOB: 100          # Top of blade switch delay
+
+# Default Tx & Rx delays (in nanoseconds)
+defaultDelay: 500   # Default Tx and Rx delay
 
 # Number of channels between two nodes (i.e. a node can be a rack/blade/slot)
 channels:
