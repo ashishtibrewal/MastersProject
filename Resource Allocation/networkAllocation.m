@@ -21,6 +21,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   minChannelLatency = dataCenterConfig.bounds.minChannelLatency;
   TOR_delay = dataCenterConfig.switchDelay.TOR;
   TOB_delay = dataCenterConfig.switchDelay.TOB;
+  defaultDelay = dataCenterConfig.defaultDelay;
   
   % Obtain the required resource values from the request
   % Column  1 -> CPU
@@ -128,6 +129,8 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
           % Update latency map
           ksPath_Latency(i,j,k) = ksPath_Latency(i,j,k) + totalSwitchDelay;
         end
+        % Add the default delay (i.e. Tx and Rx delays) to every k-th path
+        ksPath_Latency(i,j,k) = ksPath_Latency(i,j,k) + defaultDelay;
         %disp(ksPath_Paths{i,j}{k}(1:numel(ksPath_Paths{i,j}{k})));
         %disp(ksPath_Latency(i,j,k));
       end
