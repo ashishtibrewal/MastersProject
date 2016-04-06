@@ -107,6 +107,10 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
     % Extract number of requests generated for current timestep
     currentRequests = size(find([requestDB{:,17}] == t),2);
     
+    % Display time and the number of requests generated
+    %str = sprintf('Time: %ds - Requests: %d', t, currentRequests);
+    %disp(str);
+    
     % Iterate over all requests for current timestep
     for i = 1:currentRequests
       % Extract request from the database for current timestep
