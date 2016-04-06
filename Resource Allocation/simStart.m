@@ -102,7 +102,7 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
 
   %nBlocked = zeros(1,size(time,2));
 
-  % Main time loop (each iteration simulates a timestep)
+  % Main time loop stating at t = 0 (each iteration simulates a timestep)
   for t = 0:timeStep:tTime
     % Extract number of requests generated for current timestep
     currentRequests = size(find([requestDB{:,17}] == t),2);
