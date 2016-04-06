@@ -101,7 +101,14 @@ function requestDB = inputGeneration(nRequests, timeStep)
   % required number of requests have been generated
   while(1) 
     % Requests generated for current timestep
-    currentRequests = poissrnd(lambda,[1,1]);   % Generate a random number from a Poisson distribution
+    %currentRequests = poissrnd(lambda,[1,1]);   % Generate a random number from a Poisson distribution
+    currentRequests = 1;                         % Maximum of 1 request per second
+    
+    % Generate time (in seconds) at which the request is generated
+    arrivalTime = poissrnd(10,[1,1]);             % Generate a random arrival time from a Poisson distribution
+    
+    % Increment time (i.e. increment upto arrival time of current request)
+    time = time + arrivalTime;
     
     % Check to prevent total requests going over the limit
     if ((totalRequestsGenerated + currentRequests) > nRequests)
@@ -217,9 +224,6 @@ function requestDB = inputGeneration(nRequests, timeStep)
       % Increment database index
       DBindex = DBindex + 1;
     end
-    
-    % Increment time (i.e. increment for each timestep)
-    time = time + timeStep;
     
     % If all required requests have been generated, break out of the outer
     % (time) loop

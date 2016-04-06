@@ -31,7 +31,7 @@ FAILURE = 0;          % Assign a value to global macro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 numRequests = 1000;     % Total number of requests to generate
 numTypes = 3;           % Total number of configuration types
-timeStep = 1;           % dt (i.e. Simulation timestep in seconds)
+timeStep = 1;           % dt (i.e. Simulation timestep in seconds) - ALWAYS KEEP THIS ONE OR ELSE A REQUEST CAN BE MISSED
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Import configuration files (YAML config files)
