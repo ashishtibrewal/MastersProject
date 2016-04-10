@@ -143,7 +143,7 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
     %plotUsage(dataCenterMap, dataCenterConfig);
 
     % Plot heat map (Updated everytime a new request is being allocated/handled)
-    %if (mod(t,10) == 0)   % Plot (after) every 10 requests to avoid slowing down the simulation
+    %if (mod(req,50) == 0)   % Plot (after) every 50 requests to avoid slowing down the simulation
     %  plotHeatMap(dataCenterConfig, dataCenterMap, 'allMaps');
     %end
 
