@@ -1,4 +1,4 @@
-function requestDB = inputGeneration(nRequests, timeStep)
+function requestDB = inputGeneration(nRequests)
 % Function to generate the input that feeds into the resource allocation 
 % algorithm
 %   Funtion return values:
@@ -52,10 +52,10 @@ function requestDB = inputGeneration(nRequests, timeStep)
   holdTimeMin = 1;                        % In s (i.e. seconds)
   holdTimeMax = 1000;                     % In s (i.e. seconds)
   
-  arrivalRateMin = 0 * timeStep;          % Minimum number of requests generated for a timestep (i.e. requests per second)
-  arrivalRateMax = 5 * timeStep;          % Maximum number of requests generated for a timestep (i.e. requests per second)
-  arrivalRateAverage = 3 * timeStep;      % Average number of requests generated for a timestep (i.e. lambda in a Poisson pdf)
-  lambda = arrivalRateAverage;
+  arrivalRateMin = 0;                     % Minimum number of requests generated per second
+  arrivalRateMax = 5;                     % Maximum number of requests generated per second
+  arrivalRateAverage = 3;                 % Average number of requests generated per second (i.e. lambda in a Poisson pdf)
+  lambda = arrivalRateAverage;            % Lamba (Mean/average) used in the Poisson distribution to generate arrival-time
   
   totalRequestsGenerated = 0;             % Initialize total requests generated
   DBindex = 1;                            % Initialize database index
@@ -100,8 +100,8 @@ function requestDB = inputGeneration(nRequests, timeStep)
   % Start infinite loop to simulate time (in seconds) - Break out once the 
   % required number of requests have been generated
   while(1) 
-    % Requests generated for current timestep
-    %currentRequests = poissrnd(lambda,[1,1]);   % Generate a random number from a Poisson distribution
+    % Number of requests generated for current time
+    %currentRequests = poissrnd(lambda,[1,1]);   % Generate a random number of requests from a Poisson distribution
     currentRequests = 1;                         % Maximum of 1 request per second
     
     % Generate time (in seconds) at which the request is generated
@@ -118,7 +118,7 @@ function requestDB = inputGeneration(nRequests, timeStep)
     % Increment total requests generated
     totalRequestsGenerated = totalRequestsGenerated + currentRequests;
     
-    % Iterate to generate the required number of requests for current timestep
+    % Iterate to generate the required number of requests for current time
     for i = 1:currentRequests
       % CPU
       nCPU = randi([cpuMin,cpuMax]);

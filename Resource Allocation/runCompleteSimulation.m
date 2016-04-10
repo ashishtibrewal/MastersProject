@@ -31,7 +31,6 @@ FAILURE = 0;          % Assign a value to global macro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 numRequests = 1000;     % Total number of requests to generate
 numTypes = 3;           % Total number of configuration types
-timeStep = 1;           % dt (i.e. Simulation timestep in seconds) - ALWAYS KEEP THIS ONE OR ELSE A REQUEST CAN BE MISSED
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Import configuration files (YAML config files)
@@ -58,7 +57,7 @@ dataCenterConfig = dataCenterConfig_T1;         % Store it as a separate variabl
 str = sprintf('Input generation started ...');
 disp(str);
 
-requestDB = inputGeneration(numRequests, timeStep);    % Pre-generating randomised requests - Note that the resource allocation is only allowed to look at the request for the current iteration
+requestDB = inputGeneration(numRequests);    % Pre-generating randomised requests - Note that the resource allocation is only allowed to look at the request for the current iteration
 
 str = sprintf('Input generation complete.\n');
 disp(str);
@@ -75,7 +74,7 @@ requestDB_T3 = [];
 dataCenterMap_T3 = [];
 
 % Start parallel for loop to run multiple threads
-parfor i = 1:numTypes
+for i = 1:numTypes
   type = i;     % Type of configuration/setup
   switch (i)
     case 1
@@ -85,7 +84,7 @@ parfor i = 1:numTypes
       str = sprintf('Running simulation for Type 1 ...\n');
       disp(str);
 
-      [requestDB_T1_L, dataCenterMap_T1_L] = simStart(dataCenterConfig_T1, numRequests, requestDB, timeStep, type);
+      [requestDB_T1_L, dataCenterMap_T1_L] = simStart(dataCenterConfig_T1, numRequests, requestDB, type);
       requestDB_T1 = [requestDB_T1, requestDB_T1_L];
       dataCenterMap_T1 = [dataCenterMap_T1, dataCenterMap_T1_L];
 
@@ -96,7 +95,7 @@ parfor i = 1:numTypes
       str = sprintf('Running simulation for Type 2 ...\n');
       disp(str);
 
-      [requestDB_T2_L, dataCenterMap_T2_L] = simStart(dataCenterConfig_T2, numRequests, requestDB, timeStep, type);
+      [requestDB_T2_L, dataCenterMap_T2_L] = simStart(dataCenterConfig_T2, numRequests, requestDB, type);
       requestDB_T2 = [requestDB_T2, requestDB_T2_L];
       dataCenterMap_T2 = [dataCenterMap_T2, dataCenterMap_T2_L];
 
@@ -107,7 +106,7 @@ parfor i = 1:numTypes
       str = sprintf('Running simulation for Type 3 ...\n');
       disp(str);
 
-      [requestDB_T3_L, dataCenterMap_T3_L] = simStart(dataCenterConfig_T3, numRequests, requestDB, timeStep, type);
+      [requestDB_T3_L, dataCenterMap_T3_L] = simStart(dataCenterConfig_T3, numRequests, requestDB, type);
       requestDB_T3 = [requestDB_T3, requestDB_T3_L];
       dataCenterMap_T3 = [dataCenterMap_T3, dataCenterMap_T3_L];
   end
