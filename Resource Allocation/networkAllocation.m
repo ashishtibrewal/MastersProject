@@ -349,7 +349,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
           end
         end
         if (BANsuccess == FAILURE)
-          failureNodesInternal = [failureNodesInternal, Allnodes(i), ALLnodes(j)];
+          failureNodesInternal = [failureNodesInternal, ALLnodes(i), ALLnodes(j)];
         end
         if (pathsSuccessfulIndex < maxPaths)    % Check to prevent index going out of range
           pathsSuccessfulIndex = pathsSuccessfulIndex + 1;    % Increment paths successful index every iteration of the j-th loop
