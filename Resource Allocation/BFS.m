@@ -114,12 +114,14 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
   
   % Run until the queue is empty (i.e. the whole graph is traversed)
   while (q.size() > 0)
-    currentNode = q.remove();     % Remove head of queue
+    currentNode = q.remove();                           % Remove head of queue
     adjaceny = completeConnectivityMap(currentNode(3),:);   % Extract it's information from the connectivity/adjacency matrix
-    neighbours = find(adjaceny == 1);   % Find current nodes neighbours
+    neighbours = find(adjaceny == 1);                   % Find current nodes neighbours
+    neighboursIndex = randperm(numel(neighbours));      % Find a random permutation to be used as vector indices
     
     % Iterate through all it's neighbours
-    for nNode = 1:size(neighbours,2)
+    for node = 1:size(neighbours,2)
+      nNode = neighboursIndex(node);                    % Extract a node inxed from the neighboursIndex vector
       if (graphNodes{1,neighbours(nNode)} == inf)
         graphNodes{1,neighbours(nNode)} = graphNodes{1,currentNode(3)} + completeDistanceMap(currentNode(3),neighbours(nNode));
         graphNodes{2,neighbours(nNode)} = graphNodes{3,currentNode(3)};
