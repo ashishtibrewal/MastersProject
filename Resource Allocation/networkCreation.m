@@ -90,7 +90,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       rackConnectivity = zeros(nTOR * nRacks);    % Need to remove since it's unused
       for TOR_NoDim1 = 1:(nTOR * nRacks)
         completeConnectivity(TOR_NoDim1,(TOR_NoDim1 + 1)) = 1;
-        % Also need to connect is around since it's a ring topology
+        % Also need to connect it around since it's a ring topology
         if (TOR_NoDim1 == 1)
           completeConnectivity(TOR_NoDim1,(nTOR * nRacks)) = 1;
         end
@@ -200,7 +200,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       bladeConnectivity = zeros(nBlades, nBlades, nRacks);     % Need to remove since it's unused
       for TOB_NoDim1 = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
         completeConnectivity(TOB_NoDim1,(TOB_NoDim1 + 1)) = 1;
-        % Also need to connect is around since it's a ring topology
+        % Also need to connect it around since it's a ring topology
         if (TOB_NoDim1 == ((nTOR * nRacks) + 1))
           completeConnectivity(TOB_NoDim1,((nTOR * nRacks) + (nTOB * nBlades * nRacks))) = 1;
         end
@@ -312,7 +312,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       slotConnectivity = zeros(nSlots, nSlots, nBlades, nRacks);   % Need to remove since it's unused
       for slotNoDim1 = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))
         completeConnectivity(slotNoDim1,(slotNoDim1 + 1)) = 1;
-        % Also need to connect is around since it's a ring topology
+        % Also need to connect it around since it's a ring topology
         if (slotNoDim1 == ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + 1))
           completeConnectivity(slotNoDim1,((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))) = 1;
         end
