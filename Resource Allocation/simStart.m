@@ -2,7 +2,7 @@
 %%% Function that starts the simulation %%%
 %%+++++++++++++++++++++++++++++++++++++%%
 
-function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, requestDB, timeStep, type)
+function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, requestDB, type)
   % Function that sets up and starts the requried simulation
   
   % Import global macros
@@ -15,8 +15,8 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
   % Evaluate IT & Network constants
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   nRequests = numRequests;           % Number of requests to generate
-  tTime = max([requestDB{:,17}]);    % Total time to simulate - in seconds (maximum arrival-time in the request database, could also use the last value in the database)
-  requestDBindex = 1;                % Initialize database index
+  %tTime = max([requestDB{:,17}]);    % Total time to simulate - in seconds (maximum arrival-time in the request database, could also use the last value in the database)
+  tTime = max([requestDB{:,17}]) + [requestDB{numRequests,8}]; % Total time to simulate should be last arrival time + last hold time
 
   % Initialize counter variables
   nCPUs = 0;
@@ -101,83 +101,85 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
   %time = 1:tTime;
 
   %nBlocked = zeros(1,size(time,2));
+  
+  % Initialise previous time
+  previousTime = 0;
 
-  % Main time loop stating at t = 0 (each iteration simulates a timestep)
-  for t = 0:timeStep:tTime
-    % Extract number of requests generated for current timestep
-    currentRequests = size(find([requestDB{:,17}] == t),2);
+  % Main request loop stating at top of the database
+  for req = 1:numRequests
+    % Extract current time
+    currentTime = [requestDB{req,17}];
+    
+    % Evaluate time difference
+    diffTime = currentTime - previousTime;
+    
+    % Update previous time
+    previousTime = currentTime;
     
     % Display time and the number of requests generated
     %str = sprintf('Time: %ds - Requests: %d', t, currentRequests);
     %disp(str);
     
-    % Iterate over all requests for current timestep
-    for i = 1:currentRequests
-      % Extract request from the database for current timestep
-      request = requestDB(requestDBindex,:);
+    % Extract current request from the request database
+    request = requestDB(req,:);
 
-      % Display required resources for request on the prompt
-      str = sprintf('Type %d - Requests generated (Time: %ds): %d. Serving request: %d', type, t, currentRequests, i);
-      disp(str);
-      requestString = sprintf(' %d', request{1:7});
-      str = sprintf('Requried resouces (Request no. %d): %s', requestDBindex, requestString);
-      disp(str);
+    % Display required resources for request on the prompt
+    requestString = sprintf(' %d', request{1:7});
+    str = sprintf('Type %d - Time: %ds - Requried resouces (Request no. %d): %s', type, currentTime, req, requestString);
+    disp(str);
 
-      %profile on;         % Turn on profiler
+    %profile on;         % Turn on profiler
 
-      %%%%%%%%%% IT & NET resource allocation %%%%%%%%%%
-      [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
+    %%%%%%%%%% IT & NET resource allocation %%%%%%%%%%
+    [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
 
-      %profile off;         % Turn off profiler
-      %profile viewer;     % View profiler results
+    %profile off;         % Turn off profiler
+    %profile viewer;     % View profiler results
 
-      % Update request database
-      requestDB(requestDBindex,12:16) = {ITresourceNodesAllocated,NETresourcesAllocaed,ITfailureCause,NETfailureCause,pathLatenciesAllocated};
+    % Update request database
+    requestDB(req,12:16) = {ITresourceNodesAllocated,NETresourcesAllocaed,ITfailureCause,NETfailureCause,pathLatenciesAllocated};
 
-      % Plot usage
-      %plotUsage(dataCenterMap, dataCenterConfig);
+    % Plot usage
+    %plotUsage(dataCenterMap, dataCenterConfig);
 
-      % Plot heat map (Updated everytime a new request is being allocated/handled)
-      %if (mod(t,10) == 0)   % Plot (after) every 10 requests to avoid slowing down the simulation
-      %  plotHeatMap(dataCenterConfig, dataCenterMap, 'allMaps');
-      %end
+    % Plot heat map (Updated everytime a new request is being allocated/handled)
+    %if (mod(t,10) == 0)   % Plot (after) every 10 requests to avoid slowing down the simulation
+    %  plotHeatMap(dataCenterConfig, dataCenterMap, 'allMaps');
+    %end
 
-      %blocked = find(cell2mat(requestDB(1:t,9)) == 0);    % Find requests that have been blocked upto time t
-      %nBlocked(t) = size(blocked,1);                      % Count the number of requests found
+    %blocked = find(cell2mat(requestDB(1:t,9)) == 0);    % Find requests that have been blocked upto time t
+    %nBlocked(t) = size(blocked,1);                      % Count the number of requests found
 
-      %%%%%%%%%% Network resource allocation %%%%%%%%%%
-      % Need to get a better understanding of network resource allocation code
-      %NETallocationResult = FAILURE;
+    %%%%%%%%%% Network resource allocation %%%%%%%%%%
+    % Need to get a better understanding of network resource allocation code
+    %NETallocationResult = FAILURE;
 
-      %%%%%%%%%% Update requests database %%%%%%%%%%
-      % Doing this to "simulate parallelism" with IT and network resource
-      % allocation. Updating the request database after the IT resource
-      % allocation makes the updated database available to the network resource
-      % allocation unit which is not what we want. We want them to work
-      % independently although we would still require information on which IT
-      % resources have been allocated to this request (if any, i.e. Rack
-      % number, blade number, slot number and unit numbers for each slot). This
-      % can be stored in the request database (i.e. requestDB).
+    %%%%%%%%%% Update requests database %%%%%%%%%%
+    % Doing this to "simulate parallelism" with IT and network resource
+    % allocation. Updating the request database after the IT resource
+    % allocation makes the updated database available to the network resource
+    % allocation unit which is not what we want. We want them to work
+    % independently although we would still require information on which IT
+    % resources have been allocated to this request (if any, i.e. Rack
+    % number, blade number, slot number and unit numbers for each slot). This
+    % can be stored in the request database (i.e. requestDB).
 
-      % Update IT resource allocation column
-      requestDB{requestDBindex, ITresourceAllocStatusColumn} =  ITallocationResult;
+    % Update IT resource allocation column
+    requestDB{req, ITresourceAllocStatusColumn} =  ITallocationResult;
 
-      % Update network resource allocation column
-      requestDB{requestDBindex, networkResourceAllocStatusColumn} =  NETallocationResult;
+    % Update network resource allocation column
+    requestDB{req, networkResourceAllocStatusColumn} =  NETallocationResult;
 
-      % Update request status column
-      if (ITallocationResult == SUCCESS && NETallocationResult == SUCCESS)
-        requestDB{requestDBindex, requestStatusColumn} = SUCCESS;
-      end
-      
-      % Increment database index
-      requestDBindex = requestDBindex + 1;
+    % Update request status column
+    if (ITallocationResult == SUCCESS && NETallocationResult == SUCCESS)
+      requestDB{req, requestStatusColumn} = SUCCESS;
     end
     
-    % TODO Update hold time maps (Decrement by timestep on each iteration)
-    % If element is non-zero reduce by timestep, if zero, reset/add value
+    % TODO Update hold time maps (Decrement by diffTime on each iteration)
+    % If element is non-zero reduce by diffTime, if zero, reset/add value
     % to resource available map (both IT and NET). Also need to change
     % the resourceAllocation function to update hold time maps.
+    % IMPORTANT NOTE: Subtract using the diffTime factor
     
   end
 
