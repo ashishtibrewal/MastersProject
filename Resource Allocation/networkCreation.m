@@ -72,7 +72,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   %%%%%% RACK (TOR) CONNECTIVITY %%%%%%
   switch (rackTopology)
     case 'Fully-connected'
-      rackConnectivity = ones(nTOR * nRacks);
+      rackConnectivity = ones(nTOR * nRacks);   % Need to remove since it's unused
       for TOR_NoDim1 = 1:(nTOR * nRacks)
         for TOR_NoDim2 = (TOR_NoDim1 + 1):(nTOR * nRacks)
           completeConnectivity(TOR_NoDim1,TOR_NoDim2) = 1;
@@ -80,8 +80,21 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       end
       
     case 'Line'    % Adjacent nodes (i.e.TORs) are connected to each other
+      rackConnectivity = zeros(nTOR * nRacks);    % Need to remove since it's unused
+      for TOR_NoDim1 = 1:((nTOR * nRacks) - 1)
+        completeConnectivity(TOR_NoDim1,(TOR_NoDim1 + 1)) = 1;
+        %completeConnectivity(TOR_NoDim1,(TOR_NoDim1 - 1)) = 1; % Don't need to do this since we only care about the upper half of the matrix
+      end
     
     case 'Ring'    % Similar to the line topology but with end nodes connected to each other too (i.e. node 1 and node n have to be connected)
+      rackConnectivity = zeros(nTOR * nRacks);    % Need to remove since it's unused
+      for TOR_NoDim1 = 1:(nTOR * nRacks)
+        completeConnectivity(TOR_NoDim1,(TOR_NoDim1 + 1)) = 1;
+        % Also need to connect is around since it's a ring topology
+        if (TOR_NoDim1 == 1)
+          completeConnectivity(TOR_NoDim1,(nTOR * nRacks)) = 1;
+        end
+      end
       
     %case 'Star'   % Make the first/middle rack (i.e. first TOR in the first rack) the center of the star
       
@@ -163,7 +176,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       % IMPORTANT NOTE: Fully-connected within a rack (No inter-rack blades
       % are connected directly and all traffic has to go through the TOR
       % switch)
-      bladeConnectivity = ones(nBlades, nBlades, nRacks);
+      bladeConnectivity = ones(nBlades, nBlades, nRacks);     % Need to remove since it's unused
       mod_offset = 0;       % Initialize mod offset outside/before the outer loop
       for TOB_NoDim1 = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
         TOB_counter = 0;  % Reset TOB counter for every source TOB node
@@ -178,8 +191,20 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       end
       
     case 'Line'    % Adjacent nodes (i.e.TOBs) are connected to each other
+      bladeConnectivity = zeros(nBlades, nBlades, nRacks);     % Need to remove since it's unused
+      for TOB_NoDim1 = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
+        completeConnectivity(TOB_NoDim1,(TOB_NoDim1 + 1)) = 1;
+      end
     
     case 'Ring'    % Similar to the line topology but with end nodes connected to each other too (i.e. node 1 and node n have to be connected)
+      bladeConnectivity = zeros(nBlades, nBlades, nRacks);     % Need to remove since it's unused
+      for TOB_NoDim1 = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
+        completeConnectivity(TOB_NoDim1,(TOB_NoDim1 + 1)) = 1;
+        % Also need to connect is around since it's a ring topology
+        if (TOB_NoDim1 == ((nTOR * nRacks) + 1))
+          completeConnectivity(TOB_NoDim1,((nTOR * nRacks) + (nTOB * nBlades * nRacks))) = 1;
+        end
+      end
       
     %case 'Star'   % Make the first/middle blade (i.e. first TOB in the first blade) in each rack the center of the star
     
@@ -261,7 +286,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     % are connected directly and all traffic has to go through the TOB
     % switch)
     case 'Fully-connected'
-      slotConnectivity = ones(nSlots, nSlots, nBlades, nRacks);
+      slotConnectivity = ones(nSlots, nSlots, nBlades, nRacks);   % Need to remove since it's unused
       
       slotsLimit = nSlots - 1;
       slotCounter = 0;
@@ -278,8 +303,20 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       end
       
     case 'Line'    % Adjacent nodes (i.e.SLOTs) are connected to each other
-    
+      slotConnectivity = zeros(nSlots, nSlots, nBlades, nRacks);   % Need to remove since it's unused
+      for slotNoDim1 = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))
+        completeConnectivity(slotNoDim1,(slotNoDim1 + 1)) = 1;
+      end
+
     case 'Ring'    % Similar to the line topology but with end nodes connected to each other too (i.e. node 1 and node n have to be connected)
+      slotConnectivity = zeros(nSlots, nSlots, nBlades, nRacks);   % Need to remove since it's unused
+      for slotNoDim1 = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))
+        completeConnectivity(slotNoDim1,(slotNoDim1 + 1)) = 1;
+        % Also need to connect is around since it's a ring topology
+        if (slotNoDim1 == ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + 1))
+          completeConnectivity(slotNoDim1,((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))) = 1;
+        end
+      end
       
     %case 'Star'   % Make the first/middle slot in every blade in every rack the center of the star
       
