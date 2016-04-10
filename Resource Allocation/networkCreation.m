@@ -192,17 +192,29 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       
     case 'Line'    % Adjacent nodes (i.e.TOBs) are connected to each other
       bladeConnectivity = zeros(nBlades, nBlades, nRacks);     % Need to remove since it's unused
+      TOB_counter = 0;
       for TOB_NoDim1 = ((nTOR * nRacks) + 1):(((nTOR * nRacks) + (nTOB * nBlades * nRacks)) - 1)
-        completeConnectivity(TOB_NoDim1,(TOB_NoDim1 + 1)) = 1;
+        TOB_counter = TOB_counter + 1;
+        if (TOB_counter == (nTOB * nBlades))    % Check if all TOBs in a rack have been covered
+          TOB_counter = 0;    % Reset TOB counter when moving to a new rack
+        else
+          completeConnectivity(TOB_NoDim1,(TOB_NoDim1 + 1)) = 1;
+        end
       end
     
     case 'Ring'    % Similar to the line topology but with end nodes connected to each other too (i.e. node 1 and node n have to be connected)
       bladeConnectivity = zeros(nBlades, nBlades, nRacks);     % Need to remove since it's unused
+      TOB_counter = 0;
       for TOB_NoDim1 = ((nTOR * nRacks) + 1):(((nTOR * nRacks) + (nTOB * nBlades * nRacks)) - 1)
-        completeConnectivity(TOB_NoDim1,(TOB_NoDim1 + 1)) = 1;
-        % Also need to connect it around since it's a ring topology
-        if (TOB_NoDim1 == ((nTOR * nRacks) + 1))
-          completeConnectivity(TOB_NoDim1,((nTOR * nRacks) + (nTOB * nBlades * nRacks))) = 1;
+        TOB_counter = TOB_counter + 1;
+        if (TOB_counter == (nTOB * nBlades))    % Check if all TOBs in a rack have been covered
+          TOB_counter = 0;    % Reset TOB counter when moving to a new rack
+        else
+          completeConnectivity(TOB_NoDim1,(TOB_NoDim1 + 1)) = 1;
+          % Also need to connect it around since it's a ring topology
+          if (TOB_counter == 1)   % Check if the current node is the first TOB in the rack
+            completeConnectivity(TOB_NoDim1,((TOB_NoDim1 + (nTOB * nBlades)) - 1)) = 1;
+          end
         end
       end
       
@@ -304,17 +316,29 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       
     case 'Line'    % Adjacent nodes (i.e.SLOTs) are connected to each other
       slotConnectivity = zeros(nSlots, nSlots, nBlades, nRacks);   % Need to remove since it's unused
+      slotCounter = 0;
       for slotNoDim1 = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + 1):(((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks)) - 1)
-        completeConnectivity(slotNoDim1,(slotNoDim1 + 1)) = 1;
+        slotCounter = slotCounter + 1;
+        if (slotCounter == nSlots)          % Check if all slots in a blade have been covered
+          slotCounter = 0;    % Reset slot counter when moving to a new blade
+        else
+          completeConnectivity(slotNoDim1,(slotNoDim1 + 1)) = 1;
+        end
       end
 
     case 'Ring'    % Similar to the line topology but with end nodes connected to each other too (i.e. node 1 and node n have to be connected)
       slotConnectivity = zeros(nSlots, nSlots, nBlades, nRacks);   % Need to remove since it's unused
+      slotCounter = 0;
       for slotNoDim1 = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + 1):(((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks)) - 1)
-        completeConnectivity(slotNoDim1,(slotNoDim1 + 1)) = 1;
-        % Also need to connect it around since it's a ring topology
-        if (slotNoDim1 == ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + 1))
-          completeConnectivity(slotNoDim1,((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))) = 1;
+        slotCounter = slotCounter + 1;
+        if (slotCounter == nSlots)          % Check if all slots in a blade have been covered
+          slotCounter = 0;    % Reset slot counter when moving to a new blade
+        else
+          completeConnectivity(slotNoDim1,(slotNoDim1 + 1)) = 1;
+          % Also need to connect it around since it's a ring topology
+          if (slotCounter == 1)
+            completeConnectivity(slotNoDim1,((slotNoDim1 + nSlots) - 1)) = 1;
+          end
         end
       end
       
