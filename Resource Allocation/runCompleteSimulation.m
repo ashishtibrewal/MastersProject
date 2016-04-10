@@ -631,6 +631,18 @@ for r = 1:tRequests
   end
 end
 
+% Change all zeros in the allocated latency matrices to NaNs to avoid plotting them.
+maxLatency_T1(maxLatency_T1 == 0) = NaN;
+minLatency_T1(minLatency_T1 == 0) = NaN;
+averageLatency_T1(averageLatency_T1 == 0) = NaN;
+maxLatency_T2(maxLatency_T2 == 0) = NaN;
+minLatency_T2(minLatency_T2 == 0) = NaN;
+averageLatency_T2(averageLatency_T2 == 0) = NaN;
+maxLatency_T3(maxLatency_T3 == 0) = NaN;
+minLatency_T3(minLatency_T3 == 0) = NaN;
+averageLatency_T3(averageLatency_T3 == 0) = NaN;
+
+% Start plotting
 figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
 semilogy(CPUutilization_T1,(nBlocked_T1/nRequests),'x-');
 hold on;
