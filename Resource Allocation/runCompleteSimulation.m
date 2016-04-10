@@ -74,7 +74,7 @@ requestDB_T3 = [];
 dataCenterMap_T3 = [];
 
 % Start parallel for loop to run multiple threads
-for i = 1:numTypes
+parfor i = 1:numTypes
   type = i;     % Type of configuration/setup
   switch (i)
     case 1
