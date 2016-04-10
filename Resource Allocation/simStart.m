@@ -1,7 +1,3 @@
-%%+++++++++++++++++++++++++++++++++++++%%
-%%% Function that starts the simulation %%%
-%%+++++++++++++++++++++++++++++++++++++%%
-
 function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, requestDB, type)
   % Function that sets up and starts the requried simulation
   
@@ -97,10 +93,6 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
 
   % Open figure - Updated when each request's resource allocation is complete
   %figure ('Name', 'Data Center Rack Usage (1st rack of each type)', 'NumberTitle', 'off', 'Position', [40, 100, 1200, 700]);
-
-  %time = 1:tTime;
-
-  %nBlocked = zeros(1,size(time,2));
   
   % Initialise previous time
   previousTime = 0;
@@ -130,11 +122,11 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
 
     %profile on;         % Turn on profiler
 
-    %%%%%%%%%% IT & NET resource allocation %%%%%%%%%%
+    % IT & NET resource allocation
     [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
 
     %profile off;         % Turn off profiler
-    %profile viewer;     % View profiler results
+    %profile viewer;      % View profiler results
 
     % Update request database
     requestDB(req,12:16) = {ITresourceNodesAllocated,NETresourcesAllocaed,ITfailureCause,NETfailureCause,pathLatenciesAllocated};
@@ -147,23 +139,7 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
     %  plotHeatMap(dataCenterConfig, dataCenterMap, 'allMaps');
     %end
 
-    %blocked = find(cell2mat(requestDB(1:t,9)) == 0);    % Find requests that have been blocked upto time t
-    %nBlocked(t) = size(blocked,1);                      % Count the number of requests found
-
-    %%%%%%%%%% Network resource allocation %%%%%%%%%%
-    % Need to get a better understanding of network resource allocation code
-    %NETallocationResult = FAILURE;
-
-    %%%%%%%%%% Update requests database %%%%%%%%%%
-    % Doing this to "simulate parallelism" with IT and network resource
-    % allocation. Updating the request database after the IT resource
-    % allocation makes the updated database available to the network resource
-    % allocation unit which is not what we want. We want them to work
-    % independently although we would still require information on which IT
-    % resources have been allocated to this request (if any, i.e. Rack
-    % number, blade number, slot number and unit numbers for each slot). This
-    % can be stored in the request database (i.e. requestDB).
-
+    % Update requests database
     % Update IT resource allocation column
     requestDB{req, ITresourceAllocStatusColumn} =  ITallocationResult;
 
@@ -175,19 +151,20 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
       requestDB{req, requestStatusColumn} = SUCCESS;
     end
     
+    % Update hold time maps
     % TODO Update hold time maps (Decrement by diffTime on each iteration)
     % If element is non-zero reduce by diffTime, if zero, reset/add value
     % to resource available map (both IT and NET). Also need to change
     % the resourceAllocation function to update hold time maps.
-    % IMPORTANT NOTE: Subtract using the diffTime factor
-    
+    % IMPORTANT NOTE: Subtract using the diffTime factor. Also need to make
+    % sure that requests that have been genereated at the same time (i.e.
+    % if there is more than a single request that needs to be served at the
+    % same time) get their resources allocated before updating the holdtime
+    % map - Another loop maybe required to do this that would checking the 
+    % number of requests generated at a particular time and serve all 
+    % before updating the holdtime map. 
   end
-
-  % Plot blocking probability
-  % figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
-  % semilogy(time,(nBlocked/tTime));
-  % title('Blocking probability');
-
+  
   str = sprintf('Resource allocation complete (Type %d).\n', type);
   disp(str);
 
