@@ -410,6 +410,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % an itself is zero)
   completeLatency(1:(completeLatencyMatrixSize+1):(completeLatencyMatrixSize ^ 2)) = 0;
   
+  % Extract distance values
   TOR_distIntraRack = dataCenterConfig.distances.TOR_IntraRack;
   TOR_distInterRack = dataCenterConfig.distances.TOR_InterRack;
   TOR_TOB_dist = dataCenterConfig.distances.TOR_TOB;
@@ -443,6 +444,7 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   end
   
   %%%%%% TOR DISTANCE %%%%%% 
+  % IMPORTANT NOTE: Distance between TORs within the same rack is the same (constant across all TORs within a rack)
   for TOR_NoDim1 = 1:(nTOR * nRacks)
     for TOR_NoDim2 = (TOR_NoDim1 + 1):(nTOR * nRacks)
       if (completeConnectivity(TOR_NoDim1,TOR_NoDim2) == 1) % Only has a finite distance if two nodes are connected
@@ -501,33 +503,26 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     end
   end
   
-  %%%%%% TOB DISTANCE %%%%%%  
-  % TODO THIS STILL NEEDS TO BE FIXED (BEFORE FIXING, CHANGE CONFIG FILE 
-  % ('fully-connected TOB/blade topology and nRacks to 4)
-%   for TOB_NoDim1 = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
-%     for TOB_NoDim2 = (TOB_NoDim1 + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
-%       if (completeConnectivity(TOB_NoDim1,TOB_NoDim2) == 1) % Only has a finite distance if two nodes are connected
-%         [TOB_NoDim1, TOB_NoDim2, ceil(TOB_NoDim1/(nTOB + (nTOR * nRacks))), ceil((TOB_NoDim2 - 1)/(nTOB + (nTOR * nRacks))), (nTOB * nBlades)]
-%         if (ceil(TOB_NoDim2/(nTOB + (nTOR * nRacks))) == ceil(TOB_NoDim1/(nTOB + (nTOR * nRacks)))) % If both TOBs are on the same blade
-%           completeDistance(TOB_NoDim1,TOB_NoDim2) = TOB_distIntraBlade;
-%         else
-%           completeDistance(TOB_NoDim1,TOB_NoDim2) = (ceil(TOB_NoDim2/(nTOB + (nTOR * nRacks))) - ceil(TOB_NoDim1/(nTOB + (nTOR * nRacks)))) * TOB_distInterBlade;
-%         end
-%         completeLatency(TOB_NoDim1,TOB_NoDim2) = completeDistance(TOB_NoDim1, TOB_NoDim2) * minChannelLatency;   % Update complete latency map
-%       end
-%     end
-%   end
+  %%%%%% TOB DISTANCE %%%%%%
+  % IMPORTANT NOTE: Distance between TOBs within the same blade is the same (constant across all TOBs within a blade)
+  TOB_num = 0;        % Initialize TOB num
   for TOB_NoDim1 = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
+    TOB_counter = 0;
     for TOB_NoDim2 = (TOB_NoDim1 + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
+      TOB_counter = TOB_counter + 1;
       if (completeConnectivity(TOB_NoDim1,TOB_NoDim2) == 1) % Only has a finite distance if two nodes are connected
-        if (abs(TOB_NoDim2 - TOB_NoDim1) < nTOB) % If both TOBs are on the same blade
+        if (TOB_counter < (nTOB - TOB_num)) % If both TOBs are on the same blade
           completeDistance(TOB_NoDim1, TOB_NoDim2) = TOB_distIntraBlade;
         else
           %[TOB_NoDim1, TOB_NoDim2, ceil(TOB_NoDim1/(nTOB + (nTOR * nRacks))), ceil((TOB_NoDim2 - 1)/(nTOB + (nTOR * nRacks))), (nTOB * nBlades)]
-          completeDistance(TOB_NoDim1,TOB_NoDim2) = (ceil(abs(TOB_NoDim2 - TOB_NoDim1)) - 1) * TOB_distInterBlade;
+          completeDistance(TOB_NoDim1,TOB_NoDim2) = abs(TOB_NoDim2 - TOB_NoDim1) * TOB_distInterBlade;
         end
         completeLatency(TOB_NoDim1,TOB_NoDim2) = completeDistance(TOB_NoDim1, TOB_NoDim2) * minChannelLatency;   % Update complete latency map
       end
+    end
+    TOB_num = TOB_num + 1;
+    if (TOB_num == nTOB)
+      TOB_num = 0;    % Reset TOB num counter
     end
   end
     
@@ -546,7 +541,6 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
       end
     end
   end
-  
 
   % SLOT DISTANCE - Slots 1 to n are an increasing distance away from each
   % other. Adjacent slots are 0.01 meters (i.e. 1 cm) away from each other.
@@ -576,11 +570,17 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     end
   end
   
-  %%%%%% SLOT DISTANCE %%%%%% 
-  % TODO Depending on the slot topology, update distance map. Currently all
-  % slots are assumed to be disconnected hence distance map doesn't need to
-  % be changed.
-  %completeLatency(slot,slot) = completeDistance(slot,slot) * minChannelLatency;   % Update complete latency map
+  %%%%%% SLOT DISTANCE %%%%%%
+  for slotNoDim1 = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))
+    slotCounter = 0;
+    for slotNoDim2 = (slotNoDim1 + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks))
+      slotCounter = slotCounter + 1;
+      if (completeConnectivity(slotNoDim1,slotNoDim2) == 1)
+        completeDistance(slotNoDim1,slotNoDim2) = slot_dist * slotCounter;
+      end
+      completeLatency(slotNoDim1,slotNoDim2) = completeDistance(slotNoDim1,slotNoDim2) * minChannelLatency;   % Update complete latency map
+    end
+  end
   
   % Convert upper-triangular matrix to a full matrix (Doing this since the matrix should be complete and symmetric)
   nNodes = size(completeDistance, 1);
