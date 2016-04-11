@@ -1,4 +1,6 @@
-function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems)
+function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, ...
+          NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated] = ...
+          resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems)
   % Function to allocate the IT resources
   % NEED TO PLAN AND TRY DIFFERENT APPROACHES.
   
