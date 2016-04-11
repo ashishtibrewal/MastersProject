@@ -42,8 +42,8 @@ function requestDB = inputGeneration(nRequests)
   
   latencyCM_MSfactor = 5;                 % "Scalibility" factor between CM and MS latency
   latencyRangeCM = 500;                  % Range of acceptable latency values (Must be a multiple of 500)
-  latencyMinCM = 500;                    % In ns (i.e. nanoseconds)
-  latencyMaxCM = 5000;                   % In ns (i.e. nanoseconds)
+  latencyMinCM = 1000;                   % In ns (i.e. nanoseconds)
+  latencyMaxCM = 3000;                   % In ns (i.e. nanoseconds)
   
   latencyMinMS = latencyMinCM * latencyCM_MSfactor;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (min) latency between MEM & STO
   latencyMaxMS = latencyMaxCM * latencyCM_MSfactor;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (max) latency between MEM & STO

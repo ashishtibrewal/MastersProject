@@ -51,6 +51,18 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   completeDistanceUpdated = completeDistance;                    % Store the original distance map that contains all the links
   linksToRemove = find(completeBandwidthMap < requiredBAN_CM);   % Based on CPU-MEM bandwith requirement. TODO could try with MEM-STO and see how the performance changes
   completeDistanceUpdated(linksToRemove) = Inf;                  % Disconnect/remove links that do not have enough bandwidth available to prevent the k-shortest paths algorithm from using them
+  
+  % Weigh distance matrix based on both the distance and bandwidth available
+  completeDistanceWeighted = completeDistanceUpdated;     % Initialise with updated matrix
+  for i = 1:size(completeDistanceUpdated,2)
+    for j = 1:size(completeDistanceUpdated,2)
+      % Check if a link exists and that there is bandwidth available on it
+      if ((completeDistanceUpdated(i,j) ~= Inf) && (completeBandwidthMap(i,j) > 0))
+        % Want to minimize f(x,y) = dist(x,y)/bandwidth(x,y)
+        completeDistanceWeighted(i,j) = completeDistanceUpdated(i,j)/completeBandwidthMap(i,j);
+      end
+    end
+  end
 
   % Initialize result variables
   LATsuccess = SUCCESS;
@@ -91,7 +103,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   %disp(ALLnodes);
   
   %%%%%% K-shortest path %%%%%%
-  weightedEdgeSparseGraph = sparse(completeDistanceUpdated);       % Use the updated complete distance map to create a weighted sparse matrix
+  weightedEdgeSparseGraph = sparse(completeDistanceWeighted);       % Use the updated complete distance map to create a weighted sparse matrix
  	nNodes = size(ALLnodes, 2);                               % Obtain size of the nodes matrix (i.e. the total number of nodes)
   kPaths = 3;     % Specify number of shortest paths to find
   
