@@ -1,4 +1,6 @@
-function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, failureNodes, pathLatenciesAllocated] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig)
+function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, ...
+          failureNodes, pathLatenciesAllocated] = networkAllocation(request, ...
+          heldITresources, dataCenterMap, dataCenterConfig)
   % Network allocation algorithm
   
   % Import global macros
@@ -45,6 +47,11 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   requiredLAT_CM = request{6};    % MAXIMUM ACCEPTABLE LATENCY (CPU-MEM)
   requiredLAT_MS = request{7};    % MAXIMUM ACCEPTABLE LATENCY (MEM-STO)
   
+  % Update complete distance map to contain links that satisfy the request's bandwidth requirement
+  completeDistanceUpdated = completeDistance;                    % Store the original distance map that contains all the links
+  linksToRemove = find(completeBandwidthMap < requiredBAN_CM);   % Based on CPU-MEM bandwith requirement. TODO could try with MEM-STO and see how the performance changes
+  completeDistanceUpdated(linksToRemove) = Inf;                  % Disconnect/remove links that do not have enough bandwidth available to prevent the k-shortest paths algorithm from using them
+
   % Initialize result variables
   LATsuccess = SUCCESS;
   BANsuccess = SUCCESS;
@@ -84,7 +91,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   %disp(ALLnodes);
   
   %%%%%% K-shortest path %%%%%%
-  weightedEdgeSparseGraph = sparse(completeDistance);       % Use the complete distance map to create a weighted sparse matrix
+  weightedEdgeSparseGraph = sparse(completeDistanceUpdated);       % Use the updated complete distance map to create a weighted sparse matrix
  	nNodes = size(ALLnodes, 2);                               % Obtain size of the nodes matrix (i.e. the total number of nodes)
   kPaths = 3;     % Specify number of shortest paths to find
   
