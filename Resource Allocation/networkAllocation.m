@@ -49,7 +49,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   
   % Update complete distance map to contain links that satisfy the request's bandwidth requirement
   completeDistanceUpdated = completeDistance;                    % Store the original distance map that contains all the links
-  linksToRemove = find(completeBandwidthMap < requiredBAN_CM);   % Based on CPU-MEM bandwith requirement. TODO could try with MEM-STO and see how the performance changes
+  linksToRemove = find(completeBandwidthMap < requiredBAN_MS);   % Based on MEM-STO bandwith requirement. TODO could try with MEM-STO and see how the performance changes
   completeDistanceUpdated(linksToRemove) = Inf;                  % Disconnect/remove links that do not have enough bandwidth available to prevent the k-shortest paths algorithm from using them
   
   % Weigh distance matrix based on both the distance and bandwidth available
