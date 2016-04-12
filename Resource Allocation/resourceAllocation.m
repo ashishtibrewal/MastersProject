@@ -136,18 +136,6 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   disp(str);
   
   %%%%%% MAIN IT RESOURCE ALLOCATION ALGORITHM %%%%%%
-
-  % Run BFS to find required (avaliable) resources starting at a specific
-  % resoure node with the resource type having the highest contention ratio
-  % Starting from first unit available node rather than from the first node
-  % of a specific unit type - This can potentially have a huge performance
-  % improvement because you avoid running BFS from nodes (i.e. slots that 
-  % are already completely occupied) - THIS ALSO IMPROVES THE LOCALITY
-  % FACTOR (SPECIALLY LOCALITY BETWEEN CPU & MEM, WHICH IS REALLY
-  % IMPORTANT DUE TO LATENCY CONSTRAINTS) SINCE BFS IS RUN STARTING ON A
-  % NODE THAT HAS AT LEAST A SINGLE UNIT FREE OF THE RESOURCE TYPE WITH
-  % THE HIGHEST CONTENTION RATIO.
-  
   % Primary scanning loop iterator (Jump to atleast the next rack)
   loopIncrement = nSlots * nBlades;
 
