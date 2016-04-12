@@ -40,10 +40,10 @@ function requestDB = inputGeneration(nRequests)
   bandwidthMinMS = bandwidthMinCM/bandwidthCM_MSfactor;      % In Gb/s -> 5x LOWER acceptable (min) bandwidth between MEM & STO
   bandwidthMaxMS = bandwidthMaxCM/bandwidthCM_MSfactor;      % In Gb/s -> 5x LOWER acceptable (max) bandwidth between MEM & STO
   
-  latencyCM_MSfactor = 5;                 % "Scalibility" factor between CM and MS latency
-  latencyRangeCM = 500;                  % Range of acceptable latency values (Must be a multiple of 500)
-  latencyMinCM = 1000;                   % In ns (i.e. nanoseconds)
-  latencyMaxCM = 3000;                   % In ns (i.e. nanoseconds)
+  latencyCM_MSfactor = 2;                 % "Scalibility" factor between CM and MS latency
+  latencyRangeCM = 50;                   % Range of acceptable latency values (Must be a multiple of 500)
+  latencyMinCM = 250;                    % In ns (i.e. nanoseconds)
+  latencyMaxCM = 600;                   % In ns (i.e. nanoseconds)
   
   latencyMinMS = latencyMinCM * latencyCM_MSfactor;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (min) latency between MEM & STO
   latencyMaxMS = latencyMaxCM * latencyCM_MSfactor;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (max) latency between MEM & STO
@@ -142,15 +142,17 @@ function requestDB = inputGeneration(nRequests)
       nBAN_CM = randi((bandwidthMaxCM/bandwidthMinCM)) * bandwidthMinCM;
       
       % Memory - Storage bandwidth
-      nBAN_MS = randi((bandwidthMaxMS/bandwidthMinMS)) * bandwidthMinMS;
+      %nBAN_MS = randi((bandwidthMaxMS/bandwidthMinMS)) * bandwidthMinMS;
+      nBAN_MS = nBAN_CM * bandwidthCM_MSfactor;     % To prevent MEM-STO being higher than CPU-MEM
       
       % CPU - Memory latency
       nLAT_CM = randi([(latencyMinCM/latencyRangeCM),(latencyMaxCM/latencyRangeCM)]) * latencyRangeCM;
       
       % Memory - Storage latency
-      nLAT_MS = randi([(latencyMinMS/latencyRangeMS),(latencyMaxMS/latencyRangeMS)]) * latencyRangeMS;
+      %nLAT_MS = randi([(latencyMinMS/latencyRangeMS),(latencyMaxMS/latencyRangeMS)]) * latencyRangeMS;
+      nLAT_MS = nLAT_CM * latencyCM_MSfactor;       % To prevent MEM-STO being higher than CPU-MEM
       
-      % Request holdtime
+      % Request holdtime (TODO Could use a Poisson distribution)
       nHDT = randi((holdTimeMax/holdTimeMin)) * holdTimeMin;
       
       % Boundary checks
