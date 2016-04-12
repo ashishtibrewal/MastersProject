@@ -37,13 +37,18 @@ str = sprintf('Number of requests/jobs generated: %i', nRequests);
 disp(str);
 
 % Total number of IT resoure allocation failed
-nResourceAllocationFailed_IT = size(find(cell2mat(requestDB(:,9)) == 0), 1);
-str = sprintf('Number of IT resource allocation failed: %i', nResourceAllocationFailed_IT);
+nResourceAllocationFailed_CPU = size(cell2mat(strfind(requestDB(:,14),'CPU')),1);    % Failed due to CPU
+nResourceAllocationFailed_MEM = size(cell2mat(strfind(requestDB(:,14),'MEM')),1);    % Failed due to MEM
+nResourceAllocationFailed_STO = size(cell2mat(strfind(requestDB(:,14),'STO')),1);    % Failed due to STO
+nResourceAllocationFailed_IT = nResourceAllocationFailed_CPU + nResourceAllocationFailed_MEM + nResourceAllocationFailed_STO;   % Total failed due to IT
+str = sprintf('Number of IT resource allocation failed: %i (CPU: %i | MEM: %i | STO: %i)', nResourceAllocationFailed_IT,nResourceAllocationFailed_CPU,nResourceAllocationFailed_MEM,nResourceAllocationFailed_STO);
 disp(str);
 
 % Total number of network resource allocation failed
-nResourceAllocationFailed_Network= size(find(cell2mat(requestDB(:,10)) == 0), 1);
-str = sprintf('Number of network resource allocation failed: %i', nResourceAllocationFailed_Network);
+nResourceAllocationFailed_LAT = size(cell2mat(strfind(requestDB(:,15),'LAT')),1);    % Failed due to latency
+nResourceAllocationFailed_BAN = size(cell2mat(strfind(requestDB(:,15),'BAN')),1);    % Failed due to bandwidth
+nResourceAllocationFailed_Network = nResourceAllocationFailed_LAT + nResourceAllocationFailed_BAN;  % Total failed due to network
+str = sprintf('Number of network resource allocation failed: %i (Latency: %i | Bandwidth: %i)', nResourceAllocationFailed_Network, nResourceAllocationFailed_LAT, nResourceAllocationFailed_BAN);
 disp(str);
 
 % Total number of requests failed/dropped
