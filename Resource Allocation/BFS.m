@@ -1,4 +1,4 @@
-function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startNode, reqResourceUnits, updatedUnitAvailableMap)
+function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startNode, reqResourceUnits, updatedUnitAvailableMap, removeLinks, request)
   % Function to implement the "customised" Breadth-First Search (BFS) algorithm
   % resourceNodes - 1st row = CPUs, 2nd row = MEMs, 3rd row = STOs
   % successful - Only set if all resources have been found
@@ -35,6 +35,18 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
   CPUsBreakWhile = false;
   MEMsBreakWhile = false;
   STOsBreakWhile = false;
+
+  % Extract request's bandwidth requirements
+  %requiredBAN_CM = request{4};    % MINIMUM ACCEPTABLE BANDWIDTH (CPU-MEM)
+  requiredBAN_MS = request{5};    % MINIMUM ACCEPTABLE BANDWIDTH (MEM-STO)
+  
+  % Remove failure nodes
+  if (removeLinks == 1)
+    linksToRemove = find(completeBandwidthMap < requiredBAN_MS);      % Based on MEM-STO bandwith requirement. TODO could try with CPU-MEM and see how the performance changes
+    completeDistanceMap(linksToRemove) = Inf;                         % Disconnect/remove links that do not have enough bandwidth available to prevent the k-shortest paths algorithm from using them
+    completeDistanceMap(logical(eye(size(completeDistanceMap)))) = 0; % Zero leading diagonal since it's set to infinity when removing 'useless' links
+    completeBandwidthMap(linksToRemove) = 0;                          % Zero the bandwidth on links that do not satisfy the minimum constraints/requirements
+  end
   
   % Create graph and initialize distances with infinity (Each column is a node)
   % 1st 'row' holds the node's distance from the source
