@@ -47,22 +47,54 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   requiredLAT_CM = request{6};    % MAXIMUM ACCEPTABLE LATENCY (CPU-MEM)
   requiredLAT_MS = request{7};    % MAXIMUM ACCEPTABLE LATENCY (MEM-STO)
   
-  % Update complete distance map to contain links that satisfy the request's bandwidth requirement
+  % Update complete distance map and the complete bandwidth map to contain links that satisfy the request's bandwidth requirement
   completeDistanceUpdated = completeDistance;                    % Store the original distance map that contains all the links
+  completeBandwidthMapUpdated = completeBandwidthMap;            % Store the original bandwidth map that contains all the available bandwidth
   linksToRemove = find(completeBandwidthMap < requiredBAN_MS);   % Based on MEM-STO bandwith requirement. TODO could try with MEM-STO and see how the performance changes
   completeDistanceUpdated(linksToRemove) = Inf;                  % Disconnect/remove links that do not have enough bandwidth available to prevent the k-shortest paths algorithm from using them
-  
-  % Weigh distance matrix based on both the distance and bandwidth available
-  completeDistanceWeighted = completeDistanceUpdated;     % Initialise with updated matrix
+  completeDistanceUpdated(logical(eye(size(completeDistanceUpdated)))) = 0;   % Zero leading diagonal since it's set to infinity when removing 'useless' links
+  completeBandwidthMapUpdated(linksToRemove) = 0;                % Zero the bandwidth on links that do not satisfy the minimum constraints/requirements
+  totalDistance = 0;                                             % Initialise total distance variable
+ 
+  % Evaluate the total distance (i.e. sum of all distances in the graph) - Sum all elements in the upper-traingle - Looping around to avoid adding infinity to the sum being calculated
   for i = 1:size(completeDistanceUpdated,2)
-    for j = 1:size(completeDistanceUpdated,2)
-      % Check if a link exists and that there is bandwidth available on it
-      if ((completeDistanceUpdated(i,j) ~= Inf) && (completeBandwidthMap(i,j) > 0))
-        % Want to minimize f(x,y) = dist(x,y)/bandwidth(x,y)
-        completeDistanceWeighted(i,j) = completeDistanceUpdated(i,j)/completeBandwidthMap(i,j);
+    for j = (i + 1):size(completeDistanceUpdated,2)
+      % Check if a link exists (i.e. has a finite distance)
+      if (completeDistanceUpdated(i,j) ~= Inf)
+        totalDistance = totalDistance + completeDistanceUpdated(i,j);
       end
     end
   end
+  
+  % Evaluate the total bandwidth (i.e. sum of all bandwidths in the graph) - Sum all elements in the upper-traingle - Don't need loops since the values are all finite
+  totalBandwidth = sum(sum(triu(completeBandwidthMapUpdated)));
+  
+  % Set weightage factor (w = 0.5 is equal weightage to both bandwidth and latency/distance)
+  f = 0.5;
+  
+  % Weigh all edges/links on the graph based on both it's latency (distance) and bandwidth (capacity)
+  newWeightedGraph = completeDistanceUpdated;     % Initialise with updated distance matrix
+  for i = 1:size(completeDistanceUpdated,2)
+    for j = 1:size(completeDistanceUpdated,2)
+      % Check if a link exists and that there is bandwidth available on it
+      if ((completeDistanceUpdated(i,j) ~= Inf) && (completeBandwidthMapUpdated(i,j) > 0))
+        % W_new = f * W_b + (1 - f) * W_l, where W_b = (1 - W_b_ij/W_b_total) and W_l = W_l_ij/W_l_total
+        newWeightedGraph(i,j) = (f * (1 - (completeBandwidthMapUpdated(i,j)/totalBandwidth))) + ((1 - f) * (completeDistanceUpdated(i,j)/totalDistance));
+      end
+    end
+  end
+  
+%   % Weigh distance matrix based on both the distance and bandwidth available
+%   completeDistanceWeighted = completeDistanceUpdated;     % Initialise with updated matrix
+%   for i = 1:size(completeDistanceUpdated,2)
+%     for j = 1:size(completeDistanceUpdated,2)
+%       % Check if a link exists and that there is bandwidth available on it
+%       if ((completeDistanceUpdated(i,j) ~= Inf) && (completeBandwidthMap(i,j) > 0))
+%         % Want to minimize f(x,y) = dist(x,y)/bandwidth(x,y)
+%         completeDistanceWeighted(i,j) = completeDistanceUpdated(i,j)/completeBandwidthMap(i,j);
+%       end
+%     end
+%   end
 
   % Initialize result variables
   LATsuccess = SUCCESS;
@@ -103,7 +135,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   %disp(ALLnodes);
   
   %%%%%% K-shortest path %%%%%%
-  weightedEdgeSparseGraph = sparse(completeDistanceWeighted);       % Use the updated complete distance map to create a weighted sparse matrix
+  weightedEdgeSparseGraph = sparse(newWeightedGraph);       % Use the updated complete distance map to create a weighted sparse matrix
  	nNodes = size(ALLnodes, 2);                               % Obtain size of the nodes matrix (i.e. the total number of nodes)
   kPaths = 3;     % Specify number of shortest paths to find
   
@@ -117,10 +149,8 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
     for j = (i + 1):nNodes
       sourceNode = ALLnodes(i);
       destNode = ALLnodes(j);
-      % Use the k-shortest paths algorithm
-      [ksPath_Dist(i,j,:),ksPath_Paths{i,j}] = graphkshortestpaths(weightedEdgeSparseGraph, sourceNode, destNode, kPaths);
-      % Store distance found for a specific set of source and destination nodes to the latency matrix
-      ksPath_Latency(i,j,:) = ksPath_Dist(i,j,:) * minChannelLatency;
+      % Use the k-shortest paths algorithm (Distances generated are irrelevant since the weights on the sparse graph are modified and do not represent real distance values)
+      [~,ksPath_Paths{i,j}] = graphkshortestpaths(weightedEdgeSparseGraph, sourceNode, destNode, kPaths);
       % Check that at least k shortest paths have been found for the current set of source and destination nodes
       if (size(ksPath_Paths{i,j},2) ~= kPaths)
           copyPath = ksPath_Paths{i,j};
@@ -129,6 +159,17 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
           ksPath_Paths{i,j} = [ksPath_Paths{i,j},copyPath];
         end
       end
+      % Evaluate the distance of all paths between node i and j
+      kpaths_ij = ksPath_Paths{i,j};
+      for k = 1:kPaths
+        path_ij = kpaths_ij{k};   % Extract k-th path between i and j
+        % Use the path to evaluate its total distance
+        for pathNode = 1:(size(path_ij,2) - 1)
+          ksPath_Dist(i,j,k) = ksPath_Dist(i,j,k) + completeDistance(path_ij(pathNode), path_ij(pathNode + 1));
+        end
+      end
+      % Store distance found for a specific set of source and destination nodes to the latency matrix
+      ksPath_Latency(i,j,:) = ksPath_Dist(i,j,:) * minChannelLatency;
       % Find if the path found contains any switches for every k-th path
       for k = 1:kPaths
         % Extract k-th path for current source and destination nodes exluding the destination node (hence, the -1)
