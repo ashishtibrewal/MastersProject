@@ -1,8 +1,8 @@
 ########################################
 # Resource unit dimensions to prevent going out of bounds/limit
 ########################################
-nRacks: 12     # Total number of racks
-nBlades: 16    # Total number of blades (in each rack)
+nRacks: 12    # Total number of racks
+nBlades: 16   # Total number of blades (in each rack)
 nSlots: 8     # Total number of slots (in each blade) IMPORTANT NOTE: Always keep an even number of slots
 nUnits: 8     # Total number of units (in each slot)
 nTOR: 2       # Number of TOR switches per rack
@@ -12,17 +12,17 @@ nTOB: 2       # Number of TOB switches per blade
 unitSize:
   CPU: 4      # >1 signifies multi-core (A simplistic approach)
   MEM: 4      # Each DIMM is 4 GB in size/capacity
-  STO: 64    # Each HDD is 128 GB in size /capacity
+  STO: 64     # Each HDD is 128 GB in size /capacity
 
-# TODO change these to more realistic values (such as 1U, 2U .. rack unit sizes)
+# TODO change these to more realistic values (such as 1U, 2U .. rack unit sizes) - Currently using 2U in meters (approx.)
 distances:
-  TOR_IntraRack: 5    # Distance between TORs within the same rack
-  TOR_InterRack: 30   # Distance between TORs between different racks
-  TOR_TOB: 15         # Distance between TORs and TOBs within the same rack
-  TOB_IntraBlade: 2   # Distance between TOBs within the same blade (within the same rack)
-  TOB_InterBlade: 5   # Distance between TOBs between different blades (within the same rack)
-  TOB_slot: 10        # Distance between TOBs and and slots within the same blade (within the same rack)
-  slot: 2             # Distance between slots within the same blad (within the same rack)
+  TOR_IntraRack: 0.50   # Distance between TORs within the same rack
+  TOR_InterRack: 2.00   # Distance between TORs between different racks
+  TOR_TOB: 0.10         # Distance between TORs and TOBs within the same rack
+  TOB_IntraBlade: 0.05  # Distance between TOBs within the same blade (within the same rack)
+  TOB_InterBlade: 0.10  # Distance between TOBs between different blades (within the same rack)
+  TOB_slot: 0.05        # Distance between TOBs and and slots within the same blade (within the same rack)
+  slot: 0.05            # Distance between slots within the same blad (within the same rack)
 
 ########################################
 # Specify the network topology and switch delays for each 
@@ -34,26 +34,26 @@ distances:
 # Topologies at different levels
 topology:
   rack: 'Fully-connected'
-  rack_blade: 'Star'
-  blade: 'Disconnected'
-  blade_slot: 'Star'
-  slot: 'Disconnected'
+  rack_blade: 'Spine-leaf'
+  blade: 'Ring'
+  blade_slot: 'Spine-leaf'
+  slot: 'Ring'
 
 # Switch delays at different levels (in nanoseconds) - Used in the latency map
 switchDelay:
-  TOD: 300          # Main (Top of data center) switch delay - Currently not used
-  TOR: 200          # Top of rack switch delay
-  TOB: 100          # Top of blade switch delay
+  TOD: 10          # Main (Top of data center) switch delay - Currently not used
+  TOR: 10          # Top of rack switch delay
+  TOB: 10          # Top of blade switch delay
 
 # Default Tx & Rx delays (in nanoseconds)
-defaultDelay: 500   # Default Tx and Rx delay
+defaultDelay: 200   # Default Tx and Rx delay
 
 # Number of channels between two nodes (i.e. a node can be a rack/blade/slot)
 channels:
-  TOR_TOR: 32        # Number of channels between TORs
-  TOR_TOB: 32        # Number of channels between TOR & TOB
-  TOB_TOB: 16        # Number of channels between TOBs
-  TOB_SLOT: 16       # Number of channels between TOB & SLOT
+  TOR_TOR: 4        # Number of channels between TORs
+  TOR_TOB: 4        # Number of channels between TOR & TOB
+  TOB_TOB: 1        # Number of channels between TOBs
+  TOB_SLOT: 2       # Number of channels between TOB & SLOT
   SLOT_SLOT: 1      # Number of channels between SLOTs
 
 # Contraints/bounds in the data center (Minimum channel latency in nanoseconds & maximum channel bandwidth in Gb/s)
