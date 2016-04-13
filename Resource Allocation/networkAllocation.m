@@ -172,25 +172,31 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
       ksPath_Latency(i,j,:) = ksPath_Dist(i,j,:) * minChannelLatency;
       % Find if the path found contains any switches for every k-th path
       for k = 1:kPaths
-        % Extract k-th path for current source and destination nodes exluding the destination node (hence, the -1)
-        kth_Path = ksPath_Paths{i,j}{k}(1:numel(ksPath_Paths{i,j}{k}) - 1);
-        % Find TOR swithces
-        TOR_Switches = ismember(switchMap.TOR_indexes, kth_Path);
-        % Find TOB switches
-        TOB_Swithces = ismember(switchMap.TOB_indexes, kth_Path);
-        % If any switches exist in the shortest path
-        if (nnz(TOR_Switches) || nnz(TOB_Swithces))
-          % Find the total number of TOR swithces
-          nTOR_Switches = sum(histcounts(kth_Path,switchMap.TOR_indexes));
-          % Find the total number of TOB swithces
-          nTOB_Switches = sum(histcounts(kth_Path,switchMap.TOB_indexes));
-          % Find total switch delay on the path
-          totalSwitchDelay = (nTOR_Switches * TOR_delay) + (nTOB_Switches * TOB_delay);
-          % Update latency map
-          ksPath_Latency(i,j,k) = ksPath_Latency(i,j,k) + totalSwitchDelay;
+        % Check if the k-th path exists (To avoid index out of bounds errors)
+        if (numel(ksPath_Paths{i,j}{k}) ~= 0)
+          % Extract k-th path for current source and destination nodes exluding the destination node (hence, the -1)
+          kth_Path = ksPath_Paths{i,j}{k}(1:numel(ksPath_Paths{i,j}{k}) - 1);
+          % Find TOR swithces
+          TOR_Switches = ismember(switchMap.TOR_indexes, kth_Path);
+          % Find TOB switches
+          TOB_Swithces = ismember(switchMap.TOB_indexes, kth_Path);
+          % If any switches exist in the shortest path
+          if (nnz(TOR_Switches) || nnz(TOB_Swithces))
+            % Find the total number of TOR swithces
+            nTOR_Switches = sum(histcounts(kth_Path,switchMap.TOR_indexes));
+            % Find the total number of TOB swithces
+            nTOB_Switches = sum(histcounts(kth_Path,switchMap.TOB_indexes));
+            % Find total switch delay on the path
+            totalSwitchDelay = (nTOR_Switches * TOR_delay) + (nTOB_Switches * TOB_delay);
+            % Update latency map
+            ksPath_Latency(i,j,k) = ksPath_Latency(i,j,k) + totalSwitchDelay;
+          end
+          % Add the default delay (i.e. Tx and Rx delays) to every k-th path
+          ksPath_Latency(i,j,k) = ksPath_Latency(i,j,k) + defaultDelay;
+        else
+          % If a path doesn't exist, set its corresponding latency to infinity
+          ksPath_Latency(i,j,k) = Inf;
         end
-        % Add the default delay (i.e. Tx and Rx delays) to every k-th path
-        ksPath_Latency(i,j,k) = ksPath_Latency(i,j,k) + defaultDelay;
         %disp(ksPath_Paths{i,j}{k}(1:numel(ksPath_Paths{i,j}{k})));
         %disp(ksPath_Latency(i,j,k));
       end
