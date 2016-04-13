@@ -174,15 +174,16 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
 
   % Main loop to iterate over all possible contention ratio switches starting from the primary contention ratio switch
   for iCR = 1:size(contentionRatios,2)
-    ITresourceUnavailable = 0;    % Initialize/reset IT resource unavailable for every iteration of the loop
-    NETresourceUnavailable = 0;   % Initialize/reset NET resource unavailable for every iteration of the loop
-    ITsuccessful = FAILURE;       % Initialize/reset IT successful for every iteration of the loop
-    NETsuccessful = FAILURE;      % Initialize/reset NET successful for every iteration of the loop
-    heldITresources = {};         % Initialize/reset held IT resources for every iteration of the loop
-    heldNETresources = {};        % Initialize/reset held NET resources for every iteration of the loop
-    ITfailureCause = 'NONE';      % Initialize/reset IT resource allocation failure cause for every iteration of the loop
-    NETfailureCause = 'NONE';     % Initialize/reset NET resource allocation failure cause for every iteration of the loop
-    pathLatenciesAllocated = {};  % Initialize/reset path latencies for every iteration of the loop
+    ITresourceUnavailable = 0;      % Initialize/reset IT resource unavailable for every iteration of the loop
+    NETresourceUnavailable = 0;     % Initialize/reset NET resource unavailable for every iteration of the loop
+    NETresourceUnavailableBFS = 0;  % Initialize/reset NET resource unavailable when using BFS for every iteration of the loop
+    ITsuccessful = FAILURE;         % Initialize/reset IT successful for every iteration of the loop
+    NETsuccessful = FAILURE;        % Initialize/reset NET successful for every iteration of the loop
+    heldITresources = {};           % Initialize/reset held IT resources for every iteration of the loop
+    heldNETresources = {};          % Initialize/reset held NET resources for every iteration of the loop
+    ITfailureCause = 'NONE';        % Initialize/reset IT resource allocation failure cause for every iteration of the loop
+    NETfailureCause = 'NONE';       % Initialize/reset NET resource allocation failure cause for every iteration of the loop
+    pathLatenciesAllocated = {};    % Initialize/reset path latencies for every iteration of the loop
 
     % Store contention ratios
     CRs{iCR} = maxCRswitch;
@@ -231,9 +232,27 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
             %str = sprintf('Starting CPU node: %d, %d, %d \n', CPUlocations(availableCPUslots(slotNo)), CPUlocations(availableCPUslots(1,slotNo)),CPUunitsInSlots(1,availableCPUslots(slotNo)));
             %disp(str);
             startCPUslot = CPUunitsInSlots(1,availableCPUslots(slotNo)); % CPU start slot/node
-            [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startCPUslot, reqResourceUnits, updatedUnitAvailableMap);
-            % Check if all resources have been successfully found
-            if (ITsuccessful == SUCCESS)
+            removeLinks = 1;    % Set to 1 to remove unacceptable links
+            % Run BFS - Remove unacceptable links
+            [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startCPUslot, reqResourceUnits, updatedUnitAvailableMap, removeLinks, request);
+            % Re-run to check if the failure cause was unavalibility of IT or removal of unacceptable links
+            if (ITsuccessful == FAILURE)
+              removeLinks = 0;  % Set to 0 to use original graph
+              % Run BFS - Original graph
+              [~, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startCPUslot, reqResourceUnits, updatedUnitAvailableMap, removeLinks, request);
+              % Actual failure cause is IT resources
+              if (ITsuccessful == FAILURE)
+                ITresourceUnavailable = 1;
+                heldITresources = {};
+                pathLatenciesAllocated = {};
+                break;    % Break out of inner scan loop since not enough IT resources are available
+              else    % Actual failure cause is network resources
+                NETresourceUnavailable = 1;
+                NETfailureCause = 'BAN';
+                NETresourceUnavailableBFS = 1;
+                break;    % Break out of inner scan loop since not enough NET resources are available; any further tries would fail
+              end
+            else      % If required IT resources have been successfully found with acceptable bandwidth links
               % Locations of resources that are "held" for the current request
               heldITresources = ITresourceNodes;
               % TODO Add network allocation code - if network is successful, break out else start search for new 
@@ -271,11 +290,6 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
                   break;
                 end
               end
-            else
-              ITresourceUnavailable = 1;
-              heldITresources = {};
-              pathLatenciesAllocated = {};
-              break;      % Break out of the inner loop since required number of IT resources couldn't be found
             end
           end
           if (ITsuccessful == SUCCESS && NETsuccessful == SUCCESS)
@@ -283,7 +297,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           end
         end
         % Break out of the outer loop if required number of IT resources are unavailable
-        if (ITresourceUnavailable == 1)
+        if (ITresourceUnavailable == 1 || NETresourceUnavailableBFS == 1)
           break;    % Break out of outer loop
         end
 
@@ -296,9 +310,27 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         else
           for slotNo = 1:loopIncrement:nMEM_SlotsToScan
             startMEMslot = MEMunitsInSlots(1,availableMEMslots(slotNo)); % MEM start slot/node
-            [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startMEMslot, reqResourceUnits, updatedUnitAvailableMap);
-            % Check if all resources have been successfully found
-            if (ITsuccessful == SUCCESS)
+            removeLinks = 1;    % Set to 1 to remove unacceptable links
+            % Run BFS - Remove unacceptable links
+            [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startMEMslot, reqResourceUnits, updatedUnitAvailableMap, removeLinks, request);
+            % Re-run to check if the failure cause was unavalibility of IT or removal of unacceptable links
+            if (ITsuccessful == FAILURE)
+              removeLinks = 0;  % Set to 0 to use original graph
+              % Run BFS - Original graph
+              [~, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startMEMslot, reqResourceUnits, updatedUnitAvailableMap, removeLinks, request);
+              % Actual failure cause is IT resources
+              if (ITsuccessful == FAILURE)
+                ITresourceUnavailable = 1;
+                heldITresources = {};
+                pathLatenciesAllocated = {};
+                break;    % Break out of inner scan loop since not enough IT resources are available
+              else    % Actual failure cause is network resources
+                NETresourceUnavailable = 1;
+                NETfailureCause = 'BAN';
+                NETresourceUnavailableBFS = 1;
+                break;    % Break out of inner scan loop since not enough NET resources are available; any further tries would fail
+              end
+            else      % If required IT resources have been successfully found with acceptable bandwidth links
               % Locations of resources that are "held" for the current request
               heldITresources = ITresourceNodes;
               % TODO Add network allocation code - if network is successful, break out else start search for new 
@@ -336,11 +368,6 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
                   break;
                 end
               end
-            else
-              ITresourceUnavailable = 1;
-              heldITresources = {};
-              pathLatenciesAllocated = {};
-              break;      % Break out of the inner loop since required number of IT resources couldn't be found
             end
           end
           if (ITsuccessful == SUCCESS && NETsuccessful == SUCCESS)
@@ -348,7 +375,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           end
         end
         % Break out of the outer loop if required number of IT resources are unavailable
-        if (ITresourceUnavailable == 1)
+        if (ITresourceUnavailable == 1 || NETresourceUnavailableBFS == 1)
           break;    % Break out of outer loop
         end
 
@@ -361,9 +388,27 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         else
           for slotNo = 1:loopIncrement:nSTO_SlotsToScan
             startSTOslot = STOunitsInSlots(1,availableSTOslots(slotNo)); % STO start slot/node
-            [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startSTOslot, reqResourceUnits, updatedUnitAvailableMap);
-            % Check if all resources have been successfully found
-            if (ITsuccessful == SUCCESS)
+            removeLinks = 1;    % Set to 1 to remove unacceptable links
+            % Run BFS - Remove unacceptable links
+            [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startSTOslot, reqResourceUnits, updatedUnitAvailableMap, removeLinks, request);
+            % Re-run to check if the failure cause was unavalibility of IT or removal of unacceptable links
+            if (ITsuccessful == FAILURE)
+              removeLinks = 0;  % Set to 0 to use original graph
+              % Run BFS - Original graph
+              [~, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, startSTOslot, reqResourceUnits, updatedUnitAvailableMap, removeLinks, request);
+              % Actual failure cause is IT resources
+              if (ITsuccessful == FAILURE)
+                ITresourceUnavailable = 1;
+                heldITresources = {};
+                pathLatenciesAllocated = {};
+                break;    % Break out of inner scan loop since not enough IT resources are available
+              else    % Actual failure cause is network resources
+                NETresourceUnavailable = 1;
+                NETfailureCause = 'BAN';
+                NETresourceUnavailableBFS = 1;
+                break;    % Break out of inner scan loop since not enough NET resources are available; any further tries would fail
+              end
+            else      % If required IT resources have been successfully found with acceptable bandwidth links
               % Locations of resources that are "held" for the current request
               heldITresources = ITresourceNodes;
               % TODO Add network allocation code - if network is successful, break out else start search for new 
@@ -401,11 +446,6 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
                   break;
                 end
               end
-            else
-              ITresourceUnavailable = 1;
-              heldITresources = {};
-              pathLatenciesAllocated = {};
-              break;      % Break out of the inner loop since required number of IT resources couldn't be found
             end
           end
           if (ITsuccessful == SUCCESS && NETsuccessful == SUCCESS)
@@ -413,7 +453,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           end
         end
         % Break out of the outer loop if required number of IT resources are unavailable
-        if (ITresourceUnavailable == 1)
+        if (ITresourceUnavailable == 1 || NETresourceUnavailableBFS == 1)
           break;    % Break out of outer loop
         end
     end
@@ -441,10 +481,10 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     ITresult = FAILURE;
     NETresult = FAILURE;
     if (ITresourceUnavailable == 1)
-      str = sprintf('Resources (IT) unavailable for current request!\n');
+      str = sprintf('Resources (IT) unavailable for current request (Cause: %s)! \n', ITfailureCause);
       disp(str);
     elseif (NETresourceUnavailable == 1)
-      str = sprintf('Resources (NET) unavailable for current request!\n');
+      str = sprintf('Resources (NET) unavailable for current request (Cause: %s)! \n', NETfailureCause);
       disp(str);
     end
   end    
