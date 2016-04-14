@@ -70,7 +70,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   totalBandwidth = sum(sum(triu(completeBandwidthMapUpdated)));
   
   % Set weightage factor (w = 0.5 is equal weightage to both bandwidth and latency/distance)
-  f = 0.5;
+  f = 0.5;    % A higher value of f favours bandwidth whereas a lower value favours latency
   
   % Weigh all edges/links on the graph based on both it's latency (distance) and bandwidth (capacity)
   newWeightedGraph = completeDistanceUpdated;     % Initialise with updated distance matrix
