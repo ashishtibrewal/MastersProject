@@ -56,6 +56,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % Compelte/total matrix map in a single 2D matrix of size [(nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks)]
   completeMatrixSize = ((nTOR * nRacks) + (nTOB * nBlades * nRacks) + (nSlots * nBlades * nRacks));
   
+  % Flag to choose whether the distance between TORs-TOBs (in a rack) and TOBs-SLOTs (in a blade) are equal (i.e. independent of the node number)
+  equalSwitchDistances = 0;   % Switch equal distances flag
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % NETWORK CONNECTIVITY/TOPOLOGY MAP
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -394,6 +397,8 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   % Note that the latency between two "nodes" is dependent on the distance
   % between them (i.e. minimum latency is 5 ns/m)
   
+  % IMPORTANT NOTE: See equalSwitchDistances flag above
+  
   % Complete distance map
   completeDistanceMatrixSize = completeMatrixSize;      % Complete distance map
   completeDistance = inf(completeDistanceMatrixSize);   % Initialize with infinity
@@ -463,10 +468,11 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
     bladeCounter = 0;       % Reset blade counter when iterating for every TOR
     for TOB = ((nTOR * nRacks) + 1):((nTOR * nRacks) + (nTOB * nBlades * nRacks))
       if (completeConnectivity(TOR,TOB) == 1) % Only has a finite distance if two nodes are connected
-        % TODO Need to get incremental distance to work (Need to be able to
-        % extract the blade number) - Currently all TORs-TOBs are equidistant
-        % completeDistance(TOR, TOB) = mod(round(TOB/(nTOB * nBlades)), nBlades) * TOR_TOB_dist;
-        completeDistance(TOR,TOB) = TOR_TOB_dist + (bladeCounter * TOR_TOB_dist);
+        if (equalSwitchDistances == 1)
+          completeDistance(TOR,TOB) = TOR_TOB_dist;   % Distance independent of the blade counter/location
+        else
+          completeDistance(TOR,TOB) = TOR_TOB_dist + (bladeCounter * TOR_TOB_dist);   % Distance based on the blade counter/location
+        end
         completeLatency(TOR,TOB) = completeDistance(TOR, TOB) * minChannelLatency;   % Update complete latency map
         if (mod(TOB, nTOB) == 0)          % Check if all TOBs have been covered for current blade
           bladeCounter = bladeCounter + 1;   % Increment blade counter
@@ -534,7 +540,11 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
         slot_counter = 1;
       end
       if (completeConnectivity(TOB,slot) == 1)
-        completeDistance(TOB,slot) = slot_counter * TOB_slot_dist;  % Distance based on the slot counter/location
+        if (equalSwitchDistances == 1)
+          completeDistance(TOB,slot) = TOB_slot_dist;   % Distance independent of the slot counter/location
+        else
+          completeDistance(TOB,slot) = slot_counter * TOB_slot_dist;  % Distance based on the slot counter/location
+        end
         completeLatency(TOB,slot) = completeDistance(TOB,slot) * minChannelLatency;   % Update complete latency map
       end
     end
