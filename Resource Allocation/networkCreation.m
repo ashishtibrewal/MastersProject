@@ -468,11 +468,9 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
         % completeDistance(TOR, TOB) = mod(round(TOB/(nTOB * nBlades)), nBlades) * TOR_TOB_dist;
         completeDistance(TOR,TOB) = TOR_TOB_dist + (bladeCounter * TOR_TOB_dist);
         completeLatency(TOR,TOB) = completeDistance(TOR, TOB) * minChannelLatency;   % Update complete latency map
-      end
-      if (mod(TOB, (nTOB * nBlades)) == 0)  % Check if all TOBs have been covered for current rack
-        bladeCounter = 0;       % Reset blade counter when iterating for every rack
-      elseif (mod(TOB, nTOB) == 0)          % Check if all TOBs have been covered for current blade
-        bladeCounter = bladeCounter + 1;   % Increment blade counter
+        if (mod(TOB, nTOB) == 0)          % Check if all TOBs have been covered for current blade
+          bladeCounter = bladeCounter + 1;   % Increment blade counter
+        end
       end
     end
   end
