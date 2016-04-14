@@ -249,6 +249,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               else    % Actual failure cause is network resources
                 NETresourceUnavailable = 1;
                 NETfailureCause = 'BAN';
+                ITfailureCause = 'NONE';    % Reset the value returned by BFS since the actual failure cause was network resources and not IT resources
                 NETresourceUnavailableBFS = 1;
                 break;    % Break out of inner scan loop since not enough NET resources are available; any further tries would fail
               end
@@ -327,6 +328,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               else    % Actual failure cause is network resources
                 NETresourceUnavailable = 1;
                 NETfailureCause = 'BAN';
+                ITfailureCause = 'NONE';    % Reset the value returned by BFS since the actual failure cause was network resources and not IT resources
                 NETresourceUnavailableBFS = 1;
                 break;    % Break out of inner scan loop since not enough NET resources are available; any further tries would fail
               end
@@ -405,6 +407,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               else    % Actual failure cause is network resources
                 NETresourceUnavailable = 1;
                 NETfailureCause = 'BAN';
+                ITfailureCause = 'NONE';    % Reset the value returned by BFS since the actual failure cause was network resources and not IT resources
                 NETresourceUnavailableBFS = 1;
                 break;    % Break out of inner scan loop since not enough NET resources are available; any further tries would fail
               end
