@@ -29,8 +29,9 @@ FAILURE = 0;          % Assign a value to global macro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Evaluate constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-numRequests = 1000;     % Total number of requests to generate
-numTypes = 3;           % Total number of configuration types
+numRequests = 1000;         % Total number of requests to generate
+numTypes = 3;               % Total number of configuration types
+generateNewRequestDB = 0;   % Flag that is used to generate a new request database
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Import configuration files (YAML config files)
@@ -53,14 +54,25 @@ dataCenterConfig = dataCenterConfig_T1;         % Store it as a separate variabl
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input generation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Inputs generated here to keep it consistent across all simulations
-str = sprintf('Input generation started ...');
-disp(str);
+if (generateNewRequestDB == 1)
+  % Inputs generated here to keep it consistent across all simulations
+  str = sprintf('Input generation started ...');
+  disp(str);
 
-requestDB = inputGeneration(numRequests);    % Pre-generating randomised requests - Note that the resource allocation is only allowed to look at the request for the current iteration
+  requestDB = inputGeneration(numRequests);    % Pre-generating randomised requests - Note that the resource allocation is only allowed to look at the request for the current iteration
 
-str = sprintf('Input generation complete.\n');
-disp(str);
+  str = sprintf('Input generation complete.\n');
+  disp(str);
+else
+  % Inputs generated here to keep it consistent across all simulations
+  str = sprintf('Loading input database ...');
+  disp(str);
+
+  load('requestDB');            % Load the same requestDB to keep it consistent across all simulations
+
+  str = sprintf('Loading input database complete.\n');
+  disp(str);
+end
 
 % Start timer
 tic;
