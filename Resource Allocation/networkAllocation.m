@@ -72,6 +72,14 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   % Set weightage factor (w = 0.5 is equal weightage to both bandwidth and latency/distance)
   f = 0.5;    % A higher value of f favours bandwidth whereas a lower value favours latency
   
+  % Find the maximum bandwidth
+  maxBandwidth = max(max(completeBandwidthMapUpdated));
+  
+  % Find the maximum/longest distance (Ignoring infinity)
+  distanceIndices = find(completeDistanceUpdated < Inf);   % Find (linear) indices of elements that have a finite distance value
+  distancesWithoutInfinity = completeDistanceUpdated(distanceIndices);  % Store all finite distance values into a column vector
+  maxDistance = max(distancesWithoutInfinity);      % Find the maximum distance
+  
   % Weigh all edges/links on the graph based on both it's latency (distance) and bandwidth (capacity)
   newWeightedGraph = completeDistanceUpdated;     % Initialise with updated distance matrix
   for i = 1:size(completeDistanceUpdated,2)
@@ -80,6 +88,8 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
       if ((completeDistanceUpdated(i,j) ~= Inf) && (completeBandwidthMapUpdated(i,j) > 0))
         % W_new = f * W_b + (1 - f) * W_l, where W_b = (1 - W_b_ij/W_b_total) and W_l = W_l_ij/W_l_total
         newWeightedGraph(i,j) = (f * (1 - (completeBandwidthMapUpdated(i,j)/totalBandwidth))) + ((1 - f) * (completeDistanceUpdated(i,j)/totalDistance));
+        % W_new = f * W_b + (1 - f) * W_l, where W_b = (1 - W_b_ij/W_b_max) and W_l = W_l_ij/W_l_max
+        newWeightedGraph(i,j) = (f * (1 - (completeBandwidthMapUpdated(i,j)/maxBandwidth))) + ((1 - f) * (completeDistanceUpdated(i,j)/maxDistance));
       end
     end
   end
