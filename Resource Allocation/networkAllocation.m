@@ -87,7 +87,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
       % Check if a link exists and that there is bandwidth available on it
       if ((completeDistanceUpdated(i,j) ~= Inf) && (completeBandwidthMapUpdated(i,j) > 0))
         % W_new = f * W_b + (1 - f) * W_l, where W_b = (1 - W_b_ij/W_b_total) and W_l = W_l_ij/W_l_total
-        newWeightedGraph(i,j) = (f * (1 - (completeBandwidthMapUpdated(i,j)/totalBandwidth))) + ((1 - f) * (completeDistanceUpdated(i,j)/totalDistance));
+        %newWeightedGraph(i,j) = (f * (1 - (completeBandwidthMapUpdated(i,j)/totalBandwidth))) + ((1 - f) * (completeDistanceUpdated(i,j)/totalDistance));
         % W_new = f * W_b + (1 - f) * W_l, where W_b = (1 - W_b_ij/W_b_max) and W_l = W_l_ij/W_l_max
         newWeightedGraph(i,j) = (f * (1 - (completeBandwidthMapUpdated(i,j)/maxBandwidth))) + ((1 - f) * (completeDistanceUpdated(i,j)/maxDistance));
       end
