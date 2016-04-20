@@ -90,6 +90,7 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
   ITresourceAllocStatusColumn = 9;
   networkResourceAllocStatusColumn = 10;
   requestStatusColumn = 11;
+  timeTakenColumn = 18;
 
   % Open figure - Updated when each request's resource allocation is complete
   %figure ('Name', 'Data Center Rack Usage (1st rack of each type)', 'NumberTitle', 'off', 'Position', [40, 100, 1200, 700]);
@@ -123,8 +124,9 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
     %profile on;         % Turn on profiler
 
     % IT & NET resource allocation
-    [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
-
+    [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, ...
+     NETfailureCause, pathLatenciesAllocated, timeTaken] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
+    
     %profile off;         % Turn off profiler
     %profile viewer;      % View profiler results
 
@@ -146,9 +148,10 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
     % Update network resource allocation column
     requestDB{req, networkResourceAllocStatusColumn} =  NETallocationResult;
 
-    % Update request status column
+    % Update request status column and time taken to find and allocate resources
     if (ITallocationResult == SUCCESS && NETallocationResult == SUCCESS)
       requestDB{req, requestStatusColumn} = SUCCESS;
+      requestDB{req, timeTakenColumn} = timeTaken;
     end
     
     % Update hold time maps

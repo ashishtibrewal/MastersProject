@@ -61,7 +61,7 @@ function requestDB = inputGeneration(nRequests)
   DBindex = 1;                            % Initialize database index
   time = 0;                               % Stores value of time (in seconds)
   
-  requestDB = cell(nRequests, 17);        % Matrix to store all generated requests (Each row contains a different request)
+  requestDB = cell(nRequests, 18);        % Matrix to store all generated requests (Each row contains a different request)
   % Column  1 -> CPU
   % Column  2 -> Memory
   % Column  3 -> Storage
@@ -79,6 +79,7 @@ function requestDB = inputGeneration(nRequests)
   % Column 15 -> NET failure cause
   % Column 16 -> Allocated path latencies
   % Column 17 -> Arrival time
+  % Column 18 -> Time taken to find and allocate resources
   
   distributionPlot = 0;   % Flag variable to check if anything needs to be plotted
   scatterPlot = 0;
@@ -208,8 +209,8 @@ function requestDB = inputGeneration(nRequests)
       AT = time;
       
       % Collect/store data generated over i iterations
-      requestDB(DBindex,:) = {nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0, {}, {}, 'NONE', 'NONE', {}, AT};
-      %testRequest = {64,128,256,100,50,10000,20000,4000,0,0,0,{},{},'NONE','NONE',{}, AT};    % Test request used for debugging
+      requestDB(DBindex,:) = {nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0, {}, {}, 'NONE', 'NONE', {}, AT, 0};
+      %testRequest = {64,128,256,100,50,10000,20000,4000,0,0,0,{},{},'NONE','NONE',{}, AT, 0};    % Test request used for debugging
       %requestDB(i,:) = testRequest;
   
       if (scatterPlot == 1)
