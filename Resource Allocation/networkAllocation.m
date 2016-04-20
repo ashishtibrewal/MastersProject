@@ -17,6 +17,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   completeDistance = dataCenterMap.distanceMap.completeDistance;
   switchMap = dataCenterMap.switchMap;
   completeBandwidthMap = dataCenterMap.bandwidthMap.completeBandwidth;
+  completeBandwidthMapOriginal = dataCenterMap.bandwidthMap.completeBandwidthOriginal;
   sparseBandwitdhMap = sparse(completeBandwidthMap);      % Sparse matrix containing links with its corresponding/respective bandwidth
   
   % Extract required items from the data center config struct
@@ -72,6 +73,9 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   % Set weightage factor (w = 0.5 is equal weightage to both bandwidth and latency/distance)
   f = 0.5;    % A higher value of f favours bandwidth whereas a lower value favours latency
   
+  % Function type (1 - 4)
+  fType = 3;    % Used to switch between different weightage function implementations
+  
   % Find the maximum bandwidth
   maxBandwidth = max(max(completeBandwidthMapUpdated));
   
@@ -86,25 +90,23 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
     for j = 1:size(completeDistanceUpdated,2)
       % Check if a link exists and that there is bandwidth available on it
       if ((completeDistanceUpdated(i,j) ~= Inf) && (completeBandwidthMapUpdated(i,j) > 0))
-        % W_new = f * W_b + (1 - f) * W_l, where W_b = (1 - W_b_ij/W_b_total) and W_l = W_l_ij/W_l_total
-        %newWeightedGraph(i,j) = (f * (1 - (completeBandwidthMapUpdated(i,j)/totalBandwidth))) + ((1 - f) * (completeDistanceUpdated(i,j)/totalDistance));
-        % W_new = f * W_b + (1 - f) * W_l, where W_b = (1 - W_b_ij/W_b_max) and W_l = W_l_ij/W_l_max
-        newWeightedGraph(i,j) = (f * (1 - (completeBandwidthMapUpdated(i,j)/maxBandwidth))) + ((1 - f) * (completeDistanceUpdated(i,j)/maxDistance));
+        switch (fType)
+          case 1
+            % W_new = f * W_b + (1 - f) * W_l, where W_b = (1 - W_b_ij/W_b_total) and W_l = W_l_ij/W_l_total
+            newWeightedGraph(i,j) = (f * (1 - (completeBandwidthMapUpdated(i,j)/totalBandwidth))) + ((1 - f) * (completeDistanceUpdated(i,j)/totalDistance));
+          case 2
+            % W_new = f * W_b + (1 - f) * W_l, where W_b = (1 - W_b_ij/W_b_max) and W_l = W_l_ij/W_l_max
+            newWeightedGraph(i,j) = (f * (1 - (completeBandwidthMapUpdated(i,j)/maxBandwidth))) + ((1 - f) * (completeDistanceUpdated(i,j)/maxDistance));
+          case 3
+            % W_new = f * W_b + (1 - f) * W_l, where W_b = (1 - W_b_ij/W_b_O_ij) and W_l = W_l_ij/W_l_max
+            newWeightedGraph(i,j) = (f * (1 - (completeBandwidthMapUpdated(i,j)/completeBandwidthMapOriginal(i,j)))) + ((1 - f) * (completeDistanceUpdated(i,j)/maxDistance));
+          case 4
+            % W_new = W_l/W_b  -> Want to minimize f(x,y) = dist(x,y)/bandwidth(x,y)
+            newWeightedGraph(i,j) = completeDistanceUpdated(i,j)/completeBandwidthMapUpdated(i,j);
+        end
       end
     end
   end
-  
-%   % Weigh distance matrix based on both the distance and bandwidth available
-%   completeDistanceWeighted = completeDistanceUpdated;     % Initialise with updated matrix
-%   for i = 1:size(completeDistanceUpdated,2)
-%     for j = 1:size(completeDistanceUpdated,2)
-%       % Check if a link exists and that there is bandwidth available on it
-%       if ((completeDistanceUpdated(i,j) ~= Inf) && (completeBandwidthMap(i,j) > 0))
-%         % Want to minimize f(x,y) = dist(x,y)/bandwidth(x,y)
-%         completeDistanceWeighted(i,j) = completeDistanceUpdated(i,j)/completeBandwidthMap(i,j);
-%       end
-%     end
-%   end
 
   % Initialize result variables
   LATsuccess = SUCCESS;
