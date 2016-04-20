@@ -58,6 +58,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   completeResourceMap = dataCenterMap.completeResourceMap;
   completeUnitAvailableMap = dataCenterMap.completeUnitAvailableMap;
   updatedUnitAvailableMap = completeUnitAvailableMap;   % Copy of the original unit available map on which changes are made
+  completeBandwidthMap = dataCenterMap.bandwidthMap.completeBandwidth;
   
   % IMPORTANT NOTE: A unit can only be allocated to a single request.
   % Updates/changes are made to the copies of the original maps and the
@@ -252,8 +253,13 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               else    % Actual failure cause is network resources
                 NETresourceUnavailable = 1;
                 NETfailureCause = 'BAN';
-                NETresourceUnavailableBFS = 1;
-                break;    % Break out of inner scan loop since not enough NET resources are available; any further tries would fail
+                % To handle the corner-case when the start node has IT resources but no NET resources
+                adjaceny = completeBandwidthMap(startCPUslot,:);  % Find start node's neighbours
+                neighbours = find(adjaceny > 0);    % Find neighbours with non-zero bandwidth links
+                if (numel(neighbours) ~= 0)   % The start node has NET resources but BFS failed on some other links somewhere else in the graph/network
+                  NETresourceUnavailableBFS = 1;
+                  break;    % Break out of inner scan loop since not enough NET resources are available; any further tries would fail
+                end
               end
             else      % If required IT resources have been successfully found with acceptable bandwidth links
               % Locations of resources that are "held" for the current request
@@ -330,8 +336,13 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               else    % Actual failure cause is network resources
                 NETresourceUnavailable = 1;
                 NETfailureCause = 'BAN';
-                NETresourceUnavailableBFS = 1;
-                break;    % Break out of inner scan loop since not enough NET resources are available; any further tries would fail
+                % To handle the corner-case when the start node has IT resources but no NET resources
+                adjaceny = completeBandwidthMap(startMEMslot,:);  % Find start node's neighbours
+                neighbours = find(adjaceny > 0);    % Find neighbours with non-zero bandwidth links
+                if (numel(neighbours) ~= 0)   % The start node has NET resources but BFS failed on some other links somewhere else in the graph/network
+                  NETresourceUnavailableBFS = 1;
+                  break;    % Break out of inner scan loop since not enough NET resources are available; any further tries would fail
+                end
               end
             else      % If required IT resources have been successfully found with acceptable bandwidth links
               % Locations of resources that are "held" for the current request
@@ -408,8 +419,13 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               else    % Actual failure cause is network resources
                 NETresourceUnavailable = 1;
                 NETfailureCause = 'BAN';
-                NETresourceUnavailableBFS = 1;
-                break;    % Break out of inner scan loop since not enough NET resources are available; any further tries would fail
+                % To handle the corner-case when the start node has IT resources but no NET resources
+                adjaceny = completeBandwidthMap(startSTOslot,:);  % Find start node's neighbours
+                neighbours = find(adjaceny > 0);    % Find neighbours with non-zero bandwidth links
+                if (numel(neighbours) ~= 0)   % The start node has NET resources but BFS failed on some other links somewhere else in the graph/network
+                  NETresourceUnavailableBFS = 1;
+                  break;    % Break out of inner scan loop since not enough NET resources are available; any further tries would fail
+                end
               end
             else      % If required IT resources have been successfully found with acceptable bandwidth links
               % Locations of resources that are "held" for the current request
