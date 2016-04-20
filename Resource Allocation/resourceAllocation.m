@@ -1,5 +1,5 @@
 function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, ...
-          NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated] = ...
+          NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated, timeTaken] = ...
           resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems)
   % Function to allocate the IT resources
   % NEED TO PLAN AND TRY DIFFERENT APPROACHES.
@@ -165,6 +165,9 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   % IMPORTANT DUE TO LATENCY CONSTRAINTS) SINCE BFS IS RUN STARTING ON A
   % NODE THAT HAS AT LEAST A SINGLE UNIT FREE OF THE RESOURCE TYPE WITH
   % THE HIGHEST CONTENTION RATIO.
+  
+  % Start/reset timer for each request (i.e. each function invokation) - Starting here since the main allocation algorithm starts here
+  tic;
   
   % Primary scanning loop iterator (Jump to atleast the next rack)
   loopIncrement = nSlots * nBlades;
@@ -458,12 +461,16 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         end
     end
   end
+  
+  % Stop/record timer for each request (Stop here since everything after
+  % this is mainly post processing)
+  timeTaken = toc;
 
   % Break out of loop if both IT and netowrk resources have been successfully allocated
   if (ITsuccessful == SUCCESS && NETsuccessful == SUCCESS)
     ITresult = SUCCESS;
     NETresult = SUCCESS;
-    str = sprintf('Resources allocated for current request.\n');
+    str = sprintf('Resources allocated for current request. Time taken: %.2fs \n', timeTaken);
     disp(str);
     % Update complete unit/resource available map
     for i = 1:size(heldITresources,1)
@@ -481,10 +488,10 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     ITresult = FAILURE;
     NETresult = FAILURE;
     if (ITresourceUnavailable == 1)
-      str = sprintf('Resources (IT) unavailable for current request (Cause: %s)! \n', ITfailureCause);
+      str = sprintf('Resources (IT) unavailable for current request (Cause: %s)! Time taken: %.2fs \n', ITfailureCause, timeTaken);
       disp(str);
     elseif (NETresourceUnavailable == 1)
-      str = sprintf('Resources (NET) unavailable for current request (Cause: %s)! \n', NETfailureCause);
+      str = sprintf('Resources (NET) unavailable for current request (Cause: %s)! Time taken: %.2fs \n', NETfailureCause, timeTaken);
       disp(str);
     end
   end    
