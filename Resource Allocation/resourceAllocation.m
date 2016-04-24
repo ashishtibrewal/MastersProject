@@ -172,6 +172,8 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     heldITresources = {};
     ITfailureCause = 'STO';   % Allocation failed due to unavailibility of STOs
   else
+    % Loop to iterate/try multiple combinations when a particular chosen combination
+    % of resources fails and with these nodes removed before the next iteration/try
     for slotNo = scanStartNode:loopIncrement:totalSlotsToScan
       %str = sprintf('Starting node: %d \n', ITlocations(slotNo));
       %disp(str);
