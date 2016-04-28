@@ -156,8 +156,9 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   nCPU_SlotsToScan = size(CPUlocations,2);  % Number of slots to scan
   nMEM_SlotsToScan = size(MEMlocations,2);  % Number of slots to scan
   nSTO_SlotsToScan = size(STOlocations,2);  % Number of slots to scan
-  totalSlotsToScan = size(ITlocations, 2);    % Total number of slots to scan
-  scanStartNode = (nTORs * nRacks) + (nTOBs * nBlades * nRacks) + 1;    % First non-switch node
+  totalCPUSlotsToScan = size(CPUlocations, 2);    % Total number of slots to scan
+  totalMEMSlotsToScan = size(MEMlocations, 2);    % Total number of slots to scan
+  totalSTOSlotsToScan = size(STOlocations, 2);    % Total number of slots to scan
   
   if ((nCPU_SlotsToScan == 0) || (availableCPUunits < minReqCPUslots))        % Don't need to search any further since no (or not enough) CPU slots are available
     ITresourceUnavailable = 1;
@@ -172,13 +173,14 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     heldITresources = {};
     ITfailureCause = 'STO';   % Allocation failed due to unavailibility of STOs
   else
+    % Initialise start slot numbers
+    scanStartNodeCPU = 1;
+    scanStartNodeMEM = 1;
+    scanStartNodeSTO = 1;
+    
     % Loop to iterate/try multiple combinations when a particular chosen combination
     % of resources fails and with these nodes removed before the next iteration/try
-    for slotNo = scanStartNode:loopIncrement:totalSlotsToScan
-      %str = sprintf('Starting node: %d \n', ITlocations(slotNo));
-      %disp(str);
-      startSlot = scanStartNode;     % Start slot/node
-      
+    while(1)
       % Initialise variables that keep track to the number of units found
       CPUunitsFound = 0;
       MEMunitsFound = 0;
@@ -190,107 +192,103 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
       % Pre-allocate (and initialize) cell to hold resource nodes
       ITresourceNodes = cell(3,max([CPUunitsRequired,MEMunitsRequired,STOunitsRequired]));    % This caters for worst-case allocation (i.e. one unit on each slot)
       
-      % Find CPUs, MEMs and STOs by interating over all IT slots
-      for slot = startSlot:totalSlotsToScan
-        % Extract slot type
-        slotType = ITlocations(slot);
-        
-        % Store the slot type as an integer (Need to do this since the switch-case statement doesn't accept strings).
-        if (strcmp(slotType,'CPU'))
-          slotTypeInt = 1;
-        elseif (strcmp(slotType,'MEM'))
-          slotTypeInt = 2;
-        elseif (strcmp(slotType,'STO'))
-          slotTypeInt = 3;
-        end
-
-        % Switch on slot type
-        switch (slotTypeInt)
-          % CPU slots
-          case 1 
-            if (CPUunitsFound < CPUunitsRequired)
-              if (updatedUnitAvailableMap(slot) > 0)
-                unitsFound = updatedUnitAvailableMap(slot);
-                if ((CPUunitsRequired - CPUunitsFound) >= unitsFound)
-                  CPUunitsFound = CPUunitsFound + unitsFound;
-                  ITresourceNodes{1,CPUindex} = {slot,unitsFound};
-                else
-                  unitsRequired = CPUunitsRequired - CPUunitsFound;
-                  CPUunitsFound = CPUunitsFound + unitsRequired;
-                  ITresourceNodes{1,CPUindex} = {slot,unitsRequired};
-                end
-                CPUindex = CPUindex + 1;    % Increment index
-              end            
+      % Scan CPU slots
+      for CPUslotNo = scanStartNodeCPU:totalCPUSlotsToScan
+        %str = sprintf('Starting CPU node: %d \n', ITlocations(slotNo));
+        %disp(str);
+        if (CPUunitsFound < CPUunitsRequired)
+          if (updatedUnitAvailableMap(CPUlocations(CPUslotNo)) > 0)
+            unitsFound = updatedUnitAvailableMap(CPUlocations(CPUslotNo));
+            if ((CPUunitsRequired - CPUunitsFound) >= unitsFound)
+              CPUunitsFound = CPUunitsFound + unitsFound;
+              ITresourceNodes{1,CPUindex} = {CPUlocations(CPUslotNo),unitsFound};
+            else
+              unitsRequired = CPUunitsRequired - CPUunitsFound;
+              CPUunitsFound = CPUunitsFound + unitsRequired;
+              ITresourceNodes{1,CPUindex} = {CPUlocations(CPUslotNo),unitsRequired};
             end
-            
-          % MEM slots
-          case 2
-            if (MEMunitsFound < MEMunitsRequired)
-              if (updatedUnitAvailableMap(slot) > 0)
-                unitsFound = updatedUnitAvailableMap(slot);
-                if ((MEMunitsRequired - MEMunitsFound) >= unitsFound)
-                  MEMunitsFound = MEMunitsFound + unitsFound;
-                  ITresourceNodes{2,MEMindex} = {slot,unitsFound};
-                else
-                  unitsRequired = MEMunitsRequired - MEMunitsFound;
-                  MEMunitsFound = MEMunitsFound + unitsRequired;
-                  ITresourceNodes{2,MEMindex} = {slot,unitsRequired};
-                end
-                MEMindex = MEMindex + 1;    % Increment index
-              end            
-            end
-            
-          % STO slots
-          case 3
-            if (STOunitsFound < STOunitsRequired)
-              if (updatedUnitAvailableMap(slot) > 0)
-                unitsFound = updatedUnitAvailableMap(slot);
-                if ((STOunitsRequired - STOunitsFound) >= unitsFound)
-                  STOunitsFound = STOunitsFound + unitsFound;
-                  ITresourceNodes{3,STOindex} = {slot,unitsFound};
-                else
-                  unitsRequired = STOunitsRequired - STOunitsFound;
-                  STOunitsFound = STOunitsFound + unitsRequired;
-                  ITresourceNodes{3,STOindex} = {slot,unitsRequired};
-                end
-                STOindex = STOindex + 1;    % Increment index
-              end            
-            end
-        end
-        
-        % Check if all required resource units have been found
-        if ((CPUunitsFound == CPUunitsRequired) && ...
-            (MEMunitsFound == MEMunitsRequired) && ...
-            (STOunitsFound == STOunitsRequired))
-          ITsuccessful = SUCCESS;
-          ITfailureCause = 'NONE';
-          break;
+            CPUindex = CPUindex + 1;    % Increment index
+          end            
         else
-          ITsuccessful = FAILURE;
-          % Failure cause possible values
-          % NONE = 0
-          % CPU = 1
-          % MEM = 2
-          % STO = 3
-          % CPU & MEM = 4
-          % CPU & STO = 5
-          % MEM & STO = 6
-          CPUfailed = (CPUunitsRequired - CPUunitsFound);
-          MEMfailed = (MEMunitsRequired - MEMunitsFound);
-          STOfailed = (STOunitsRequired - STOunitsFound);
-          if (CPUfailed > 0)
-            ITfailureCause = 'CPU';
-          elseif (MEMfailed > 0)
-            ITfailureCause = 'MEM';
-          elseif (STOfailed > 0)
-            ITfailureCause = 'STO';
-          elseif ((CPUfailed > 0) && (MEMfailed > 0))
-            ITfailureCause = 'CPU-MEM';
-          elseif ((CPUfailed > 0) && (STOfailed > 0))
-            ITfailureCause = 'CPU-STO';
-          elseif ((MEMfailed > 0) && (STOfailed > 0))
-            ITfailureCause = 'MEM-STO';
+          break;      % Break out since required CPU units have been found
+        end
+      end
+      
+      % Scan MEM slots
+      for MEMslotNo = scanStartNodeMEM:totalMEMSlotsToScan
+        %str = sprintf('Starting MEM node: %d \n', ITlocations(slotNo));
+        %disp(str);
+        if (MEMunitsFound < MEMunitsRequired)
+          if (updatedUnitAvailableMap(MEMlocations(MEMslotNo)) > 0)
+            unitsFound = updatedUnitAvailableMap(MEMlocations(MEMslotNo));
+            if ((MEMunitsRequired - MEMunitsFound) >= unitsFound)
+              MEMunitsFound = MEMunitsFound + unitsFound;
+              ITresourceNodes{1,MEMindex} = {MEMlocations(MEMslotNo),unitsFound};
+            else
+              unitsRequired = MEMunitsRequired - MEMunitsFound;
+              MEMunitsFound = MEMunitsFound + unitsRequired;
+              ITresourceNodes{1,MEMindex} = {MEMlocations(MEMslotNo),unitsRequired};
+            end
+            MEMindex = MEMindex + 1;    % Increment index
           end
+        else
+          break;     % Break out since required MEM units have been found
+        end
+      end
+      
+      % Scan STO slots
+      for STOslotNo = scanStartNodeSTO:totalSTOSlotsToScan
+        %str = sprintf('Starting STO node: %d \n', ITlocations(slotNo));
+        %disp(str);
+        if (STOunitsFound < STOunitsRequired)
+          if (updatedUnitAvailableMap(STOlocations(STOslotNo)) > 0)
+            unitsFound = updatedUnitAvailableMap(STOlocations(STOslotNo));
+            if ((STOunitsRequired - STOunitsFound) >= unitsFound)
+              STOunitsFound = STOunitsFound + unitsFound;
+              ITresourceNodes{1,STOindex} = {STOlocations(STOslotNo),unitsFound};
+            else
+              unitsRequired = STOunitsRequired - STOunitsFound;
+              STOunitsFound = STOunitsFound + unitsRequired;
+              ITresourceNodes{1,STOindex} = {STOlocations(STOslotNo),unitsRequired};
+            end
+            STOindex = STOindex + 1;    % Increment index
+          end
+        else
+          break;     % Break out since required STO units have been found
+        end
+      end
+      
+      % Check if all required resource units have been found
+      if ((CPUunitsFound == CPUunitsRequired) && ...
+          (MEMunitsFound == MEMunitsRequired) && ...
+          (STOunitsFound == STOunitsRequired))
+        ITsuccessful = SUCCESS;
+        ITfailureCause = 'NONE';
+      else
+        ITsuccessful = FAILURE;
+        % Failure cause possible values
+        % NONE = 0
+        % CPU = 1
+        % MEM = 2
+        % STO = 3
+        % CPU & MEM = 4
+        % CPU & STO = 5
+        % MEM & STO = 6
+        CPUfailed = (CPUunitsRequired - CPUunitsFound);
+        MEMfailed = (MEMunitsRequired - MEMunitsFound);
+        STOfailed = (STOunitsRequired - STOunitsFound);
+        if (CPUfailed > 0)
+          ITfailureCause = 'CPU';
+        elseif (MEMfailed > 0)
+          ITfailureCause = 'MEM';
+        elseif (STOfailed > 0)
+          ITfailureCause = 'STO';
+        elseif ((CPUfailed > 0) && (MEMfailed > 0))
+          ITfailureCause = 'CPU-MEM';
+        elseif ((CPUfailed > 0) && (STOfailed > 0))
+          ITfailureCause = 'CPU-STO';
+        elseif ((MEMfailed > 0) && (STOfailed > 0))
+          ITfailureCause = 'MEM-STO';
         end
       end
       
@@ -320,6 +318,12 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           NETresourceUnavailable = 1;
           %disp(NETfailureCause);
           heldITresources = {};   % Free/empty held held resources cell network allocation failed for this set of IT resources
+          
+          % Incrememt all scan start nodes to look for next combination
+          scanStartNodeCPU = scanStartNodeCPU + loopIncrement;
+          scanStartNodeMEM = scanStartNodeMEM + loopIncrement;
+          scanStartNodeSTO = scanStartNodeSTO + loopIncrement;
+          
           % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
           updatedUnitAvailableMap(failureNodes) = 0;    % Set units available in failure nodes to be zero
 
