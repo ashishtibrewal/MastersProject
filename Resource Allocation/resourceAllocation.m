@@ -160,15 +160,20 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   totalMEMSlotsToScan = size(MEMlocations, 2);    % Total number of slots to scan
   totalSTOSlotsToScan = size(STOlocations, 2);    % Total number of slots to scan
   
-  if ((nCPU_SlotsToScan == 0) || (availableCPUunits < minReqCPUslots))        % Don't need to search any further since no (or not enough) CPU slots are available
+  % Find the number of slots that are free
+  nAvailableCPUslots = size(availableCPUslots,2);
+  nAvailableMEMslots = size(availableMEMslots,2);
+  nAvailableSTOslots = size(availableSTOslots,2);
+  
+  if ((nCPU_SlotsToScan == 0) || (nAvailableCPUslots < minReqCPUslots))        % Don't need to search any further since no (or not enough) CPU slots are available
     ITresourceUnavailable = 1;
     heldITresources = {};
     ITfailureCause = 'CPU';   % Allocation failed due to unavailibility of CPUs
-  elseif ((nMEM_SlotsToScan == 0) || (availableMEMunits < minReqMEMslots))    % Don't need to search any further since no (or not enough) MEM slots are available
+  elseif ((nMEM_SlotsToScan == 0) || (nAvailableMEMslots < minReqMEMslots))    % Don't need to search any further since no (or not enough) MEM slots are available
     ITresourceUnavailable = 1;
     heldITresources = {};
     ITfailureCause = 'MEM';   % Allocation failed due to unavailibility of MEMs
-  elseif ((nSTO_SlotsToScan == 0) || (availableSTOunits < minReqSTOslots))    % Don't need to search any further since no (or not enough) STO slots are available
+  elseif ((nSTO_SlotsToScan == 0) || (nAvailableSTOslots < minReqSTOslots))    % Don't need to search any further since no (or not enough) STO slots are available
     ITresourceUnavailable = 1;
     heldITresources = {};
     ITfailureCause = 'STO';   % Allocation failed due to unavailibility of STOs
@@ -277,17 +282,20 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         CPUfailed = (CPUunitsRequired - CPUunitsFound);
         MEMfailed = (MEMunitsRequired - MEMunitsFound);
         STOfailed = (STOunitsRequired - STOunitsFound);
-        if (CPUfailed > 0)
+        if ((CPUfailed > 0) && (availableCPUunits < CPUunitsRequired))
           ITfailureCause = 'CPU';
-        elseif (MEMfailed > 0)
+        elseif ((MEMfailed > 0) && (availableMEMunits < MEMunitsRequired))
           ITfailureCause = 'MEM';
-        elseif (STOfailed > 0)
+        elseif ((STOfailed > 0) && (availableSTOunits < STOunitsRequired))
           ITfailureCause = 'STO';
-        elseif ((CPUfailed > 0) && (MEMfailed > 0))
+        elseif (((CPUfailed > 0) && (availableCPUunits < CPUunitsRequired)) && ...
+                ((MEMfailed > 0) && (availableMEMunits < MEMunitsRequired)))
           ITfailureCause = 'CPU-MEM';
-        elseif ((CPUfailed > 0) && (STOfailed > 0))
+        elseif (((CPUfailed > 0) && (availableCPUunits < CPUunitsRequired)) && ...
+                ((STOfailed > 0) && (availableSTOunits < STOunitsRequired)))
           ITfailureCause = 'CPU-STO';
-        elseif ((MEMfailed > 0) && (STOfailed > 0))
+        elseif (((MEMfailed > 0) && (availableMEMunits < MEMunitsRequired)) && ...
+                ((STOfailed > 0) && (availableSTOunits < STOunitsRequired)))
           ITfailureCause = 'MEM-STO';
         end
       end
