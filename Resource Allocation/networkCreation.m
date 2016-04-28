@@ -40,8 +40,8 @@ function dataCenterMap =  networkCreation(dataCenterConfig)
   nChannelsTOR_TOR = dataCenterConfig.channels.TOR_TOR;
   nChannelsTOR_TOB = dataCenterConfig.channels.TOR_TOB;
   nChannelsTOB_TOB = dataCenterConfig.channels.TOB_TOB;
-  nChannelsTOB_SLOT = dataCenterConfig.channels.TOB_SLOT;
-  nChannelsSLOT_SLOT = dataCenterConfig.channels.SLOT_SLOT;
+  nChannelsTOB_SLOT = dataCenterConfig.channels.TOB_slot;
+  nChannelsSLOT_SLOT = dataCenterConfig.channels.slot;
   
   % Network limits/constraints
   maxChannelBandwidth = dataCenterConfig.bounds.maxChannelBandwidth; % Maximum bandwidth available on a link connecting any two "nodes" in the network (i.e 400 Gb/s)

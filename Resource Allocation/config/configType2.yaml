@@ -35,9 +35,9 @@ distances:
 topology:
   rack: 'Fully-connected'
   rack_blade: 'Spine-leaf'
-  blade: 'Ring'
+  blade: 'Disconnected'
   blade_slot: 'Spine-leaf'
-  slot: 'Ring'
+  slot: 'Disconnected'
 
 # Switch delays at different levels (in nanoseconds) - Used in the latency map
 switchDelay:
@@ -50,11 +50,11 @@ defaultDelay: 200   # Default Tx and Rx delay
 
 # Number of channels between two nodes (i.e. a node can be a rack/blade/slot)
 channels:
-  TOR_TOR: 4        # Number of channels between TORs
-  TOR_TOB: 4        # Number of channels between TOR & TOB
+  TOR_TOR: 8        # Number of channels between TORs
+  TOR_TOB: 8        # Number of channels between TOR & TOB
   TOB_TOB: 1        # Number of channels between TOBs
-  TOB_SLOT: 2       # Number of channels between TOB & SLOT
-  SLOT_SLOT: 1      # Number of channels between SLOTs
+  TOB_slot: 4       # Number of channels between TOB & slot
+  slot: 1           # Number of channels between slots
 
 # Contraints/bounds in the data center (Minimum channel latency in nanoseconds & maximum channel bandwidth in Gb/s)
 # Maximum bandwidth available on a link connecting any two "nodes" in the network (i.e 400 Gb/s)
