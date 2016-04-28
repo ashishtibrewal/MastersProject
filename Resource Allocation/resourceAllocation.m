@@ -227,7 +227,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
             else
               unitsRequired = MEMunitsRequired - MEMunitsFound;
               MEMunitsFound = MEMunitsFound + unitsRequired;
-              ITresourceNodes{1,MEMindex} = {MEMlocations(MEMslotNo),unitsRequired};
+              ITresourceNodes{2,MEMindex} = {MEMlocations(MEMslotNo),unitsRequired};
             end
             MEMindex = MEMindex + 1;    % Increment index
           end
@@ -249,7 +249,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
             else
               unitsRequired = STOunitsRequired - STOunitsFound;
               STOunitsFound = STOunitsFound + unitsRequired;
-              ITresourceNodes{1,STOindex} = {STOlocations(STOslotNo),unitsRequired};
+              ITresourceNodes{3,STOindex} = {STOlocations(STOslotNo),unitsRequired};
             end
             STOindex = STOindex + 1;    % Increment index
           end
