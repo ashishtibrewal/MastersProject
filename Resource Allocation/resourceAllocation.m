@@ -159,15 +159,20 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   totalSlotsToScan = size(ITlocations, 2);    % Total number of slots to scan
   scanStartNode = (nTORs * nRacks) + (nTOBs * nBlades * nRacks) + 1;    % First non-switch node
   
-  if ((nCPU_SlotsToScan == 0) || (availableCPUunits < minReqCPUslots))        % Don't need to search any further since no (or not enough) CPU slots are available
+  % Find the number of slots that are free
+  nAvailableCPUslots = size(availableCPUslots,2);
+  nAvailableMEMslots = size(availableMEMslots,2);
+  nAvailableSTOslots = size(availableSTOslots,2);
+
+  if ((nCPU_SlotsToScan == 0) || (nAvailableCPUslots < minReqCPUslots))        % Don't need to search any further since no (or not enough) CPU slots are available
     ITresourceUnavailable = 1;
     heldITresources = {};
     ITfailureCause = 'CPU';   % Allocation failed due to unavailibility of CPUs
-  elseif ((nMEM_SlotsToScan == 0) || (availableMEMunits < minReqMEMslots))    % Don't need to search any further since no (or not enough) MEM slots are available
+  elseif ((nMEM_SlotsToScan == 0) || (nAvailableMEMslots < minReqMEMslots))    % Don't need to search any further since no (or not enough) MEM slots are available
     ITresourceUnavailable = 1;
     heldITresources = {};
     ITfailureCause = 'MEM';   % Allocation failed due to unavailibility of MEMs
-  elseif ((nSTO_SlotsToScan == 0) || (availableSTOunits < minReqSTOslots))    % Don't need to search any further since no (or not enough) STO slots are available
+  elseif ((nSTO_SlotsToScan == 0) || (nAvailableSTOslots < minReqSTOslots))    % Don't need to search any further since no (or not enough) STO slots are available
     ITresourceUnavailable = 1;
     heldITresources = {};
     ITfailureCause = 'STO';   % Allocation failed due to unavailibility of STOs
