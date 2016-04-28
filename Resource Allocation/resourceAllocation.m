@@ -183,6 +183,9 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     scanStartNodeMEM = 1;
     scanStartNodeSTO = 1;
     
+    % Initialise check variable
+    ITcheckBreak = 0;
+    
     % Loop to iterate/try multiple combinations when a particular chosen combination
     % of resources fails and with these nodes removed before the next iteration/try
     while(1)
@@ -284,19 +287,25 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
         STOfailed = (STOunitsRequired - STOunitsFound);
         if ((CPUfailed > 0) && (availableCPUunits < CPUunitsRequired))
           ITfailureCause = 'CPU';
+          ITcheckBreak = 1;   % Set to 1 as it's checked later
         elseif ((MEMfailed > 0) && (availableMEMunits < MEMunitsRequired))
           ITfailureCause = 'MEM';
+          ITcheckBreak = 1;   % Set to 1 as it's checked later
         elseif ((STOfailed > 0) && (availableSTOunits < STOunitsRequired))
           ITfailureCause = 'STO';
+          ITcheckBreak = 1;   % Set to 1 as it's checked later
         elseif (((CPUfailed > 0) && (availableCPUunits < CPUunitsRequired)) && ...
                 ((MEMfailed > 0) && (availableMEMunits < MEMunitsRequired)))
           ITfailureCause = 'CPU-MEM';
+          ITcheckBreak = 1;   % Set to 1 as it's checked later
         elseif (((CPUfailed > 0) && (availableCPUunits < CPUunitsRequired)) && ...
                 ((STOfailed > 0) && (availableSTOunits < STOunitsRequired)))
           ITfailureCause = 'CPU-STO';
+          ITcheckBreak = 1;   % Set to 1 as it's checked later
         elseif (((MEMfailed > 0) && (availableMEMunits < MEMunitsRequired)) && ...
                 ((STOfailed > 0) && (availableSTOunits < STOunitsRequired)))
           ITfailureCause = 'MEM-STO';
+          ITcheckBreak = 1;   % Set to 1 as it's checked later
         end
       end
       
@@ -357,10 +366,13 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           end
         end
       else
-        ITresourceUnavailable = 1;
-        heldITresources = {};
-        pathLatenciesAllocated = {};
-        break;      % Break out of the inner loop since required number of IT resources couldn't be found
+        % Check to make sure that not enough IT resources are available
+        if (ITcheckBreak == 1)
+          ITresourceUnavailable = 1;
+          heldITresources = {};
+          pathLatenciesAllocated = {};
+          break;      % Break out of the inner loop since required number of IT resources couldn't be found
+        end
       end
     end
   end
