@@ -143,16 +143,6 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
   % Primary scanning loop iterator (Jump to atleast the next rack)
   loopIncrement = nSlots * nBlades;
 
-  ITresourceUnavailable = 0;    % Initialize/reset IT resource unavailable for every iteration of the loop
-  NETresourceUnavailable = 0;   % Initialize/reset NET resource unavailable for every iteration of the loop
-  ITsuccessful = FAILURE;       % Initialize/reset IT successful for every iteration of the loop
-  NETsuccessful = FAILURE;      % Initialize/reset NET successful for every iteration of the loop
-  heldITresources = {};         % Initialize/reset held IT resources for every iteration of the loop
-  heldNETresources = {};        % Initialize/reset held NET resources for every iteration of the loop
-  ITfailureCause = 'NONE';      % Initialize/reset IT resource allocation failure cause for every iteration of the loop
-  NETfailureCause = 'NONE';     % Initialize/reset NET resource allocation failure cause for every iteration of the loop
-  pathLatenciesAllocated = {};  % Initialize/reset path latencies for every iteration of the loop
-
   nCPU_SlotsToScan = size(CPUlocations,2);  % Number of slots to scan
   nMEM_SlotsToScan = size(MEMlocations,2);  % Number of slots to scan
   nSTO_SlotsToScan = size(STOlocations,2);  % Number of slots to scan
@@ -185,10 +175,31 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     
     % Initialise check variable
     ITcheckBreak = 0;
+    whileIncrement = 1;
+    whileLimit = max([totalCPUSlotsToScan,totalMEMSlotsToScan,totalSTOSlotsToScan]);
     
     % Loop to iterate/try multiple combinations when a particular chosen combination
     % of resources fails and with these nodes removed before the next iteration/try
     while(1)
+      % Handle corner case when no NET resources are found for all tried
+      % combinations of IT resources
+      if (whileIncrement >= whileLimit)
+        NETresourceUnavailable = 1;   % Set this since the actual cause of failure is unavailibility of NET resources
+        % Note that other values are reset in the previous iteration, hence, dont need to do it here. The same reason applies to the NET failure cause
+        break;    % Break out sice all combinations of IT have been tired for this request
+      end
+      
+      % Initialise variables
+      ITresourceUnavailable = 0;    % Initialize/reset IT resource unavailable for every iteration of the loop
+      NETresourceUnavailable = 0;   % Initialize/reset NET resource unavailable for every iteration of the loop
+      ITsuccessful = FAILURE;       % Initialize/reset IT successful for every iteration of the loop
+      NETsuccessful = FAILURE;      % Initialize/reset NET successful for every iteration of the loop
+      heldITresources = {};         % Initialize/reset held IT resources for every iteration of the loop
+      heldNETresources = {};        % Initialize/reset held NET resources for every iteration of the loop
+      ITfailureCause = 'NONE';      % Initialize/reset IT resource allocation failure cause for every iteration of the loop
+      NETfailureCause = 'NONE';     % Initialize/reset NET resource allocation failure cause for every iteration of the loop
+      pathLatenciesAllocated = {};  % Initialize/reset path latencies for every iteration of the loop
+      
       % Initialise variables that keep track to the number of units found
       CPUunitsFound = 0;
       MEMunitsFound = 0;
@@ -340,6 +351,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           scanStartNodeCPU = scanStartNodeCPU + loopIncrement;
           scanStartNodeMEM = scanStartNodeMEM + loopIncrement;
           scanStartNodeSTO = scanStartNodeSTO + loopIncrement;
+          whileIncrement = whileIncrement + loopIncrement;
           
           % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
           updatedUnitAvailableMap(failureNodes) = 0;    % Set units available in failure nodes to be zero
