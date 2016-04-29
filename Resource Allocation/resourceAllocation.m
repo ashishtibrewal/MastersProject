@@ -242,7 +242,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
             unitsFound = updatedUnitAvailableMap(MEMlocations(MEMslotNo));
             if ((MEMunitsRequired - MEMunitsFound) >= unitsFound)
               MEMunitsFound = MEMunitsFound + unitsFound;
-              ITresourceNodes{1,MEMindex} = {MEMlocations(MEMslotNo),unitsFound};
+              ITresourceNodes{2,MEMindex} = {MEMlocations(MEMslotNo),unitsFound};
             else
               unitsRequired = MEMunitsRequired - MEMunitsFound;
               MEMunitsFound = MEMunitsFound + unitsRequired;
@@ -264,7 +264,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
             unitsFound = updatedUnitAvailableMap(STOlocations(STOslotNo));
             if ((STOunitsRequired - STOunitsFound) >= unitsFound)
               STOunitsFound = STOunitsFound + unitsFound;
-              ITresourceNodes{1,STOindex} = {STOlocations(STOslotNo),unitsFound};
+              ITresourceNodes{3,STOindex} = {STOlocations(STOslotNo),unitsFound};
             else
               unitsRequired = STOunitsRequired - STOunitsFound;
               STOunitsFound = STOunitsFound + unitsRequired;
