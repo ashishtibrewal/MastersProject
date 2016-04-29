@@ -346,13 +346,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           NETresourceUnavailable = 1;
           %disp(NETfailureCause);
           heldITresources = {};   % Free/empty held held resources cell network allocation failed for this set of IT resources
-          
-          % Incrememt all scan start nodes to look for next combination
-          scanStartNodeCPU = scanStartNodeCPU + loopIncrement;
-          scanStartNodeMEM = scanStartNodeMEM + loopIncrement;
-          scanStartNodeSTO = scanStartNodeSTO + loopIncrement;
-          whileIncrement = whileIncrement + loopIncrement;
-          
+
           % Update copy of unit available map to avoid BFS finding the same nodes that were "held" in the previous iteration
           updatedUnitAvailableMap(failureNodes) = 0;    % Set units available in failure nodes to be zero
 
@@ -386,6 +380,11 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           break;      % Break out of the inner loop since required number of IT resources couldn't be found
         end
       end
+      % Incrememt all scan start nodes to look for next combination
+      scanStartNodeCPU = scanStartNodeCPU + loopIncrement;
+      scanStartNodeMEM = scanStartNodeMEM + loopIncrement;
+      scanStartNodeSTO = scanStartNodeSTO + loopIncrement;
+      whileIncrement = whileIncrement + loopIncrement;
     end
   end
 
