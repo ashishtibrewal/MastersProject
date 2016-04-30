@@ -261,11 +261,11 @@ function requestDB = inputGeneration(nRequests)
     
     subplot(2,4,3);
     histogram(cell2mat(requestDB(:,4)),nbins);
-    title('CPU-MEM Bandwidth distribution');
+    title('Bandwidth distribution (CPU-MEM)');
     
     subplot(2,4,4);
     histogram(cell2mat(requestDB(:,5)),nbins);
-    title('MEM-STO Bandwidth distribution');
+    title('Bandwidth distribution (MEM-STO)');
     
     subplot(2,4,5);
     histogram(cell2mat(requestDB(:,8)),nbins);
@@ -277,11 +277,11 @@ function requestDB = inputGeneration(nRequests)
 
     subplot(2,4,7);
     histogram(cell2mat(requestDB(:,6)),nbins);
-    title('CPU-MEM Latency distribution');
+    title('Latency distribution (CPU-MEM)');
     
     subplot(2,4,8);
     histogram(cell2mat(requestDB(:,7)),nbins);
-    title('MEM-STO Latency distribution');
+    title('Latency distribution (MEM-STO)');
   end 
 
 end
