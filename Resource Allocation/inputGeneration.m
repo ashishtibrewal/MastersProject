@@ -82,7 +82,7 @@ function requestDB = inputGeneration(nRequests)
   % Column 17 -> Arrival time
   % Column 18 -> Time taken to find and allocate resources
   
-  distributionPlot = 1;   % Flag variable to check if anything needs to be plotted
+  distributionPlot = 0;   % Flag variable to check if anything needs to be plotted
   scatterPlot = 0;
   
   if (scatterPlot == 1)
