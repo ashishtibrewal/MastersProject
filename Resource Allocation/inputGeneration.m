@@ -143,15 +143,13 @@ function requestDB = inputGeneration(nRequests)
       nBAN_CM = randi((bandwidthMaxCM/bandwidthMinCM)) * bandwidthMinCM;
       
       % Memory - Storage bandwidth
-      %nBAN_MS = randi((bandwidthMaxMS/bandwidthMinMS)) * bandwidthMinMS;
-      nBAN_MS = nBAN_CM * bandwidthCM_MSfactor;     % To prevent MEM-STO being higher than CPU-MEM
+      nBAN_MS = randi((bandwidthMaxMS/bandwidthMinMS)) * bandwidthMinMS;
       
       % CPU - Memory latency
       nLAT_CM = randi([(latencyMinCM/latencyRangeCM),(latencyMaxCM/latencyRangeCM)]) * latencyRangeCM;
       
       % Memory - Storage latency
-      %nLAT_MS = randi([(latencyMinMS/latencyRangeMS),(latencyMaxMS/latencyRangeMS)]) * latencyRangeMS;
-      nLAT_MS = nLAT_CM * latencyCM_MSfactor;       % To prevent MEM-STO being higher than CPU-MEM
+      nLAT_MS = randi([(latencyMinMS/latencyRangeMS),(latencyMaxMS/latencyRangeMS)]) * latencyRangeMS;
       
       % Request holdtime (TODO Could use a Poisson distribution)
       nHDT = randi((holdTimeMax/holdTimeMin)) * holdTimeMin;
