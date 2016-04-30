@@ -56,6 +56,7 @@ function requestDB = inputGeneration(nRequests)
   arrivalRateMax = 5;                     % Maximum number of requests generated per second
   arrivalRateAverage = 3;                 % Average number of requests generated per second (i.e. lambda in a Poisson pdf)
   lambda = arrivalRateAverage;            % Lamba (Mean/average) used in the Poisson distribution to generate arrival-time
+  interArrivalRate = 10;                  % Average (Lambda) time between two consecutive requests
   
   totalRequestsGenerated = 0;             % Initialize total requests generated
   DBindex = 1;                            % Initialize database index
@@ -81,7 +82,7 @@ function requestDB = inputGeneration(nRequests)
   % Column 17 -> Arrival time
   % Column 18 -> Time taken to find and allocate resources
   
-  distributionPlot = 0;   % Flag variable to check if anything needs to be plotted
+  distributionPlot = 1;   % Flag variable to check if anything needs to be plotted
   scatterPlot = 0;
   
   if (scatterPlot == 1)
@@ -106,7 +107,7 @@ function requestDB = inputGeneration(nRequests)
     currentRequests = 1;                         % Maximum of 1 request per second
     
     % Generate time (in seconds) at which the request is generated
-    arrivalTime = poissrnd(10,[1,1]);             % Generate a random arrival time from a Poisson distribution
+    arrivalTime = poissrnd(interArrivalRate,[1,1]);             % Generate a random arrival time from a Poisson distribution
     
     % Increment time (i.e. increment upto arrival time of current request)
     time = time + arrivalTime;
@@ -134,7 +135,7 @@ function requestDB = inputGeneration(nRequests)
       end
       
       % Storage
-      nSTO = randi([storageMin,storageMax]);
+      nSTO = randi((storageMax/storageMin)) * storageMin;
       if (mod(nSTO,2) ~= 0)   % Check to prevent odd number of STOs
         nSTO = nSTO + 1;
       end
