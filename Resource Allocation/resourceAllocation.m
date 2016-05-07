@@ -175,20 +175,12 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
     
     % Initialise check variable
     ITcheckBreak = 0;
-    whileIncrement = 1;
-    whileLimit = max([totalCPUSlotsToScan,totalMEMSlotsToScan,totalSTOSlotsToScan]);
+    slot = 1;
+    slotLimit = max([totalCPUSlotsToScan,totalMEMSlotsToScan,totalSTOSlotsToScan]);
     
     % Loop to iterate/try multiple combinations when a particular chosen combination
     % of resources fails and with these nodes removed before the next iteration/try
-    while(1)
-      % Handle corner case when no NET resources are found for all tried
-      % combinations of IT resources
-      if (whileIncrement >= whileLimit)
-        NETresourceUnavailable = 1;   % Set this since the actual cause of failure is unavailibility of NET resources
-        % Note that other values are reset in the previous iteration, hence, dont need to do it here. The same reason applies to the NET failure cause
-        break;    % Break out sice all combinations of IT have been tired for this request
-      end
-      
+    while(slot < slotLimit)
       % Initialise variables
       ITresourceUnavailable = 0;    % Initialize/reset IT resource unavailable for every iteration of the loop
       NETresourceUnavailable = 0;   % Initialize/reset NET resource unavailable for every iteration of the loop
@@ -378,13 +370,17 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
           heldITresources = {};
           pathLatenciesAllocated = {};
           break;      % Break out of the inner loop since required number of IT resources couldn't be found
+        else
+          NETresourceUnavailable = 1; % Set this since the actual cause of failure is unavailibility of NET resources and not IT resources
+          % Note that other values are (re)set in the previous iteration, hence, dont need to do it here.
+          % The same reason applies to the NET failure cause (Use *network* failure cause for previous combination of IT resources)
         end
       end
       % Incrememt all scan start nodes to look for next combination
       scanStartNodeCPU = scanStartNodeCPU + loopIncrement;
       scanStartNodeMEM = scanStartNodeMEM + loopIncrement;
       scanStartNodeSTO = scanStartNodeSTO + loopIncrement;
-      whileIncrement = whileIncrement + loopIncrement;
+      slot = slot + loopIncrement;
     end
   end
 
