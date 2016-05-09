@@ -130,27 +130,27 @@ function [ITresourceNodes, ITsuccessful, ITfailureCause] = BFS(dataCenterMap, st
     currentNode = q.remove();                           % Remove head of queue
     adjaceny = completeConnectivityMap(currentNode(3),:);   % Extract it's information from the connectivity/adjacency matrix
     neighbours = find(adjaceny == 1);                   % Find current nodes neighbours
-    neighbourBandwidth = [];                            % Initialize empty matrix to store link bandwidth between neighbours
-    neighboursIndex = [];                               % Initialize empty index array
+    %neighbourBandwidth = [];                            % Initialize empty matrix to store link bandwidth between neighbours
+    %neighboursIndex = [];                               % Initialize empty index array
     
     % Extract the bandwidth available on links to neighbouring nodes
-    for i = 1:size(neighbours,2)
-      neighbourBandwidth(i) = completeBandwidthMap(currentNode(3),neighbours(i));
-    end
+    %for i = 1:size(neighbours,2)
+    %  neighbourBandwidth(i) = completeBandwidthMap(currentNode(3),neighbours(i));
+    %end
     
     % Extract the links in descending order and update the index matrix
-    for i = 1:size(neighbourBandwidth,2)
-      [~,index] = max(neighbourBandwidth);
-      neighboursIndex = [neighboursIndex,index];
-      neighbourBandwidth(index) = 0;
-    end
+    %for i = 1:size(neighbourBandwidth,2)
+    %  [~,index] = max(neighbourBandwidth);
+    %  neighboursIndex = [neighboursIndex,index];
+    %  neighbourBandwidth(index) = 0;
+    %end
     
     % Find a random permutation to be used as vector indices
     %neighboursIndex = randperm(numel(neighbours));
     
     % Iterate through all it's neighbours
     for node = 1:size(neighbours,2)
-      nNode = neighboursIndex(node);                    % Extract a node inxed from the neighboursIndex vector
+      nNode = node;                     % Use iterator as index value
       if (graphNodes{1,neighbours(nNode)} == inf)
         graphNodes{1,neighbours(nNode)} = graphNodes{1,currentNode(3)} + completeDistanceMap(currentNode(3),neighbours(nNode));
         graphNodes{2,neighbours(nNode)} = graphNodes{3,currentNode(3)};
