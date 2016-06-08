@@ -51,18 +51,18 @@ function requestDB = inputGeneration(nRequests)
   
   holdTimeMin = 1;                        % In s (i.e. seconds)
   holdTimeMax = 1000;                     % In s (i.e. seconds)
+  holdTimeAverage = 500;                  % Average (i.e. lambda in a Poisson pdf) hold time for a request
   
   arrivalRateMin = 0;                     % Minimum number of requests generated per second
   arrivalRateMax = 5;                     % Maximum number of requests generated per second
-  arrivalRateAverage = 3;                 % Average number of requests generated per second (i.e. lambda in a Poisson pdf)
-  lambda = arrivalRateAverage;            % Lamba (Mean/average) used in the Poisson distribution to generate arrival-time
-  interArrivalRate = 10;                  % Average (Lambda) time between two consecutive requests
+  arrivalRateAverage = 3;                 % Average number of requests generated per second (i.e. lambda in a Poisson pdf) - Used to generate arrival rate (i.e. number of requests generated per second)
+  interArrivalRate = 10;                  % Average (i.e. lambda in a Poisson pdf) time between two consecutive requests - Used to generate inter-arrival rate (i.e. amount of time between two consecutive requests)
   
   totalRequestsGenerated = 0;             % Initialize total requests generated
   DBindex = 1;                            % Initialize database index
   time = 0;                               % Stores value of time (in seconds)
   
-  requestDB = cell(nRequests, 18);        % Matrix to store all generated requests (Each row contains a different request)
+  requestDB = cell(nRequests, 19);        % Matrix to store all generated requests (Each row contains a different request)
   % Column  1 -> CPU
   % Column  2 -> Memory
   % Column  3 -> Storage
@@ -81,6 +81,7 @@ function requestDB = inputGeneration(nRequests)
   % Column 16 -> Allocated path latencies
   % Column 17 -> Arrival time
   % Column 18 -> Time taken to find and allocate resources
+  % Column 19 -> Hold time inverse (i.e. time completed since request was allocated) - Updated every second  
   
   distributionPlot = 0;   % Flag variable to check if anything needs to be plotted
   scatterPlot = 0;
@@ -103,7 +104,7 @@ function requestDB = inputGeneration(nRequests)
   % required number of requests have been generated
   while(1) 
     % Number of requests generated for current time
-    %currentRequests = poissrnd(lambda,[1,1]);   % Generate a random number of requests from a Poisson distribution
+    %currentRequests = poissrnd(arrivalRateAverage,[1,1]);   % Generate a random number of requests from a Poisson distribution
     currentRequests = 1;                         % Maximum of 1 request per second
     
     % Generate time (in seconds) at which the request is generated
@@ -153,7 +154,8 @@ function requestDB = inputGeneration(nRequests)
       nLAT_MS = randi([(latencyMinMS/latencyRangeMS),(latencyMaxMS/latencyRangeMS)]) * latencyRangeMS;
       
       % Request holdtime (TODO Could use a Poisson distribution)
-      nHDT = randi((holdTimeMax/holdTimeMin)) * holdTimeMin;
+      #nHDT = randi((holdTimeMax/holdTimeMin)) * holdTimeMin;
+      nHDT = poissrnd(holdTimeAverage,[1,1]);             % Generate a random holding time from a Poisson distribution
       
       % Boundary checks
       if (nCPU < cpuMin)
@@ -208,8 +210,8 @@ function requestDB = inputGeneration(nRequests)
       AT = time;
       
       % Collect/store data generated over i iterations
-      requestDB(DBindex,:) = {nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0, {}, {}, 'NONE', 'NONE', {}, AT, 0};
-      %testRequest = {64,128,256,100,50,10000,20000,4000,0,0,0,{},{},'NONE','NONE',{}, AT, 0};    % Test request used for debugging
+      requestDB(DBindex,:) = {nCPU, nMEM, nSTO, nBAN_CM, nBAN_MS, nLAT_CM, nLAT_MS, nHDT, 0, 0, 0, {}, {}, 'NONE', 'NONE', {}, AT, 0, 0};
+      %testRequest = {64,128,256,100,50,10000,20000,4000,0,0,0,{},{},'NONE','NONE',{}, AT, 0, 0};    % Test request used for debugging
       %requestDB(i,:) = testRequest;
   
       if (scatterPlot == 1)
