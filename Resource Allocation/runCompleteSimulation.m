@@ -76,7 +76,8 @@ else
 end
 
 % Start MATLAB parallel pool (Using default cluster, i.e. 'local')
-threadPool = parpool;
+threadPool = gcp();     % Get current parallel pool, i.e. check if a parallel pool is open, if not open a new one
+%threadPool = parpool();    % Open a new parpool with default cluster, i.e. 'local'
 
 % Start timer
 tic;
@@ -151,6 +152,7 @@ toc
 
 % Close parpool
 delete(threadPool);
+%delete(gcp('nocreate'));   % The 'nocreate' option prevents opening a new one
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plot results/graphs

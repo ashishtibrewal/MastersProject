@@ -154,7 +154,7 @@ function requestDB = inputGeneration(nRequests)
       nLAT_MS = randi([(latencyMinMS/latencyRangeMS),(latencyMaxMS/latencyRangeMS)]) * latencyRangeMS;
       
       % Request holdtime (TODO Could use a Poisson distribution)
-      #nHDT = randi((holdTimeMax/holdTimeMin)) * holdTimeMin;
+      %nHDT = randi((holdTimeMax/holdTimeMin)) * holdTimeMin;
       nHDT = poissrnd(holdTimeAverage,[1,1]);             % Generate a random holding time from a Poisson distribution
       
       % Boundary checks
