@@ -75,6 +75,9 @@ else
   disp(str);
 end
 
+% Start MATLAB parallel pool (Using default cluster, i.e. 'local')
+threadPool = parpool;
+
 % Start timer
 tic;
 
@@ -145,6 +148,9 @@ displayResults(dataCenterMap_T3, requestDB_T3, numRequests, dataCenterConfig_T3)
 
 % Stop timer and print its value
 toc
+
+% Close parpool
+delete(threadPool);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plot results/graphs
