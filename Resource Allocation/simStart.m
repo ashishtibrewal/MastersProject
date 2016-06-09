@@ -91,6 +91,8 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
   networkResourceAllocStatusColumn = 10;
   requestStatusColumn = 11;
   timeTakenColumn = 18;
+  holdTimeColumn = 8;
+  updatedHoldTimeColumn = 19;
 
   % Open figure - Updated when each request's resource allocation is complete
   %figure ('Name', 'Data Center Rack Usage (1st rack of each type)', 'NumberTitle', 'off', 'Position', [40, 100, 1200, 700]);
@@ -112,6 +114,16 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
     % Display time and the number of requests generated
     %str = sprintf('Time: %ds - Requests: %d', t, currentRequests);
     %disp(str);
+
+    % Update holding times for all requests upto req
+    for htReq = 1:req
+      % Subtract time difference, i.e. amount of time that has already been simulated
+      requestDB{htReq, updatedHoldTimeColumn} = requestDB{htReq, updatedHoldTimeColumn} - diffTime;
+      % Check if any of the updated hold time values go to zero or below
+      if(requestDB{htReq, updatedHoldTimeColumn} <= 0)
+        % Update IT resource and bandwidth maps (Restore/add amount of resources allocated to htReq back to these maps)
+      end
+    end
     
     % Extract current request from the request database
     request = requestDB(req,:);
@@ -148,10 +160,11 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
     % Update network resource allocation column
     requestDB{req, networkResourceAllocStatusColumn} =  NETallocationResult;
 
-    % Update request status column and time taken to find and allocate resources
+    % Update request status column and time taken to find and allocate resources (i.e. allocation time) and 'updated' hold time column
     if (ITallocationResult == SUCCESS && NETallocationResult == SUCCESS)
       requestDB{req, requestStatusColumn} = SUCCESS;
       requestDB{req, timeTakenColumn} = timeTaken;
+      requestDB{req, updatedHoldTimeColumn} = requestDB{req, holdTimeColumn};
     end
     
     % Update hold time maps
