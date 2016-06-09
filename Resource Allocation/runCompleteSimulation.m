@@ -60,7 +60,7 @@ if (generateNewRequestDB == 1)
   disp(str);
 
   requestDB = inputGeneration(numRequests);    % Pre-generating randomised requests - Note that the resource allocation is only allowed to look at the request for the current iteration
-  save('requestDB3.mat3','requestDB');
+  save('requestDB.mat','requestDB');
 
   str = sprintf('Input generation complete.\n');
   disp(str);
