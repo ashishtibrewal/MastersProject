@@ -1,5 +1,5 @@
 function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, ...
-          NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated, timeTaken] = ...
+          NETresourcesAllocaed, ITfailureCause, NETfailureCause, pathLatenciesAllocated, timeTaken, pathsUnitMax, pathsBandwidth] = ...
           resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems)
   % Function to allocate the IT resources
   % NEED TO PLAN AND TRY DIFFERENT APPROACHES.
@@ -266,7 +266,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               heldITresources = ITresourceNodes;
               % TODO Add network allocation code - if network is successful, break out else start search for new 
               % IT slots from next available resource node
-              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes, pathLatenciesAllocated] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
+              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes, pathLatenciesAllocated, pathsUnitMax, pathsBandwidth] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
               if (NETsuccessful == SUCCESS)
                 heldNETresources = NETresourceLinks;
                 break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
@@ -349,7 +349,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               heldITresources = ITresourceNodes;
               % TODO Add network allocation code - if network is successful, break out else start search for new 
               % IT slots from next available resource node
-              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes, pathLatenciesAllocated] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
+              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes, pathLatenciesAllocated, pathsUnitMax, pathsBandwidth] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
               if (NETsuccessful == SUCCESS)
                 heldNETresources = NETresourceLinks;
                 break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
@@ -432,7 +432,7 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
               heldITresources = ITresourceNodes;
               % TODO Add network allocation code - if network is successful, break out else start search for new 
               % IT slots from next available resource node
-              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes, pathLatenciesAllocated] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
+              [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidthMap, failureNodes, pathLatenciesAllocated, pathsUnitMax, pathsBandwidth] = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig);
               if (NETsuccessful == SUCCESS)
                 heldNETresources = NETresourceLinks;
                 break;    % Can only break out of the for loop if **both** IT and network resources are satisfied else start scanning from next available slot
