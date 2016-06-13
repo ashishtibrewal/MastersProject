@@ -1,6 +1,6 @@
 function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, ...
-          failureNodes, pathLatenciesAllocated] = networkAllocation(request, ...
-          heldITresources, dataCenterMap, dataCenterConfig)
+          failureNodes, pathLatenciesAllocated, pathsUnitMax, pathsBandwidth] ...
+          = networkAllocation(request, heldITresources, dataCenterMap, dataCenterConfig)
   % Network allocation algorithm
   
   % Import global macros
@@ -302,6 +302,8 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
   
   % Initialize paths cell array to store paths taken from every node to every other node
   paths = cell(nNodes);
+  pathsUnitMax = cell(nNodes);
+  pathsBandwidth = cell(nNodes);
   maxPaths = nNodes * ((nNodes - 1)/2);
   pathsSuccessful = zeros(1,maxPaths);
   pathsSuccessfulIndex = 1;
@@ -341,6 +343,9 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
             % Find the maximum units allocated out of source and destination nodes
             unitsMax = max(unitsSource,unitsDest);
 
+            % Update cell tracking maximum units for a path
+            pathsUnitMax{i,j} = unitsMax;
+
             % Check for the required bandwidth
             for node = 1:(pathLength - 1)
               %str = sprintf('%d  %d  %d', path(node), path(node + 1), updatedBandwidtMap(path(node),path(node + 1)));
@@ -357,6 +362,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
                     % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
                     updatedBandwidtMapI(path(node),path(node + 1)) = updatedBandwidtMapI(path(node),path(node + 1)) - (requiredBAN_CM * unitsMax);
                     updatedBandwidtMapI(path(node + 1),path(node)) = updatedBandwidtMapI(path(node + 1),path(node)) - (requiredBAN_CM * unitsMax);
+                    pathsBandwidth{i,j} = requiredBAN_CM; 
                   end
                 % STO nodes
                 elseif ((j >= STOnodesStart) && (j <= STOnodesEnd))
@@ -367,7 +373,8 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
                   else
                     % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
                     updatedBandwidtMapI(path(node),path(node + 1)) = updatedBandwidtMapI(path(node),path(node + 1)) - (requiredBAN_MS * unitsMax);
-                    updatedBandwidtMapI(path(node + 1),path(node)) = updatedBandwidtMapI(path(node + 1),path(node)) - (requiredBAN_MS * unitsMax);
+                    updatedBandwidtMapI(path(node + 1),path(node)) = updatedBandwidtMapI(path(node + 1),path(node)) - (requiredBAN_MS * unitsMax); 
+                    pathsBandwidth{i,j} = requiredBAN_MS; 
                   end
                 end
 
@@ -383,6 +390,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
                     % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
                     updatedBandwidtMapI(path(node),path(node + 1)) = updatedBandwidtMapI(path(node),path(node + 1)) - (requiredBAN_CM * unitsMax);
                     updatedBandwidtMapI(path(node + 1),path(node)) = updatedBandwidtMapI(path(node + 1),path(node)) - (requiredBAN_CM * unitsMax);
+                    pathsBandwidth{i,j} = requiredBAN_CM;
                   end
                 % MEM, STO nodes
                 elseif (((j >= MEMnodesStart) && (j <= MEMnodesEnd)) || ((j >= STOnodesStart) && (j <= STOnodesEnd)))
@@ -394,6 +402,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
                     % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
                     updatedBandwidtMapI(path(node),path(node + 1)) = updatedBandwidtMapI(path(node),path(node + 1)) - (requiredBAN_MS * unitsMax);
                     updatedBandwidtMapI(path(node + 1),path(node)) = updatedBandwidtMapI(path(node + 1),path(node)) - (requiredBAN_MS * unitsMax);
+                    pathsBandwidth{i,j} = requiredBAN_MS;
                   end
                 end
 
@@ -411,6 +420,7 @@ function [NETresourceLinks, NETsuccessful, NETfailureCause, updatedBandwidtMap, 
                     % Update (copied version of) bandwidth map in both upper & bottom triangles since it needs to be symmetric
                     updatedBandwidtMapI(path(node),path(node + 1)) = updatedBandwidtMapI(path(node),path(node + 1)) - (requiredBAN_MS * unitsMax);
                     updatedBandwidtMapI(path(node + 1),path(node)) = updatedBandwidtMapI(path(node + 1),path(node)) - (requiredBAN_MS * unitsMax);
+                    pathsBandwidth{i,j} = requiredBAN_MS;
                   end
                 end
               end

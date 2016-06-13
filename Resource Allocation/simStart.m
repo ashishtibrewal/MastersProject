@@ -4,8 +4,10 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
   % Import global macros
   global SUCCESS;
   global FAILURE;
+  global DROPPED;
   SUCCESS = 1;          % Assign a value to global macro (Reassigning to avoid error from parfor)
   FAILURE = 0;          % Assign a value to global macro (Reassigning to avoid error from parfor)
+  DROPPED = 2;          % Assign a value to global macro (Reassigning to avoid error from parfor)
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Evaluate IT & Network constants
@@ -93,6 +95,8 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
   timeTakenColumn = 18;
   holdTimeColumn = 8;
   updatedHoldTimeColumn = 19;
+  maxUnitsPathsColumn = 20;
+  bandwidthAllocatedColumn = 21;
 
   % Open figure - Updated when each request's resource allocation is complete
   %figure ('Name', 'Data Center Rack Usage (1st rack of each type)', 'NumberTitle', 'off', 'Position', [40, 100, 1200, 700]);
@@ -117,11 +121,48 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
 
     % Update holding times for all requests upto req
     for htReq = 1:req
+      % Extract updated hold time
+      htUpdated = requestDB{htReq, updatedHoldTimeColumn};
+      reqStatus = requestDB{htReq, requestStatusColumn}; 
       % Subtract time difference, i.e. amount of time that has already been simulated
-      requestDB{htReq, updatedHoldTimeColumn} = requestDB{htReq, updatedHoldTimeColumn} - diffTime;
+      if(htUpdated > 0)
+        htUpdated = htUpdated - diffTime;
+        requestDB{htReq, updatedHoldTimeColumn} = htUpdated;
+      end
       % Check if any of the updated hold time values go to zero or below
-      if(requestDB{htReq, updatedHoldTimeColumn} <= 0)
+      if(htUpdated <= 0 && reqStatus == SUCCESS)
+        % Correct negative values
+        if(htUpdated < 0)
+          requestDB{htReq, updatedHoldTimeColumn} = 0; 
+        end
         % Update IT resource and bandwidth maps (Restore/add amount of resources allocated to htReq back to these maps)
+        ITresources = requestDB{htReq,12};   % Extract allocated IT resources
+        NETresources = requestDB{htReq,13};  % Extract allocated NET resources
+        pathsUnitMax = requestDB{htReq,20};  % Extract maximum allocated units for every path
+        pathsAllocatedBandwidth = requestDB{htReq, 21}; % Extract allocated path bandwidth
+        % Update IT resource map
+        for ITresType = 1:size(ITresources,1)
+          for ITresSlot = 1:size(ITresources,2)
+            if (~isempty(ITresources{ITresType,ITresSlot}))
+              extractedRes = cell2mat(ITresources{ITresType,ITresSlot});
+              dataCenterMap.completeUnitAvailableMap(extractedRes(1)) = dataCenterMap.completeUnitAvailableMap(extractedRes(1)) + extractedRes(2); 
+            end
+          end
+        end
+        % Update bandwith map
+        for NETresDim1 = 1:size(NETresources,1)
+          for NETresDim2 = (NETresDim1 + 1):size(NETresources,2)
+            extractedRes = cell2mat(NETresources{NETresDim1,NETresDim2});
+            unitsMax =  pathsUnitMax{NETresDim1,NETresDim2};
+            path = extractedRes; 
+            pathBandwidth = pathsAllocatedBandwidth{NETresDim1,NETresDim2};
+            % Iterate over every edge on a path
+            for pathNode = 1:(size(path,2) - 1)
+              dataCenterMap.bandwidthMap.completeBandwidth(path(pathNode), path(pathNode + 1)) = dataCenterMap.bandwidthMap.completeBandwidth(path(pathNode), path(pathNode + 1)) + (unitsMax * pathBandwidth);   % Add allocated bandwidth back on to the total available edge bandwidth
+              dataCenterMap.bandwidthMap.completeBandwidth(path(pathNode + 1), path(pathNode)) = dataCenterMap.bandwidthMap.completeBandwidth(path(pathNode),path(pathNode + 1));  % To keep bandwidth matrix symmetric
+            end
+          end
+        end
       end
     end
     
@@ -136,14 +177,14 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
     %profile on;         % Turn on profiler
 
     % IT & NET resource allocation
-    [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocaed, ITfailureCause, ...
-     NETfailureCause, pathLatenciesAllocated, timeTaken] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
+    [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNodesAllocated, NETresourcesAllocated, ITfailureCause, ...
+     NETfailureCause, pathLatenciesAllocated, timeTaken, pathsUnitMax, pathsBandwidth] = resourceAllocation(request, dataCenterConfig, dataCenterMap, dataCenterItems);
     
     %profile off;         % Turn off profiler
     %profile viewer;      % View profiler results
 
     % Update request database
-    requestDB(req,12:16) = {ITresourceNodesAllocated,NETresourcesAllocaed,ITfailureCause,NETfailureCause,pathLatenciesAllocated};
+    requestDB(req,12:16) = {ITresourceNodesAllocated,NETresourcesAllocated,ITfailureCause,NETfailureCause,pathLatenciesAllocated};
 
     % Plot usage
     %plotUsage(dataCenterMap, dataCenterConfig);
@@ -160,11 +201,20 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
     % Update network resource allocation column
     requestDB{req, networkResourceAllocStatusColumn} =  NETallocationResult;
 
+    % Update max units on paths column
+    requestDB{req, maxUnitsPathsColumn} = pathsUnitMax;
+    
+    % Update bandwidth allocated on paths column
+    requestDB{req, bandwidthAllocatedColumn} = pathsBandwidth;
+
     % Update request status column and time taken to find and allocate resources (i.e. allocation time) and 'updated' hold time column
     if (ITallocationResult == SUCCESS && NETallocationResult == SUCCESS)
       requestDB{req, requestStatusColumn} = SUCCESS;
       requestDB{req, timeTakenColumn} = timeTaken;
       requestDB{req, updatedHoldTimeColumn} = requestDB{req, holdTimeColumn};
+    else
+      requestDB{req, requestStatusColumn} = DROPPED;
+      requestDB{req, timeTakenColumn} = Inf;
     end
     
     % Update hold time maps
