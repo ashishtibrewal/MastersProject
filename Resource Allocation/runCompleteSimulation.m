@@ -29,7 +29,7 @@ FAILURE = 0;          % Assign a value to global macro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Evaluate constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-numRequests = 60;         % Total number of requests to generate
+numRequests = 1000;         % Total number of requests to generate
 numTypes = 3;               % Total number of configuration types
 generateNewRequestDB = 0;   % Flag that is used to generate a new request database
 plotFigures = 0;            % Flag that is used to control figures/plots
@@ -92,7 +92,7 @@ requestDB_T3 = [];
 dataCenterMap_T3 = [];
 
 % Start parallel for loop to run multiple threads
-for i = 1:numTypes
+parfor i = 1:numTypes
   type = i;     % Type of configuration/setup
   switch (i)
     case 1
