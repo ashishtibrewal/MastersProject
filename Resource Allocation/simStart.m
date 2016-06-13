@@ -5,9 +5,11 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
   global SUCCESS;
   global FAILURE;
   global DROPPED;
+  global HT_COMPLETE;
   SUCCESS = 1;          % Assign a value to global macro (Reassigning to avoid error from parfor)
   FAILURE = 0;          % Assign a value to global macro (Reassigning to avoid error from parfor)
   DROPPED = 2;          % Assign a value to global macro (Reassigning to avoid error from parfor)
+  HT_COMPLETE = 3;      % Assign a value to global macro (Reassigning to avoid error from parfor)
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Evaluate IT & Network constants
@@ -159,10 +161,11 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
             % Iterate over every edge on a path
             for pathNode = 1:(size(path,2) - 1)
               dataCenterMap.bandwidthMap.completeBandwidth(path(pathNode), path(pathNode + 1)) = dataCenterMap.bandwidthMap.completeBandwidth(path(pathNode), path(pathNode + 1)) + (unitsMax * pathBandwidth);   % Add allocated bandwidth back on to the total available edge bandwidth
-              dataCenterMap.bandwidthMap.completeBandwidth(path(pathNode + 1), path(pathNode)) = dataCenterMap.bandwidthMap.completeBandwidth(path(pathNode),path(pathNode + 1));  % To keep bandwidth matrix symmetric
+              dataCenterMap.bandwidthMap.completeBandwidth(path(pathNode + 1), path(pathNode)) = dataCenterMap.bandwidthMap.completeBandwidth(path(pathNode), path(pathNode + 1));  % To keep bandwidth matrix symmetric
             end
           end
         end
+        requestDB{htReq, requestStatusColumn} = HT_COMPLETE;  % Update request status in requestDB to prevent completed requests being checked again
       end
     end
     
