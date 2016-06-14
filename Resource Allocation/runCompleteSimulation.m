@@ -23,9 +23,11 @@ disp(str);
 % Macro definitions
 global SUCCESS;       % Declare macro as global
 global FAILURE;       % Declare macro as global
-global HT_COMPLETE;
+global DROPPED;       % Declare macro as global
+global HT_COMPLETE;   % Declare macro as global
 SUCCESS = 1;          % Assign a value to global macro
 FAILURE = 0;          % Assign a value to global macro
+DROPPED = 2;          % Assign a value to global macro
 HT_COMPLETE = 3;      % Assign a value to global macro
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -178,9 +180,9 @@ if(plotFigures == 1)
   nBlocked_T3 = zeros(1,size(requests,2));
   % Main request loop
   for r = 1:tRequests
-    blocked_T1 = find(cell2mat(requestDB_T1(1:r,11)) == 0);    % Find requests that have been blocked upto request r
-    blocked_T2 = find(cell2mat(requestDB_T2(1:r,11)) == 0);    % Find requests that have been blocked upto request r
-    blocked_T3 = find(cell2mat(requestDB_T3(1:r,11)) == 0);    % Find requests that have been blocked upto request r
+    blocked_T1 = find(cell2mat(requestDB_T1(1:r,11)) == DROPPED);    % Find requests that have been blocked upto request r
+    blocked_T2 = find(cell2mat(requestDB_T2(1:r,11)) == DROPPED);    % Find requests that have been blocked upto request r
+    blocked_T3 = find(cell2mat(requestDB_T3(1:r,11)) == DROPPED);    % Find requests that have been blocked upto request r
     nBlocked_T1(r) = size(blocked_T1,1);                      % Count the number of requests found
     nBlocked_T2(r) = size(blocked_T2,1);                      % Count the number of requests found
     nBlocked_T3(r) = size(blocked_T3,1);                      % Count the number of requests found
@@ -289,18 +291,18 @@ if(plotFigures == 1)
     for i = 1:size(allocatedResources_T1,1)
       for j = 1:size(allocatedResources_T1,2)
         % Extract current cell from the heldITresources cell array
-        NETcell = allocatedResources_T1{i,j};
-        if (~isempty(NETcell))
+        ITcell = allocatedResources_T1{i,j};
+        if (~isempty(ITcell))
           switch (i)
             % CPU nodes
             case 1
-              CPUunitsUtilized_T1 = [CPUunitsUtilized_T1, NETcell{2}];
+              CPUunitsUtilized_T1 = [CPUunitsUtilized_T1, ITcell{2}];
             % MEM nodes
             case 2
-              MEMunitsUtilized_T1 = [MEMunitsUtilized_T1, NETcell{2}];
+              MEMunitsUtilized_T1 = [MEMunitsUtilized_T1, ITcell{2}];
             % STO nodes
             case 3
-              STOunitsUtilized_T1 = [STOunitsUtilized_T1, NETcell{2}];
+              STOunitsUtilized_T1 = [STOunitsUtilized_T1, ITcell{2}];
           end
         end
       end
@@ -328,18 +330,18 @@ if(plotFigures == 1)
     for i = 1:size(allocatedResources_DB2,1)
       for j = 1:size(allocatedResources_DB2,2)
         % Extract current cell from the heldITresources cell array
-        NETcell = allocatedResources_DB2{i,j};
-        if (~isempty(NETcell))
+        ITcell = allocatedResources_DB2{i,j};
+        if (~isempty(ITcell))
           switch (i)
             % CPU nodes
             case 1
-              CPUunitsUtilized_T2 = [CPUunitsUtilized_T2, NETcell{2}];
+              CPUunitsUtilized_T2 = [CPUunitsUtilized_T2, ITcell{2}];
             % MEM nodes
             case 2
-              MEMunitsUtilized_T2 = [MEMunitsUtilized_T2, NETcell{2}];
+              MEMunitsUtilized_T2 = [MEMunitsUtilized_T2, ITcell{2}];
             % STO nodes
             case 3
-              STOunitsUtilized_T2 = [STOunitsUtilized_T2, NETcell{2}];
+              STOunitsUtilized_T2 = [STOunitsUtilized_T2, ITcell{2}];
           end
         end
       end
@@ -367,18 +369,18 @@ if(plotFigures == 1)
     for i = 1:size(allocatedResources_DB3,1)
       for j = 1:size(allocatedResources_DB3,2)
         % Extract current cell from the heldITresources cell array
-        NETcell = allocatedResources_DB3{i,j};
-        if (~isempty(NETcell))
+        ITcell = allocatedResources_DB3{i,j};
+        if (~isempty(ITcell))
           switch (i)
             % CPU nodes
             case 1
-              CPUunitsUtilized_T3 = [CPUunitsUtilized_T3, NETcell{2}];
+              CPUunitsUtilized_T3 = [CPUunitsUtilized_T3, ITcell{2}];
             % MEM nodes
             case 2
-              MEMunitsUtilized_T3 = [MEMunitsUtilized_T3, NETcell{2}];
+              MEMunitsUtilized_T3 = [MEMunitsUtilized_T3, ITcell{2}];
             % STO nodes
             case 3
-              STOunitsUtilized_T3 = [STOunitsUtilized_T3, NETcell{2}];
+              STOunitsUtilized_T3 = [STOunitsUtilized_T3, ITcell{2}];
           end
         end
       end
@@ -619,13 +621,6 @@ if(plotFigures == 1)
     end
     
     NETutilization_T3(r) = (totalNETutilized_T3(r)/totalNET_T3) * 100;
-    
-    blocked_T1 = find(cell2mat(requestDB_T1(1:r,11)) == 0);    % Find requests that have been blocked upto request r
-    blocked_T2 = find(cell2mat(requestDB_T2(1:r,11)) == 0);    % Find requests that have been blocked upto request r
-    blocked_T3 = find(cell2mat(requestDB_T3(1:r,11)) == 0);    % Find requests that have been blocked upto request r
-    nBlocked_T1(r) = size(blocked_T1,1);                      % Count the number of requests found
-    nBlocked_T2(r) = size(blocked_T2,1);                      % Count the number of requests found
-    nBlocked_T3(r) = size(blocked_T3,1);                      % Count the number of requests found
 
     % Extract the requested latency (Can use any request database since all contain the same values)
     reqLatencyCM(r) = requestDB_T1{r,6};
