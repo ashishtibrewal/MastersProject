@@ -23,8 +23,10 @@ disp(str);
 % Macro definitions
 global SUCCESS;       % Declare macro as global
 global FAILURE;       % Declare macro as global
+global HT_COMPLETE;
 SUCCESS = 1;          % Assign a value to global macro
 FAILURE = 0;          % Assign a value to global macro
+HT_COMPLETE = 3;      % Assign a value to global macro
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Evaluate constants
@@ -630,7 +632,7 @@ if(plotFigures == 1)
     reqLatencyMS(r) = requestDB_T1{r,7};
 
     % Type 1 latency allocated
-    if (requestDB_T1{r,11} == 1)    % Check if the request was successfully allocated
+    if (requestDB_T1{r,11} == SUCCESS || requestDB_T1{r,11} == HT_COMPLETE)    % Check if the request was successfully allocated
       latencyAllocated_T1 = requestDB_T1{r,16};
       maxLatency_T1(r) = max([latencyAllocated_T1{:}]);
       minLatency_T1(r) = min([latencyAllocated_T1{:}]);
@@ -638,7 +640,7 @@ if(plotFigures == 1)
     end
 
     % Type 2 latency allocated
-    if (requestDB_T2{r,11} == 1)    % Check if the request was successfully allocated
+    if (requestDB_T2{r,11} == SUCCESS || requestDB_T2{r,11} == HT_COMPLETE)    % Check if the request was successfully allocated
       latencyAllocated_T2 = requestDB_T2{r,16};
       maxLatency_T2(r) = max([latencyAllocated_T2{:}]);
       minLatency_T2(r) = min([latencyAllocated_T2{:}]);
@@ -646,7 +648,7 @@ if(plotFigures == 1)
     end
 
     % Type 3 latency allocated
-    if (requestDB_T3{r,11} == 1)    % Check if the request was successfully allocated
+    if (requestDB_T3{r,11} == SUCCESS || requestDB_T3{r,11} == HT_COMPLETE)    % Check if the request was successfully allocated
       latencyAllocated_T3 = requestDB_T3{r,16};
       maxLatency_T3(r) = max([latencyAllocated_T3{:}]);
       minLatency_T3(r) = min([latencyAllocated_T3{:}]);
