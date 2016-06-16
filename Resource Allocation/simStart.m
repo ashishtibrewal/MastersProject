@@ -1,4 +1,4 @@
-function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, requestDB, type)
+function [requestDB, dataCenterMap, nBlocked, CPUutilization, MEMutilization, STOutilization, NETutilization, minLatency, maxLatency, averageLatency] = simStart (dataCenterConfig, numRequests, requestDB, type)
   % Function that sets up and starts the requried simulation
   
   % Import global macros
@@ -14,7 +14,6 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Evaluate IT & Network constants
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  nRequests = numRequests;           % Number of requests to generate
   %tTime = max([requestDB{:,17}]);    % Total time to simulate - in seconds (maximum arrival-time in the request database, could also use the last value in the database)
   tTime = max([requestDB{:,17}]) + [requestDB{numRequests,8}]; % Total time to simulate should be last arrival time + last hold time
 
@@ -102,7 +101,40 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
 
   % Open figure - Updated when each request's resource allocation is complete
   %figure ('Name', 'Data Center Rack Usage (1st rack of each type)', 'NumberTitle', 'off', 'Position', [40, 100, 1200, 700]);
+
+  requests = 1:numRequests;
+
+  % BLOCKING PROBABILITY (Request vs BP)
+  nBlocked = zeros(1,size(requests,2));
   
+  % Extract locations for each type of resource
+  CPUlocations = dataCenterMap.locationMap.CPUs;
+  MEMlocations = dataCenterMap.locationMap.MEMs;
+  STOlocations = dataCenterMap.locationMap.STOs;
+
+  % Evaluate total bandwidth
+  bandwidthMapOriginal = dataCenterMap.bandwidthMap.completeBandwidthOriginal;
+  totalNET = 0;
+  for i = 1:size(bandwidthMapOriginal,1)
+    for j = (i + 1):size(bandwidthMapOriginal,2)
+      totalNET = totalNET + bandwidthMapOriginal(i,j);
+    end
+  end
+  
+  nUnits = dataCenterConfig.nUnits;
+  totalCPUunits = size(dataCenterMap.locationMap.CPUs,2) * nUnits;
+  totalMEMunits = size(dataCenterMap.locationMap.MEMs,2) * nUnits;
+  totalSTOunits = size(dataCenterMap.locationMap.STOs,2) * nUnits;
+  CPUutilization = zeros(1,size(requests,2));
+  MEMutilization = zeros(1,size(requests,2));
+  STOutilization = zeros(1,size(requests,2));
+  NETutilization = zeros(1,size(requests,2));
+  reqLatencyCM = zeros(1,size(requests,2));
+  reqLatencyMS = zeros(1,size(requests,2));
+  maxLatency = zeros(1,size(requests,2));
+  minLatency = zeros(1,size(requests,2));
+  averageLatency = zeros(1,size(requests,2));
+
   % Initialise previous time
   previousTime = 0;
 
@@ -220,6 +252,55 @@ function [requestDB, dataCenterMap] = simStart (dataCenterConfig, numRequests, r
       requestDB{req, timeTakenColumn} = Inf;
     end
     
+    % Update data structures that track both IT and NET utilisation after every request. Need to do this here since hold time can change the utilisation after every request.
+    % Blocking probability
+    % Check upto req (i.e. outer loop control vairable)
+    blocked = find(cell2mat(requestDB(1:req,11)) == DROPPED);    % Find requests that have been blocked upto request req
+    nBlocked(req) = size(blocked,1)/numRequests;                   % Count the number of requests found over the total number of requests
+
+    completeUnitAvailableMap = dataCenterMap.completeUnitAvailableMap;
+    CPUunitsAvailable = sum(completeUnitAvailableMap(CPUlocations));
+    MEMunitsAvailable = sum(completeUnitAvailableMap(MEMlocations));
+    STOunitsAvailable = sum(completeUnitAvailableMap(STOlocations));
+    bandwidthMap= dataCenterMap.bandwidthMap.completeBandwidth;
+
+    % IT resource utilization
+    CPUunitsUtilized = totalCPUunits - CPUunitsAvailable;
+    MEMunitsUtilized = totalMEMunits - MEMunitsAvailable;
+    STOunitsUtilized = totalSTOunits - STOunitsAvailable;
+    
+    CPUutilization(req) = (CPUunitsUtilized/totalCPUunits) * 100;
+    MEMutilization(req) = (MEMunitsUtilized/totalMEMunits) * 100;
+    STOutilization(req) = (STOunitsUtilized/totalSTOunits) * 100;
+    
+    % Network utilization
+    NETavailable = 0;
+    for i = 1:size(bandwidthMap,1)
+      for j = (i + 1):size(bandwidthMap,2)
+        NETavailable = NETavailable + bandwidthMap(i,j);
+      end
+    end
+    NETutilized = totalNET - NETavailable;
+    
+    NETutilization(req) = (NETutilized/totalNET) * 100;
+    
+    % Extract the requested latency (Can use any request database since all contain the same values)
+    reqLatencyCM(req) = requestDB{req,6};
+    reqLatencyMS(req) = requestDB{req,7};
+
+    % Latency allocated
+    if (requestDB{req,requestStatusColumn} == SUCCESS || requestDB{req,requestStatusColumn} == HT_COMPLETE)    % Check if the request was successfully allocated
+      latencyAllocated = requestDB{req,16};
+      maxLatency(req) = max([latencyAllocated{:}]);
+      minLatency(req) = min([latencyAllocated{:}]);
+      averageLatency(req) = sum([latencyAllocated{:}],2)/size([latencyAllocated{:}],2);
+    end
+
+    % Change all zeros in the allocated latency matrices to NaNs to avoid plotting them.
+    maxLatency(maxLatency == 0) = NaN;
+    minLatency(minLatency == 0) = NaN;
+    averageLatency(averageLatency == 0) = NaN;
+
     % Update hold time maps
     % TODO Update hold time maps (Decrement by diffTime on each iteration)
     % If element is non-zero reduce by diffTime, if zero, reset/add value
