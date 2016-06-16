@@ -49,9 +49,9 @@ function requestDB = inputGeneration(nRequests)
   latencyMaxMS = latencyMaxCM * latencyCM_MSfactor;       % In ns (i.e. nanoseconds) -> 10x HIGHER acceptable (max) latency between MEM & STO
   latencyRangeMS = latencyRangeCM * latencyCM_MSfactor;   % Range of acceptable latency values (Must be a multiple of 1000)
   
-  holdTimeMin = 1;                        % In s (i.e. seconds)
-  holdTimeMax = 1000;                     % In s (i.e. seconds)
-  holdTimeAverage = 500;                  % Average (i.e. lambda in a Poisson pdf) hold time for a request
+  holdTimeMin = 60;                        % In s (i.e. seconds)
+  holdTimeMax = 3600;                     % In s (i.e. seconds)
+  holdTimeAverage = 1800;                  % Average (i.e. lambda in a Poisson pdf) hold time for a request
   
   arrivalRateMin = 0;                     % Minimum number of requests generated per second
   arrivalRateMax = 5;                     % Maximum number of requests generated per second
