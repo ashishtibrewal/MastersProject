@@ -157,8 +157,9 @@ function requestDB = inputGeneration(nRequests)
       
       % Request holdtime (TODO Could use a Poisson distribution)
       %nHDT = randi((holdTimeMax/holdTimeMin)) * holdTimeMin;
-      nHDT = poissrnd(holdTimeAverage,[1,1]);             % Generate a random holding time from a Poisson distribution
-      
+      %nHDT = poissrnd(holdTimeAverage,[1,1]);             % Generate a random holding time from a Poisson distribution
+      nHDT = randi(holdTimeMax,1);     % Generate a random number within range
+
       % Boundary checks
       if (nCPU < cpuMin)
         nCPU = cpuMin;
