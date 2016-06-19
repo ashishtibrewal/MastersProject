@@ -8,11 +8,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set up clean environment and logging functionality
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-diaryFileName = 'log/log.txt';  % Log file name/path
-diary(diaryFileName);           % Create new diary with the specified file name
-clear;                          % Clear all variables in the workspace
+clear all;                      % Clear all variables in the workspace
 close all;                      % Close all open figures
 clc;                            % Clear console/command prompt
+diaryDir = 'log/';              % Log directory
+diaryFileName = strcat(diaryDir, 'log.txt');  % Log file name/path
+% Create log (i.e. diary) directory if it doesn't already exist
+if(exist(diaryDir,'dir') ~= 7)
+  mkdir(diaryDir);
+end
+diary(diaryFileName);           % Create new diary with the specified file name
 diary on;                       % Turn diary (i.e. logging functionality) on
 str = sprintf('\n+-------- SIMULATION STARTED --------+\n');
 disp(str);
