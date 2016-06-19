@@ -1,4 +1,4 @@
-function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
+function plotHeatMap(dataCenterConfig, dataCenterMap, updateType, displayFigures)
 % Function to plot the heatmap that represents the resource utilisation on
 % each node (a node is a slot in this context)
 
@@ -81,8 +81,13 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
   
   switch (updateType)
     case 'locationMap'
-      % Open new figure (Done once before starting the main time loop)
-      figure ('Name', 'Data Center Heatmap', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+      if (displayFigures == 1)
+        % Open new figure (Done once before starting the main time loop)
+        figure('Name', 'Data Center Heatmap', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+      else
+        % Open new figure but turn its visibility off
+        figure('Name', 'Data Center Heatmap', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+      end
       figNo = 1;
       for i = 1:nRacks
         startNode = (nTORs + nTOBs) + ((i - 1) * (nSlots * nBlades));
@@ -235,8 +240,13 @@ function plotHeatMap(dataCenterConfig, dataCenterMap, updateType)
       %title('Resource Utilization - Green = Max free, Yellow = Min free, Red = None free');
       
     case 'allMapsSetup' 
-      % Open new figure (Done once before starting the main time loop)
-      figure ('Name', 'Data Center Heatmap', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+      if (displayFigures == 1)
+        % Open new figure (Done once before starting the main time loop)
+        figure('Name', 'Data Center Heatmap', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+      else
+        % Open new figure but turn its visibility off
+        figure('Name', 'Data Center Heatmap', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+      end
       figNo_s = 1;
       figNo_h = nSubFigs(2) + 1;
       for i = 1:nRacks

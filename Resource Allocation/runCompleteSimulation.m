@@ -37,6 +37,7 @@ numRequests = 1000;         % Total number of requests to generate
 numTypes = 3;               % Total number of configuration types
 generateNewRequestDB = 0;   % Flag that is used to generate a new request database
 plotFigures = 1;            % Flag that is used to control figures/plots
+displayFigures = 0;         % Flag that is used to control whether figures are visible
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Import configuration files (YAML config files)
@@ -216,15 +217,20 @@ delete(threadPool);
 % NEED TO THINK OF GRAPHS THAT CAN BE PLOTTED TO DEPICT SIMULATION RESULTS
 
 if(plotFigures == 1)
-  % Plot heat maps
-  plotHeatMap(dataCenterConfig_T1, dataCenterMap_T1, 'allMapsSetup');
-  plotHeatMap(dataCenterConfig_T2, dataCenterMap_T2, 'allMapsSetup');
-  plotHeatMap(dataCenterConfig_T3, dataCenterMap_T3, 'allMapsSetup');
+  % HEAT MAPS (Type 1, Type 2 & Type 3)
+  plotHeatMap(dataCenterConfig_T1, dataCenterMap_T1, 'allMapsSetup', displayFigures);
+  plotHeatMap(dataCenterConfig_T2, dataCenterMap_T2, 'allMapsSetup', displayFigures);
+  plotHeatMap(dataCenterConfig_T3, dataCenterMap_T3, 'allMapsSetup', displayFigures);
 
+  % BLOCKING PROBABILITY (Request vs BP, IT utilisation vs BP, NET utilisation vs BP, etc.)
   %yFactor = eps;               % Set to epsilon to avoid going to -inf
   %yFactor = 1/(2 * nRequests);  % Set to half the maximum blocking probability to avoid going to -inf
   yFactor = 0;
-  figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   semilogy(requests,max(yFactor,(nBlocked_T1)),'x-');
   hold on;
   semilogy(requests,max(yFactor,(nBlocked_T2)),'x-');
@@ -234,7 +240,11 @@ if(plotFigures == 1)
   legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
   title('Request no. vs Blocking probability');
 
-  figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   semilogy(CPUutilization_T1,nBlocked_T1,'x-');
   hold on;
   semilogy(CPUutilization_T2,nBlocked_T2,'x-');
@@ -244,7 +254,11 @@ if(plotFigures == 1)
   legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
   title('CPU utilization vs Blocking probability');
 
-  figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   semilogy(MEMutilization_T1,nBlocked_T1,'x-');
   hold on;
   semilogy(MEMutilization_T2,nBlocked_T2,'x-');
@@ -254,7 +268,11 @@ if(plotFigures == 1)
   legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
   title('Memory utilization vs Blocking probability');
 
-  figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   semilogy(STOutilization_T1,nBlocked_T1,'x-');
   hold on;
   semilogy(STOutilization_T2,nBlocked_T2,'x-');
@@ -264,7 +282,11 @@ if(plotFigures == 1)
   legend('Homogeneous racks (Homogeneous blades)','Heterogeneous racks (Homogeneous blades)','Heterogeneous racks (Heterogeneous blades)','location','northwest');
   title('Storage utilization vs Blocking probability');
 
-  figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   semilogy(CPUutilization_T1,nBlocked_T1,'x-');
   hold on;
   semilogy(MEMutilization_T1,nBlocked_T1,'x-');
@@ -274,7 +296,11 @@ if(plotFigures == 1)
   legend('CPU utilization','Memory utilization','Storage utilization','location','northwest');
   title('IT Resource utilization vs Blocking probability - Homogenous racks (Homogeneous blades)');
 
-  figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   semilogy(CPUutilization_T2,nBlocked_T2,'x-');
   hold on;
   semilogy(MEMutilization_T2,nBlocked_T2,'x-');
@@ -284,7 +310,11 @@ if(plotFigures == 1)
   legend('CPU utilization','Memory utilization','Storage utilization','location','northwest');
   title('IT Resource utilization vs Blocking probability - Heterogeneous racks (Homogeneous blades)');
 
-  figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   semilogy(CPUutilization_T3,nBlocked_T3,'x-');
   hold on;
   semilogy(MEMutilization_T3,nBlocked_T3,'x-');
@@ -294,7 +324,11 @@ if(plotFigures == 1)
   legend('CPU utilization','Memory utilization','Storage utilization','location','northwest');
   title('IT Resource utilization vs Blocking probability - Heterogeneous racks (Heterogeneous blades)');
 
-  figure ('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'Blocking Probability', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   semilogy(NETutilization_T1,nBlocked_T1,'x-');
   hold on;
   semilogy(NETutilization_T2,nBlocked_T2,'x-');
@@ -305,7 +339,11 @@ if(plotFigures == 1)
   title('Network utilization vs Blocking probability');
 
   % UTILIZATION (REQUEST group vs NET,CPU,MEM,STO utilization) - Log (Semi-log) scale
-  figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   semilogy(requests,CPUutilization_T1,'-');
   hold on;
   semilogy(requests,MEMutilization_T1,'-');
@@ -315,7 +353,11 @@ if(plotFigures == 1)
   legend('CPU','Memory','Storage','location','northwest');
   title('Request no. vs IT Resource utilization - Homogenous racks (Homogeneous blades)');
 
-  figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   semilogy(requests,CPUutilization_T2,'-');
   hold on;
   semilogy(requests,MEMutilization_T2,'-');
@@ -325,7 +367,11 @@ if(plotFigures == 1)
   legend('CPU','Memory','Storage','location','northwest');
   title('Request no. vs IT Resource utilization - Heterogeneous racks (Homogeneous blades)');
 
-  figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   semilogy(requests,CPUutilization_T3,'-');
   hold on;
   semilogy(requests,MEMutilization_T3,'-');
@@ -335,7 +381,11 @@ if(plotFigures == 1)
   legend('CPU','Memory','Storage','location','northwest');
   title('Request no. vs IT Resource utilization - Heterogeneous racks (Heterogeneous blades)');
 
-  figure ('Name', 'Network Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'Network Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'Network Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   semilogy(requests,NETutilization_T1,'-');
   hold on;
   semilogy(requests,NETutilization_T2,'-');
@@ -346,7 +396,11 @@ if(plotFigures == 1)
   title('Request no. vs Network utilization');
 
   % UTILIZATION (REQUEST group vs NET,CPU,MEM,STO utilization) - Linear scale
-  figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   plot(requests,CPUutilization_T1,'-');
   hold on;
   plot(requests,MEMutilization_T1,'-');
@@ -356,7 +410,11 @@ if(plotFigures == 1)
   legend('CPU','Memory','Storage','location','northwest');
   title('Request no. vs IT Resource utilization - Homogenous racks (Homogeneous blades)');
 
-  figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   plot(requests,CPUutilization_T2,'-');
   hold on;
   plot(requests,MEMutilization_T2,'-');
@@ -366,7 +424,11 @@ if(plotFigures == 1)
   legend('CPU','Memory','Storage','location','northwest');
   title('Request no. vs IT Resource utilization - Heterogeneous racks (Homogeneous blades)');
 
-  figure ('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'IT Resource Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   plot(requests,CPUutilization_T3,'-');
   hold on;
   plot(requests,MEMutilization_T3,'-');
@@ -376,7 +438,11 @@ if(plotFigures == 1)
   legend('CPU','Memory','Storage','location','northwest');
   title('Request no. vs IT Resource utilization - Heterogeneous racks (Heterogeneous blades)');
 
-  figure ('Name', 'Network Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'Network Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'Network Utilization', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   plot(requests,NETutilization_T1,'-');
   hold on;
   plot(requests,NETutilization_T2,'-');
@@ -387,7 +453,11 @@ if(plotFigures == 1)
   title('Request no. vs Network utilization');
 
   % LATENCY ALLOCATION (REQUEST group vs LATENCY ALLOCATED - min, average, max graph)
-  figure ('Name', 'Latency Allocated', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  if (displayFigures == 1)
+    figure('Name', 'Latency Allocated', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700]);
+  else
+    figure('Name', 'Latency Allocated', 'NumberTitle', 'off', 'Position', [150, 50, 1000, 700], 'Visible', 'off');
+  end
   plot(requests,reqLatencyCM,'+','color', 'c');
   hold on;
   plot(requests,reqLatencyMS,'*','color', 'm');
@@ -411,11 +481,36 @@ if(plotFigures == 1)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Save figures and entire workspace
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+outputFormats = {'png', 'fig'};
+dateTime = datestr(datetime,'dd-mmm-yyyy--HH-MM-SS/');
+relativePath = '../../';
+simResultsDir = 'simResults/';
+simResultsDirPath = strcat(relativePath, simResultsDir);
+savePath = strcat(simResultsDirPath, dateTime);
+simWorkspace = 'sim_workspace';
+simWorkspacePath = strcat(simResultsDirPath, dateTime, simWorkspace);
+% Create parent simulation results directory if it doesn't already exist
+if(exist(simResultsDirPath,'dir') ~= 7)
+  mkdir(simResultsDirPath);
+end
+% Save all "open" figures in the specified formats (Note: The saveFigs function creates a new directory for the current simulation under the parent directory if one doesn't already exist)
+for i = 1:size(outputFormats,2)
+  saveFigs(savePath, 'format', outputFormats{i});
+end
+% Save entire workspace
+save(simWorkspacePath);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Clean up & display log
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 str = sprintf('\n+------- SIMULATION COMPLETE --------+\n');
 disp(str);
 diary off;                       % Turn diary (i.e. logging functionality) off
+if(displayFigures == 0)
+  close all;   % Manually close all figures (i.e. clear/release memory( since they are not being displayed
+end
 %clear;
 %str = sprintf('Opening simulation log ...');
 %disp(str);
