@@ -11,6 +11,7 @@
 clear all;                      % Clear all variables in the workspace
 close all;                      % Close all open figures
 clc;                            % Clear console/command prompt
+addpath(genpath('../MATLAB Custom Imports/'));  % Add path to utility library (Using genpath recursively adds subdirectories)
 diaryDir = 'log/';              % Log directory
 diaryFileName = strcat(diaryDir, 'log.txt');  % Log file name/path
 % Create log (i.e. diary) directory if it doesn't already exist
