@@ -1,0 +1,6 @@
+[submodule "MATLAB Custom Imports/M-utilib"]
+	path = MATLAB Custom Imports/M-utilib
+	url = https://github.com/edobez/M-utilib
+[submodule "MATLAB Custom Imports/yamlmatlab"]
+	path = MATLAB Custom Imports/yamlmatlab
+	url = https://github.com/ashishtibrewal/yamlmatlab.git
