@@ -191,7 +191,9 @@ function [dataCenterMap, ITallocationResult, NETallocationResult, ITresourceNode
       ITfailureCause = 'NONE';      % Initialize/reset IT resource allocation failure cause for every iteration of the loop
       NETfailureCause = 'NONE';     % Initialize/reset NET resource allocation failure cause for every iteration of the loop
       pathLatenciesAllocated = {};  % Initialize/reset path latencies for every iteration of the loop
-      
+      pathsUnitMax = {};            % Initialize/reset paths unit max for every iteration of the loop
+      pathsBandwidth = {};          % Initialize/reset paths bandwidth for every iteration of the loop
+
       % Initialise variables that keep track to the number of units found
       CPUunitsFound = 0;
       MEMunitsFound = 0;
